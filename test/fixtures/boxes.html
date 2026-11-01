@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Snag fixture</title>
+    <style>
+      body {
+        margin: 0;
+        background: #ffffff;
+        height: 2000px;
+      }
+      ::-webkit-scrollbar {
+        width: 20px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #888888;
+      }
+      #parent {
+        position: absolute;
+        top: 120px;
+        left: 80px;
+        width: 400px;
+        height: 300px;
+        background: #3366ff;
+      }
+      #target {
+        position: absolute;
+        top: 90px;
+        left: 100px;
+        width: 200px;
+        height: 120px;
+        background: #ff3366;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="parent"><div id="target"></div></div>
+    <svg
+      id="logo"
+      style="position: absolute; top: 450px; left: 80px"
+      width="100"
+      height="80">
+      <rect width="100" height="80" fill="#22aa55" />
+    </svg>
+    <div
+      id="below"
+      style="
+        position: absolute;
+        top: 900px;
+        left: 80px;
+        width: 400px;
+        height: 300px;
+        background: #22aa55;
+      "></div>
+    <a id="link" href="#clicked">link</a>
+  </body>
+</html>

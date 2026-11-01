@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[data-snag-theme-root] {
+  font-size: 16px;
+  font-family: 'made_tommy', sans-serif;
+  --bezier: cubic-bezier(0, 1, 0, 1);
+  --bezier-chill: cubic-bezier(0, 1, 0.5, 1);
+  --bezier-round-inverted: cubic-bezier(0.5, 0, 1, 0.5);
+}
+
+@import 'components/popup.scss';
+@import 'components/button.scss';
+
+.made-tommy {
+  font-family: 'made_tommy', sans-serif;
+}
+.btn {
+  @apply rounded-full;
+}
+.bg-blur {
+  backdrop-filter: blur(15px) url(#aberration) hue-rotate(15deg) !important;
+  background-color: var(--_blur-bg) !important;
+  border: 2px solid #ccc5 !important;
+  border-radius: 16px !important;
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25)) !important;
+  color: var(--_blur-text-color) !important;
+  &.bg-blur\:soft {
+    backdrop-filter: blur(10px) url(#aberration) hue-rotate(15deg) !important;
+    background-color: var(--_blur-bg-soft) !important;
+    border: 1px solid #ccc5 !important;
+  }
+  &.bg-blur\:round {
+    border-radius: 100em !important;
+  }
+}
+.browser-safari {
+  .bg-blur {
+    -webkit-backdrop-filter: blur(15px) hue-rotate(15deg) !important;
+  }
+  .bg-blur\:soft {
+    -webkit-backdrop-filter: blur(10px) hue-rotate(15deg) !important;
+  }
+}
+.browser-firefox {
+  .bg-blur {
+    backdrop-filter: blur(15px) hue-rotate(15deg) !important;
+  }
+  .bg-blur\:soft {
+    backdrop-filter: blur(10px) hue-rotate(15deg) !important;
+  }
+}
+.force-ghost {
+  &,
+  * {
+    pointer-events: none !important;
+  }
+  opacity: 0.1 !important;
+}
