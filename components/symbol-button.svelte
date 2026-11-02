@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Id } from '~/lib/id'
   import type { SymbolName } from '~/lib/symbols'
   import Button from './button.svelte'
   import Symbol from './symbol.svelte'
@@ -9,7 +10,7 @@
   export let opaque = false
   export let disabled = false
   export let glassy = false
-  export let colorSeed = 'snag'
+  export let colorSeed = Id.random()
   export let title = ''
   export let testId: string | undefined = undefined
 </script>

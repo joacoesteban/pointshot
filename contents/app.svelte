@@ -56,6 +56,10 @@
     const { target$: aimed$, picked$ } = picker.pick()
     picking = true
     target$ = aimed$
+    const hint = toast(
+      'Click to snag, ↑ ↓ to change element. Press ESC to cancel.',
+      { duration: Infinity },
+    )
     picked$.subscribe({
       next: (element) => {
         void snagger.snag(element).match(
@@ -64,6 +68,7 @@
         )
       },
       complete: () => {
+        toast.dismiss(hint)
         picking = false
         target$ = idle$
       },

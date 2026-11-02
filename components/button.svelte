@@ -2,11 +2,12 @@
   import chroma from 'chroma-js'
   import ColorHash from 'color-hash'
   import { createEventDispatcher } from 'svelte'
+  import { Id } from '~/lib/id'
 
   const colorHash = new ColorHash()
   const opacity = 0.5
 
-  export let colorSeed = 'snag'
+  export let colorSeed = Id.random()
   export let round = false
   export let opaque = false
   export let glassy = false
