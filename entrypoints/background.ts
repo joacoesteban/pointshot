@@ -7,6 +7,7 @@ import { ShotStore } from '~/background/shot-store'
 import { Throttle } from '~/background/throttle'
 import { CaptureError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
+import { SettingsStore } from '~/lib/settings'
 import {
   captureVisibleTabStream,
   listShotsStream,
@@ -86,7 +87,9 @@ export default defineBackground(() => {
     void ReplyCodec.encode(store.list()).then(respond)
   })
   saveShotStream.subscribe(([shot, , respond]) => {
-    void ReplyCodec.encode(store.save(shot)).then(respond)
+    void ReplyCodec.encode(
+      SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
+    ).then(respond)
   })
   removeShotStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.remove(id)).then(respond)

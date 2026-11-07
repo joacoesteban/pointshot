@@ -1,5 +1,5 @@
 import { BehaviorSubject } from 'rxjs'
-import { StorageError } from './errors'
+import { QuotaError, StorageError } from './errors'
 import { ReplyCodec } from './reply'
 import type { NewShot, Shot } from './shot'
 import { listShots, removeShot, saveShot, shotImageUrl } from '~/messages'
@@ -15,7 +15,7 @@ export class ShotLibrary {
   }
 
   save(shot: NewShot) {
-    return ReplyCodec.decode(saveShot(shot), StorageError).map(
+    return ReplyCodec.decode(saveShot(shot), StorageError, [QuotaError]).map(
       ({ shot, evicted }) => this.publish([shot, ...this.without(evicted)]),
     )
   }

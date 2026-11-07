@@ -1,11 +1,21 @@
 import { ResultAsync, errAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
-import { StorageError, toError } from '~/lib/errors'
+import { QuotaError, StorageError, toError } from '~/lib/errors'
 import { Img } from '~/lib/image'
 import type { NewShot, Saved, Shot } from '~/lib/shot'
 import type { SnagDB, StoredShot } from './db'
 
-const MAX_SHOTS = 100
+// Dexie wraps the browser's QuotaExceededError, and keeps it as `inner` when it aborts a transaction.
+const toStorageError = (cause: unknown) =>
+  match(cause)
+    .with(
+      P.union(
+        { name: 'QuotaExceededError' },
+        { inner: { name: 'QuotaExceededError' } },
+      ),
+      () => new QuotaError('Storage is full', { cause }),
+    )
+    .otherwise(toError(StorageError))
 
 const summaryOf = ({
   id,
@@ -36,7 +46,10 @@ export class ShotStore {
   }
 
   // crypto.randomUUID is missing on insecure pages, so ids are minted here instead of in the content script.
-  save({ image, ...shot }: NewShot): ResultAsync<Saved, StorageError> {
+  save(
+    { image, ...shot }: NewShot,
+    limit: number,
+  ): ResultAsync<Saved, StorageError> {
     const stored: StoredShot = {
       ...shot,
       id: crypto.randomUUID(),
@@ -45,11 +58,11 @@ export class ShotStore {
     return ResultAsync.fromPromise(
       this.db.transaction('rw', this.db.shots, async () => {
         await this.db.shots.put(stored)
-        const evicted = await this.newestFirst().offset(MAX_SHOTS).primaryKeys()
+        const evicted = await this.newestFirst().offset(limit).primaryKeys()
         await this.db.shots.bulkDelete(evicted)
         return evicted
       }),
-      toError(StorageError),
+      toStorageError,
     ).map((evicted) => ({ shot: summaryOf(stored), evicted }))
   }
 
