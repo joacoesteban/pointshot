@@ -4,6 +4,7 @@ import { browser, type Browser } from 'wxt/browser'
 import { defineBackground } from 'wxt/utils/define-background'
 import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
+import { Throttle } from '~/background/throttle'
 import { CaptureError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import {
@@ -12,6 +13,7 @@ import {
   pickElement,
   removeShotStream,
   saveShotStream,
+  shotImageUrlStream,
   togglePopup,
 } from '~/messages'
 
@@ -25,21 +27,43 @@ const activeTabId = () =>
       .otherwise(() => undefined),
   )
 
-const sendToActiveTab = (send: (options: { tabId: number }) => Promise<void>) =>
+type Send = (options: { tabId: number }) => Promise<void>
+
+const inject = (tabId: number) =>
+  ResultAsync.fromPromise(
+    browser.scripting.executeScript({
+      target: { tabId },
+      files: ['/content-scripts/snag.js'],
+    }),
+    toError(CaptureError),
+  )
+
+const deliver = (send: Send, tabId: number) =>
+  ResultAsync.fromPromise(send({ tabId }), toError(CaptureError))
+
+// The content script is injected on first use, so a tab without a receiver gets it before the message is sent again.
+// Tabs that block content scripts, like the Web Store or chrome:// pages, fail both.
+const sendToActiveTab = (send: Send) =>
   activeTabId().andThen((tabId) =>
     match(tabId)
       .with(P.number, (tabId) =>
-        // Tabs that block content scripts, like the Web Store or chrome:// pages, have no receiver.
-        ResultAsync.fromPromise(send({ tabId }), toError(CaptureError)),
+        deliver(send, tabId).orElse(() =>
+          inject(tabId).andThen(() => deliver(send, tabId)),
+        ),
       )
       .otherwise(() => okAsync(undefined)),
   )
+
+// Chrome rejects captureVisibleTab calls beyond two a second.
+const captures = new Throttle(500)
 
 const captureTab = (sender: Browser.runtime.MessageSender) =>
   match(sender)
     .with({ tab: { windowId: P.select(P.number) } }, (windowId) =>
       ResultAsync.fromPromise(
-        browser.tabs.captureVisibleTab(windowId, { format: 'png' }),
+        captures.run(() =>
+          browser.tabs.captureVisibleTab(windowId, { format: 'png' }),
+        ),
         toError(CaptureError),
       ),
     )
@@ -66,6 +90,9 @@ export default defineBackground(() => {
   })
   removeShotStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.remove(id)).then(respond)
+  })
+  shotImageUrlStream.subscribe(([id, , respond]) => {
+    void ReplyCodec.encode(store.imageUrl(id)).then(respond)
   })
 
   toolbarAction().onClicked.addListener(() => {

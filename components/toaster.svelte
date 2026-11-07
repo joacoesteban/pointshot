@@ -3,5 +3,5 @@
 </script>
 
 <Toaster
-  containerClassName="made-tommy snag-toaster"
+  containerClassName="snag-toaster"
   toastOptions={{ className: 'bg-blur snag-toast' }} />

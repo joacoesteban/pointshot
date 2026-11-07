@@ -1,5 +1,5 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { defaultClientConditions } from 'vite'
+import { match } from 'ts-pattern'
 import { defineConfig } from 'wxt'
 
 export default defineConfig({
@@ -9,10 +9,13 @@ export default defineConfig({
   autoIcons: {
     sizes: [128, 64, 48, 32, 16],
   },
-  manifest: {
+  manifest: ({ mode }) => ({
     name: 'Snag: Screenshot Any Element',
-    permissions: ['unlimitedStorage', 'activeTab'],
-    host_permissions: ['<all_urls>'],
+    permissions: ['unlimitedStorage', 'activeTab', 'scripting'],
+    // Playwright cannot click the toolbar, which is what grants activeTab, so the end-to-end build asks for every host up front.
+    host_permissions: match(mode)
+      .with('e2e', () => ['<all_urls>'])
+      .otherwise(() => undefined),
     action: {},
     commands: {
       'toggle-popup': {
@@ -33,7 +36,7 @@ export default defineConfig({
         id: 'snag@joacoesteban.com',
       },
     },
-  },
+  }),
   zip: {
     artifactTemplate: 'snag-{{version}}-{{browser}}-{{manifestVersion}}.zip',
     zipSources: false,
@@ -41,11 +44,6 @@ export default defineConfig({
   vite: () => ({
     // Svelte injects component styles at runtime next to the component, which lands them inside the popup's shadow root.
     plugins: [svelte({ emitCss: false })],
-    resolve: {
-      // vite-plugin-svelte 3 targets Vite 5 and sets `conditions: ['svelte']`, which on Vite 6 replaces the defaults.
-      // Without `browser`, `svelte` resolves to its SSR runtime, where onMount is a no-op.
-      conditions: [...defaultClientConditions],
-    },
     build: {
       // Content scripts resolve asset URLs against the host page, so fonts ship as data URLs.
       assetsInlineLimit: (file: string) => /\.woff2?$/.test(file) || undefined,

@@ -1,3 +1,4 @@
+import { match } from 'ts-pattern'
 import { z } from 'zod'
 
 export const ShotSchema = z.object({
@@ -7,13 +8,24 @@ export const ShotSchema = z.object({
   title: z.string(),
   width: z.number(),
   height: z.number(),
-  dataUrl: z.string(),
+  thumbnail: z.string(),
 })
 
 export type Shot = z.infer<typeof ShotSchema>
 
-export type NewShot = Omit<Shot, 'id'>
+export type NewShot = Omit<Shot, 'id'> & { readonly image: string }
+
+export type Saved = {
+  readonly shot: Shot
+  readonly evicted: readonly string[]
+}
 
 export type Reply<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: string }
+
+// Pages without a host, like file:// ones, are named after their scheme.
+export const siteOf = (url: string) =>
+  match(new URL(url))
+    .with({ hostname: '' }, ({ protocol }) => protocol.replace(/:$/, ''))
+    .otherwise(({ hostname }) => hostname)

@@ -18,7 +18,12 @@ export class StorageError extends Error {
   override readonly name = 'StorageError'
 }
 
+export type ErrorKind<E extends Error> = new (
+  message: string,
+  options?: ErrorOptions,
+) => E
+
 export const toError =
-  <E extends Error>(Kind: new (message: string) => E) =>
+  <E extends Error>(Kind: ErrorKind<E>) =>
   (cause: unknown) =>
-    new Kind(String(cause))
+    new Kind(String(cause), { cause })

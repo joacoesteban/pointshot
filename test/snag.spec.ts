@@ -1,23 +1,31 @@
 import type { Page } from '@playwright/test'
 import { expect, FIXTURE_URL, INSECURE_FIXTURE_URL, test } from './fixtures'
 
-type Pixel = readonly [number, number, number]
+type Pixel = readonly [number, number, number, number]
 
 const clipboardImage = (page: Page) =>
   page.evaluate(async () => {
     const [item] = await navigator.clipboard.read()
-    if (!item) return null
+    if (!item?.types.includes('image/png')) return null
     const bitmap = await createImageBitmap(await item.getType('image/png'))
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
     const context = canvas.getContext('2d')
     if (!context) return null
     context.drawImage(bitmap, 0, 0)
     const pixel = ([x, y]: readonly [number, number]) =>
-      [...context.getImageData(x, y, 1, 1).data.slice(0, 3)] as unknown as Pixel
+      [...context.getImageData(x, y, 1, 1).data] as unknown as Pixel
+    const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height)
+    const pixels = Array.from({ length: data.length / 4 }, (_, index) =>
+      data.subarray(index * 4, index * 4 + 4),
+    )
     return {
       width: bitmap.width,
       height: bitmap.height,
       corners: [pixel([0, 0]), pixel([bitmap.width - 1, bitmap.height - 1])],
+      black: pixels.filter(
+        ([r, g, b, a]) => r === 0 && g === 0 && b === 0 && a === 255,
+      ).length,
+      clear: pixels.filter(([, , , a]) => a === 0).length,
     }
   })
 
@@ -31,6 +39,16 @@ const hover = async (page: Page, selector: string) => {
   const { x, y } = await center(page, selector)
   await page.mouse.move(x, y, { steps: 4 })
 }
+
+test('injects the UI on first use, once', async ({ page, togglePopup }) => {
+  const ui = page.locator('snag-ui')
+  await expect(ui).toHaveCount(0)
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).toHaveClass(/visible/)
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).not.toHaveClass(/visible/)
+  await expect(ui).toHaveCount(1)
+})
 
 test('picks an element, copies it to the clipboard and stores it', async ({
   page,
@@ -62,18 +80,41 @@ test('picks an element, copies it to the clipboard and stores it', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(1)
   await expect(page.getByTestId('snag-shot')).toContainText('200 × 120')
 
-  expect(await clipboardImage(page)).toEqual({
+  expect(await clipboardImage(page)).toMatchObject({
     width: 200,
     height: 120,
     corners: [
-      [255, 51, 102],
-      [255, 51, 102],
+      [255, 51, 102, 255],
+      [255, 51, 102, 255],
     ],
   })
 
   await page.reload()
   await togglePopup()
   await expect(page.getByTestId('snag-shot')).toHaveCount(1)
+})
+
+test('walks siblings and children and snags with Enter', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  const highlight = page.getByTestId('snag-highlight')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('div#parent')
+  await page.keyboard.press('ArrowRight')
+  await expect(highlight).toContainText('svg#logo')
+  await page.keyboard.press('ArrowLeft')
+  await expect(highlight).toContainText('div#parent')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#target')
+
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({ width: 400, height: 300 })
 })
 
 test('swallows the picking click so the page does not react', async ({
@@ -97,10 +138,10 @@ test('escape cancels picking without capturing', async ({
   await page.getByTestId('snag-pick').click()
   await hover(page, '#target')
   await expect(page.getByTestId('snag-highlight')).toBeVisible()
-  await expect(page.getByText('Press ESC to cancel')).toBeVisible()
+  await expect(page.getByText('Click or press Enter to snag')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('snag-highlight')).toBeHidden()
-  await expect(page.getByText('Press ESC to cancel')).toBeHidden()
+  await expect(page.getByText('Click or press Enter to snag')).toBeHidden()
   await page.mouse.down()
   await page.mouse.up()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
@@ -118,6 +159,34 @@ test('deletes a stored shot', async ({ page, togglePopup }) => {
   await shot.getByRole('button', { name: 'Delete' }).click()
   await expect(shot).toHaveCount(0)
   await expect(page.getByTestId('snag-popup')).toContainText('No snags yet')
+})
+
+test('copies and downloads a stored shot at full size', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#parent')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  await page.evaluate(() => navigator.clipboard.writeText(''))
+
+  const shot = page.getByTestId('snag-shot')
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Copy' }).click()
+  await expect
+    .poll(() => clipboardImage(page))
+    .toMatchObject({ width: 400, height: 300 })
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    shot.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.png$/)
 })
 
 test('saves the shot on http pages, where the clipboard is unavailable', async ({
@@ -162,4 +231,71 @@ test('scrolling retargets the element under the pointer', async ({
   await expect(highlight).toContainText('div#target')
   await page.mouse.wheel(0, 700)
   await expect(highlight).toContainText('div#below')
+})
+
+test('stitches an element taller than the viewport and restores the scroll', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#tall')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  // The black #sticky child, 300 × 40, straddles the first tile's bottom edge 700 px down: exactly one whole copy of it, less its 300 × 10 green child with z-index -1, means it was captured in place across both tiles and kept its stacking context. The fixed black #bubble sits over the element too, so extra black pixels mean it was not hidden. A clear pixel is a seam between tiles.
+  expect(await clipboardImage(page)).toEqual({
+    width: 300,
+    height: 1500,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    black: 300 * 30,
+    clear: 0,
+  })
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await expect(page.locator('#bubble')).toBeVisible()
+})
+
+test('clips rounded corners to transparency', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pill')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 120,
+    height: 40,
+    corners: [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+  })
+})
+
+test('keeps a margin of page around the element with Shift', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.down('Shift')
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.keyboard.up('Shift')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  // 24 px on each side of the 200 × 120 target, all of it inside the blue parent.
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 248,
+    height: 168,
+    corners: [
+      [51, 102, 255, 255],
+      [51, 102, 255, 255],
+    ],
+  })
 })

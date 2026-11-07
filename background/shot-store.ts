@@ -1,55 +1,81 @@
-import { ResultAsync } from 'neverthrow'
+import { ResultAsync, errAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { StorageError, toError } from '~/lib/errors'
-import type { NewShot, Shot } from '~/lib/shot'
-import type { SnagDB } from './db'
+import { Img } from '~/lib/image'
+import type { NewShot, Saved, Shot } from '~/lib/shot'
+import type { SnagDB, StoredShot } from './db'
 
-const MAX_SHOTS = 50
-// Every listing crosses the runtime message channel as data URLs, and Chrome caps a message at 64 MiB.
-const MAX_LISTING_CHARS = 48 * 1024 * 1024
+const MAX_SHOTS = 100
 
-const staleIds = (newestFirst: readonly Shot[]) =>
-  newestFirst.reduce<{ total: number; stale: string[] }>(
-    ({ total, stale }, { id, dataUrl }, index) =>
-      match({ index, total: total + dataUrl.length })
-        .with(
-          { index: P.number.gte(MAX_SHOTS) },
-          { index: P.number.gt(0), total: P.number.gt(MAX_LISTING_CHARS) },
-          () => ({ total, stale: [...stale, id] }),
-        )
-        .otherwise(({ total }) => ({ total, stale })),
-    { total: 0, stale: [] },
-  ).stale
+const summaryOf = ({
+  id,
+  createdAt,
+  url,
+  title,
+  width,
+  height,
+  thumbnail,
+}: StoredShot): Shot => ({
+  id,
+  createdAt,
+  url,
+  title,
+  width,
+  height,
+  thumbnail,
+})
 
 export class ShotStore {
   constructor(private readonly db: SnagDB) {}
 
   list(): ResultAsync<Shot[], StorageError> {
     return ResultAsync.fromPromise(
-      this.db.shots.orderBy('createdAt').reverse().toArray(),
+      this.newestFirst().toArray(),
       toError(StorageError),
-    )
+    ).map((shots) => shots.map(summaryOf))
   }
 
   // crypto.randomUUID is missing on insecure pages, so ids are minted here instead of in the content script.
-  save(shot: NewShot): ResultAsync<Shot[], StorageError> {
+  save({ image, ...shot }: NewShot): ResultAsync<Saved, StorageError> {
+    const stored: StoredShot = {
+      ...shot,
+      id: crypto.randomUUID(),
+      image: Img.dataUrlToBlob(image),
+    }
     return ResultAsync.fromPromise(
       this.db.transaction('rw', this.db.shots, async () => {
-        await this.db.shots.put({ ...shot, id: crypto.randomUUID() })
-        const shots = await this.db.shots
-          .orderBy('createdAt')
-          .reverse()
-          .toArray()
-        await this.db.shots.bulkDelete(staleIds(shots))
+        await this.db.shots.put(stored)
+        const evicted = await this.newestFirst().offset(MAX_SHOTS).primaryKeys()
+        await this.db.shots.bulkDelete(evicted)
+        return evicted
       }),
       toError(StorageError),
-    ).andThen(() => this.list())
+    ).map((evicted) => ({ shot: summaryOf(stored), evicted }))
   }
 
-  remove(id: string): ResultAsync<Shot[], StorageError> {
+  imageUrl(id: string): ResultAsync<string, StorageError> {
+    return ResultAsync.fromPromise(
+      this.db.shots.get(id),
+      toError(StorageError),
+    ).andThen((shot) =>
+      match(shot)
+        .with({ image: P.select() }, (image) =>
+          Img.blobToDataUrl(image).mapErr(toError(StorageError)),
+        )
+        .otherwise(() =>
+          errAsync(new StorageError('The snag is no longer stored')),
+        ),
+    )
+  }
+
+  remove(id: string): ResultAsync<undefined, StorageError> {
     return ResultAsync.fromPromise(
       this.db.shots.delete(id),
       toError(StorageError),
-    ).andThen(() => this.list())
+    ).map(() => undefined)
+  }
+
+  private newestFirst() {
+    return this.db.shots.orderBy('createdAt').reverse()
   }
 }

@@ -1,5 +1,5 @@
 import { getMessage } from '@extend-chrome/messages'
-import type { NewShot, Reply, Shot } from '~/lib/shot'
+import type { NewShot, Reply, Saved, Shot } from '~/lib/shot'
 
 export const [togglePopup, togglePopupStream] =
   getMessage<undefined>('toggle-popup')
@@ -17,12 +17,17 @@ export const [listShots, listShotsStream] = getMessage<
   Reply<Shot[]>
 >('list-shots', { async: true })
 
-export const [saveShot, saveShotStream] = getMessage<NewShot, Reply<Shot[]>>(
+export const [saveShot, saveShotStream] = getMessage<NewShot, Reply<Saved>>(
   'save-shot',
   { async: true },
 )
 
-export const [removeShot, removeShotStream] = getMessage<string, Reply<Shot[]>>(
-  'remove-shot',
-  { async: true },
-)
+export const [removeShot, removeShotStream] = getMessage<
+  string,
+  Reply<undefined>
+>('remove-shot', { async: true })
+
+export const [shotImageUrl, shotImageUrlStream] = getMessage<
+  string,
+  Reply<string>
+>('shot-image-url', { async: true })

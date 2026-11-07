@@ -4,14 +4,17 @@
     fromEvent,
     map,
     merge,
-    of,
     startWith,
     type Observable,
   } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { transitionIn, transitionOut } from '~/lib/transitions'
 
-  export let target$: Observable<Element | null> = of(null)
+  type Props = {
+    target$: Observable<Element | null>
+  }
+
+  const { target$ }: Props = $props()
 
   const reflow$ = merge(
     fromEvent(window, 'scroll', { capture: true, passive: true }),
@@ -30,7 +33,8 @@
         .join(''),
     ].join('')
 
-  $: frame$ = combineLatest([target$, reflow$]).pipe(
+  const frame$ = $derived(
+    combineLatest([target$, reflow$]).pipe(
     map(([target]) =>
       match(target)
         .with(P.instanceOf(Element), (target) => ({
@@ -39,6 +43,7 @@
           label: label(target),
         }))
         .otherwise(() => null),
+    ),
     ),
   )
 </script>
@@ -54,7 +59,7 @@
     style:width={`${String($frame$.bounds.width)}px`}
     style:height={`${String($frame$.bounds.height)}px`}
     style:border-radius={$frame$.radius}>
-    <span class="tag made-tommy bg-blur bg-blur:soft bg-blur:round">
+    <span class="tag bg-blur bg-blur:soft bg-blur:round">
       <b>{$frame$.label}</b>
       <span class="opacity-60">
         {Math.round($frame$.bounds.width)} × {Math.round($frame$.bounds.height)}

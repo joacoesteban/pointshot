@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
   import { flip } from 'svelte/animate'
   import { draggable } from '~/lib/draggable'
   import type { Shot } from '~/lib/shot'
@@ -8,17 +7,27 @@
   import ShotCard from './shot-card.svelte'
   import SymbolButton from './symbol-button.svelte'
 
-  export let visible = false
-  export let ghost = false
-  export let shots: Shot[] = []
+  type Props = {
+    visible: boolean
+    ghost: boolean
+    shots: Shot[]
+    onclose: () => void
+    onpick: () => void
+    oncopy: (shot: Shot) => void
+    ondownload: (shot: Shot) => void
+    onremove: (shot: Shot) => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    close: undefined
-    pick: undefined
-    copy: Shot
-    download: Shot
-    remove: Shot
-  }>()
+  const {
+    visible,
+    ghost,
+    shots,
+    onclose,
+    onpick,
+    oncopy,
+    ondownload,
+    onremove,
+  }: Props = $props()
 </script>
 
 <div
@@ -30,7 +39,7 @@
   use:draggable>
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
     <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
-      <h2 class="made-tommy font-black text-2xl m-0 opacity-25">snag</h2>
+      <h2 class="font-black text-2xl m-0 opacity-25">snag</h2>
       <SymbolButton
         name="xMark"
         title="Close"
@@ -38,7 +47,7 @@
         size="40px"
         padding="30%"
         disabled={ghost}
-        on:click={() => dispatch('close')} />
+        onclick={onclose} />
     </header>
 
     <main class="px-1">
@@ -49,12 +58,17 @@
               animate:flip={{ duration: 300 }}
               in:transitionIn
               out:transitionOut>
-              <ShotCard {shot} disabled={ghost} on:copy on:download on:remove />
+              <ShotCard
+                {shot}
+                disabled={ghost}
+                {oncopy}
+                {ondownload}
+                {onremove} />
             </div>
           {/each}
         </div>
       {:else}
-        <div class="text-center py-8 made-tommy">
+        <div class="text-center py-8">
           <h3 class="font-bold text-xl mb-1">No snags yet</h3>
           <p class="opacity-60 text-sm">
             Pick an element and it lands in your clipboard.
@@ -67,9 +81,9 @@
       <Button
         testId="snag-pick"
         disabled={ghost}
-        on:click={() => dispatch('pick')}>Snag</Button>
-      <p class="made-tommy text-xs opacity-50 mt-2">
-        Esc cancels · ↑ ↓ walk the tree
+        onclick={onpick}>Snag</Button>
+      <p class="text-xs opacity-50 mt-2">
+        ↑ ↓ ← → walk the page · ⇧ adds a margin · Esc cancels
       </p>
     </footer>
   </div>
