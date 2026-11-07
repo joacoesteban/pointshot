@@ -15,7 +15,8 @@
     "bundle:all": "pnpm run bundle && pnpm run bundle:firefox",
     "typecheck": "svelte-check --tsconfig tsconfig.json --fail-on-warnings",
     "lint": "eslint .",
-    "test": "playwright test",
+    "build:e2e": "wxt build --mode e2e",
+    "test": "pnpm run build:e2e && playwright test",
     "check": "pnpm run typecheck && pnpm run lint",
     "postinstall": "wxt prepare"
   },

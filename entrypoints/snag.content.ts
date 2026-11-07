@@ -6,7 +6,7 @@ import App from '~/contents/app.svelte'
 import style from '~/style.scss?inline'
 
 export default defineContentScript({
-  matches: ['<all_urls>'],
+  registration: 'runtime',
   async main(ctx) {
     const ui = await createShadowRootUi(ctx, {
       name: 'snag-ui',

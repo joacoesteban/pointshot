@@ -32,6 +32,16 @@ const hover = async (page: Page, selector: string) => {
   await page.mouse.move(x, y, { steps: 4 })
 }
 
+test('injects the UI on first use, once', async ({ page, togglePopup }) => {
+  const ui = page.locator('snag-ui')
+  await expect(ui).toHaveCount(0)
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).toHaveClass(/visible/)
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).not.toHaveClass(/visible/)
+  await expect(ui).toHaveCount(1)
+})
+
 test('picks an element, copies it to the clipboard and stores it', async ({
   page,
   togglePopup,

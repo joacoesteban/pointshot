@@ -11,12 +11,14 @@ pnpm install      # also runs `wxt prepare`, which generates .wxt/tsconfig.json
 pnpm dev          # Chrome with hot reload
 pnpm check        # typecheck (svelte-check, warnings fail) + lint
 pnpm build        # production build in build/chrome-mv3
-pnpm test         # Playwright end-to-end, against build/chrome-mv3
+pnpm test         # builds build/chrome-mv3-e2e, then runs Playwright on it
 pnpm bundle:all   # zips for Chrome and Firefox in build/
 ```
 
-`pnpm test` loads the built extension, so run `pnpm build` first after any
-change. The first run needs `pnpm exec playwright install chromium`.
+The e2e build (`--mode e2e`) differs from production only in asking for
+`<all_urls>`: tests open the popup by dispatching `action.onClicked`, which
+does not grant `activeTab`. The first run needs
+`pnpm exec playwright install chromium`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, `bundle:all` and the
 tests on every PR to `main`. A `v*.*.*` tag publishes the zips as a GitHub
@@ -27,7 +29,9 @@ release.
 - `entrypoints/background.ts`: service worker. Owns tab capture, storage and
   the keyboard commands, and answers the content script's messages.
 - `entrypoints/snag.content.ts`: mounts `contents/app.svelte` into a shadow
-  root on every page.
+  root. It is registered at runtime: the background injects it with
+  `scripting.executeScript` the first time a message to the tab finds no
+  receiver, so the extension needs only `activeTab`, no host permissions.
 - `background/`: Dexie database and `ShotStore`. Runs only in the background.
 - `lib/`: content-side logic, one class per file (`Snagger`, `ElementPicker`,
   `ShotLibrary`, `Stage`, `Img`, `Clipboard`, ...).

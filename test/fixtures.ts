@@ -11,7 +11,7 @@ import {
 export const FIXTURE_URL = 'https://snag.test/boxes.html'
 export const INSECURE_FIXTURE_URL = 'http://snag.test/boxes.html'
 
-const extensionPath = path.join(process.cwd(), 'build/chrome-mv3')
+const extensionPath = path.join(process.cwd(), 'build/chrome-mv3-e2e')
 const fixture = readFileSync(
   path.join(import.meta.dirname, 'fixtures/boxes.html'),
   'utf8',

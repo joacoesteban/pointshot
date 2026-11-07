@@ -1,4 +1,5 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { match } from 'ts-pattern'
 import { defineConfig } from 'wxt'
 
 export default defineConfig({
@@ -8,10 +9,13 @@ export default defineConfig({
   autoIcons: {
     sizes: [128, 64, 48, 32, 16],
   },
-  manifest: {
+  manifest: ({ mode }) => ({
     name: 'Snag: Screenshot Any Element',
-    permissions: ['unlimitedStorage', 'activeTab'],
-    host_permissions: ['<all_urls>'],
+    permissions: ['unlimitedStorage', 'activeTab', 'scripting'],
+    // Playwright cannot click the toolbar, which is what grants activeTab, so the end-to-end build asks for every host up front.
+    host_permissions: match(mode)
+      .with('e2e', () => ['<all_urls>'])
+      .otherwise(() => undefined),
     action: {},
     commands: {
       'toggle-popup': {
@@ -32,7 +36,7 @@ export default defineConfig({
         id: 'snag@joacoesteban.com',
       },
     },
-  },
+  }),
   zip: {
     artifactTemplate: 'snag-{{version}}-{{browser}}-{{manifestVersion}}.zip',
     zipSources: false,

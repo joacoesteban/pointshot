@@ -26,12 +26,29 @@ const activeTabId = () =>
       .otherwise(() => undefined),
   )
 
-const sendToActiveTab = (send: (options: { tabId: number }) => Promise<void>) =>
+type Send = (options: { tabId: number }) => Promise<void>
+
+const inject = (tabId: number) =>
+  ResultAsync.fromPromise(
+    browser.scripting.executeScript({
+      target: { tabId },
+      files: ['/content-scripts/snag.js'],
+    }),
+    toError(CaptureError),
+  )
+
+const deliver = (send: Send, tabId: number) =>
+  ResultAsync.fromPromise(send({ tabId }), toError(CaptureError))
+
+// The content script is injected on first use, so a tab without a receiver gets it before the message is sent again.
+// Tabs that block content scripts, like the Web Store or chrome:// pages, fail both.
+const sendToActiveTab = (send: Send) =>
   activeTabId().andThen((tabId) =>
     match(tabId)
       .with(P.number, (tabId) =>
-        // Tabs that block content scripts, like the Web Store or chrome:// pages, have no receiver.
-        ResultAsync.fromPromise(send({ tabId }), toError(CaptureError)),
+        deliver(send, tabId).orElse(() =>
+          inject(tabId).andThen(() => deliver(send, tabId)),
+        ),
       )
       .otherwise(() => okAsync(undefined)),
   )
