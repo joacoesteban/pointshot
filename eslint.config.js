@@ -1,4 +1,6 @@
+import svelte from 'eslint-plugin-svelte'
 import tseslint from 'typescript-eslint'
+import svelteConfig from './svelte.config.mjs'
 
 export default tseslint.config(
   {
@@ -7,18 +9,19 @@ export default tseslint.config(
       '.wxt',
       '.output',
       'node_modules',
-      '**/*.svelte',
       '*.config.*',
       '.prettierrc.mjs',
       'eslint.config.js',
     ],
   },
   ...tseslint.configs.strictTypeChecked,
+  ...svelte.configs.recommended,
   {
     languageOptions: {
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.svelte'],
       },
     },
     rules: {
@@ -38,6 +41,15 @@ export default tseslint.config(
           message: 'Use neverthrow results instead of try/catch.',
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.svelte'],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+        svelteConfig,
+      },
     },
   },
 )

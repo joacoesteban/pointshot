@@ -2,7 +2,7 @@
 
 Browser extension that screenshots a picked element, copies it to the
 clipboard, and keeps it in an in-page popup. Built with WXT (Chrome MV3,
-Firefox MV2), Svelte 4, Tailwind 3 with daisyUI, and SCSS.
+Firefox MV2), Svelte 5, Tailwind 3 with daisyUI, and SCSS.
 
 ## Commands
 
@@ -68,8 +68,8 @@ The compiler and linter enforce most of these; `pnpm check` must pass.
   `typescript-eslint` `strictTypeChecked`.
 - No `any`, no ternaries (use `ts-pattern`), no `try/catch` (use
   `neverthrow`). These are lint errors.
-- ESLint skips `*.svelte` files. Hold the `<script>` blocks to the same rules
-  by hand.
+- The same rules apply to `<script>` blocks in `*.svelte` files, through
+  `eslint-plugin-svelte`. Components use Svelte 5 runes and callback props.
 - WXT auto-imports are off (`imports: false`). Import `defineBackground`,
   `browser` and the rest explicitly from `wxt/...`.
 - Import project files through the `~/` alias across folders, and relatively
