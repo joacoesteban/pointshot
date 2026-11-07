@@ -22,7 +22,7 @@ import type { Framing } from './region'
 
 type Point = Readonly<Record<'x' | 'y', number>>
 
-type Aim = {
+export type Aim = {
   readonly element: Element | null
   readonly trail: readonly Element[]
 }
@@ -32,7 +32,7 @@ export type Pick = {
   readonly framing: Framing
 }
 
-type Step =
+export type Step =
   | { readonly kind: 'point'; readonly element: Element | null }
   | { readonly kind: 'up' | 'down' | 'previous' | 'next' }
 
@@ -89,7 +89,7 @@ const land = (aim: Aim, element: Element | undefined): Aim =>
     .with(P.instanceOf(Element), (element) => ({ element, trail: [] }))
     .otherwise(() => aim)
 
-const step = (aim: Aim, next: Step): Aim =>
+export const step = (aim: Aim, next: Step): Aim =>
   match([aim, next] as const)
     .with([P._, { kind: 'point' }], ([, { element }]) => ({
       element,

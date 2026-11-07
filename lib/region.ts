@@ -32,14 +32,17 @@ const CORNERS = [
 
 export const scrolled = (): Point => ({ x: window.scrollX, y: window.scrollY })
 
-const shift = ({ left, top, width, height }: Area, { x, y }: Point): Area => ({
+export const shift = (
+  { left, top, width, height }: Area,
+  { x, y }: Point,
+): Area => ({
   left: left + x,
   top: top + y,
   width,
   height,
 })
 
-const grow = ({ left, top, width, height }: Area, by: number): Area => ({
+export const grow = ({ left, top, width, height }: Area, by: number): Area => ({
   left: left - by,
   top: top - by,
   width: width + 2 * by,
@@ -57,14 +60,19 @@ export const intersect = (a: Area, b: Area): Area => {
   }
 }
 
-const steps = (start: number, length: number, span: number) =>
+export const steps = (start: number, length: number, span: number) =>
   Array.from(
     { length: Math.max(1, Math.ceil(length / span)) },
     (_, index) => start + index * span,
   )
 
 // An axis already in view keeps its scroll, so a visible element, or one inside a fixed or sticky ancestor, is captured without moving the page.
-const axis = (start: number, length: number, offset: number, span: number) =>
+export const axis = (
+  start: number,
+  length: number,
+  offset: number,
+  span: number,
+) =>
   match({ start, end: start + length })
     .with(
       { start: P.number.gte(offset), end: P.number.lte(offset + span) },
@@ -80,7 +88,10 @@ const lineage = (element: Element): Element[] =>
     .with(P.instanceOf(Element), (parent) => [element, ...lineage(parent)])
     .otherwise(() => [element])
 
-const radius = (value: string, { width, height }: Area): DOMPointInit => {
+export const radius = (
+  value: string,
+  { width, height }: Area,
+): DOMPointInit => {
   const [x = '0', y = x] = value.split(' ')
   const length = (token: string, whole: number) =>
     match(token)

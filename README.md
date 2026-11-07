@@ -40,6 +40,7 @@ pnpm install
 pnpm dev          # Chrome with hot reload
 pnpm check        # typecheck + lint
 pnpm build        # production build in build/chrome-mv3
+pnpm test:unit    # unit tests
 pnpm test         # end-to-end tests against an e2e build in build/chrome-mv3-e2e
 pnpm bundle:all   # zips for Chrome and Firefox
 ```

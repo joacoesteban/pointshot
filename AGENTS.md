@@ -11,6 +11,7 @@ pnpm install      # also runs `wxt prepare`, which generates .wxt/tsconfig.json
 pnpm dev          # Chrome with hot reload
 pnpm check        # typecheck (svelte-check, warnings fail) + lint
 pnpm build        # production build in build/chrome-mv3
+pnpm test:unit    # Vitest over lib/ and background/, with happy-dom and fake-indexeddb
 pnpm test         # builds build/chrome-mv3-e2e, then runs Playwright on it
 pnpm bundle:all   # zips for Chrome and Firefox in build/
 ```
@@ -38,6 +39,7 @@ release.
 - `components/`: Svelte components. `contents/app.svelte` is the root.
 - `messages/index.ts`: every runtime message, typed through
   `@extend-chrome/messages`.
+- `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
 
