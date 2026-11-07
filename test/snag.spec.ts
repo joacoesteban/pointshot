@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test'
 import { expect, FIXTURE_URL, INSECURE_FIXTURE_URL, test } from './fixtures'
 
-type Pixel = readonly [number, number, number]
+type Pixel = readonly [number, number, number, number]
 
 const clipboardImage = (page: Page) =>
   page.evaluate(async () => {
@@ -13,11 +13,19 @@ const clipboardImage = (page: Page) =>
     if (!context) return null
     context.drawImage(bitmap, 0, 0)
     const pixel = ([x, y]: readonly [number, number]) =>
-      [...context.getImageData(x, y, 1, 1).data.slice(0, 3)] as unknown as Pixel
+      [...context.getImageData(x, y, 1, 1).data] as unknown as Pixel
+    const { data } = context.getImageData(0, 0, bitmap.width, bitmap.height)
+    const pixels = Array.from({ length: data.length / 4 }, (_, index) =>
+      data.subarray(index * 4, index * 4 + 4),
+    )
     return {
       width: bitmap.width,
       height: bitmap.height,
       corners: [pixel([0, 0]), pixel([bitmap.width - 1, bitmap.height - 1])],
+      black: pixels.filter(
+        ([r, g, b, a]) => r === 0 && g === 0 && b === 0 && a === 255,
+      ).length,
+      clear: pixels.filter(([, , , a]) => a === 0).length,
     }
   })
 
@@ -72,12 +80,12 @@ test('picks an element, copies it to the clipboard and stores it', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(1)
   await expect(page.getByTestId('snag-shot')).toContainText('200 × 120')
 
-  expect(await clipboardImage(page)).toEqual({
+  expect(await clipboardImage(page)).toMatchObject({
     width: 200,
     height: 120,
     corners: [
-      [255, 51, 102],
-      [255, 51, 102],
+      [255, 51, 102, 255],
+      [255, 51, 102, 255],
     ],
   })
 
@@ -223,4 +231,71 @@ test('scrolling retargets the element under the pointer', async ({
   await expect(highlight).toContainText('div#target')
   await page.mouse.wheel(0, 700)
   await expect(highlight).toContainText('div#below')
+})
+
+test('stitches an element taller than the viewport and restores the scroll', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#tall')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  // The fixed #bubble sits over the element, so any black pixel means it was not hidden; a clear one is a seam between tiles.
+  expect(await clipboardImage(page)).toEqual({
+    width: 300,
+    height: 1500,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    black: 0,
+    clear: 0,
+  })
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  await expect(page.locator('#bubble')).toBeVisible()
+})
+
+test('clips rounded corners to transparency', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pill')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 120,
+    height: 40,
+    corners: [
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+  })
+})
+
+test('keeps a margin of page around the element with Shift', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.down('Shift')
+  await page.mouse.down()
+  await page.mouse.up()
+  await page.keyboard.up('Shift')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  // 24 px on each side of the 200 × 120 target, all of it inside the blue parent.
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 248,
+    height: 168,
+    corners: [
+      [51, 102, 255, 255],
+      [51, 102, 255, 255],
+    ],
+  })
 })

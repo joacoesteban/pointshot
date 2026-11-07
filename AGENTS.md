@@ -53,6 +53,11 @@ release.
 - The UI lives in a shadow root. Svelte runs with `emitCss: false` so
   component styles land inside it, and fonts ship as data URLs because content
   scripts resolve asset URLs against the host page.
+- A snag is planned by `Region.plan` (the area in document coordinates, the
+  window scroll positions to capture it from, the rounded-corner clip, and the
+  fixed or sticky elements to hide) and drawn by `Stitcher`, one
+  `captureVisibleTab` per tile. The background throttles those calls to
+  Chrome's limit of two a second.
 - `Stage.offstage` hides the UI for the capture. WXT resets the shadow host
   with `all: initial !important`, so it styles the inner container instead.
 - `Snagger.snag` must stay synchronous up to the clipboard write: the click

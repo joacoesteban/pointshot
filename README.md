@@ -13,14 +13,23 @@ download, or delete it later.
 | Select the parent / child          | `↑` / `↓` while picking                             |
 | Select the previous / next sibling | `←` / `→` while picking                             |
 | Snag the selected element          | Click, or press `Enter`                             |
+| Snag it with a margin of page      | Hold `Shift` while snagging                         |
 | Cancel                             | `Esc`                                               |
+
+Elements taller or wider than the window are captured whole: Snag scrolls the
+page, captures it piece by piece and stitches the pieces together. Fixed and
+sticky elements that would repeat or cover the element are hidden meanwhile.
+Rounded corners come out transparent.
 
 The popup keeps the 100 most recent snags.
 
 ## Limits
 
-- Snag captures the visible part of the element. Parts outside the viewport
-  are cut off.
+- Parts of the element hidden inside a scrolling container are cut off, and
+  an element inside a fixed or sticky container is captured as far as it is
+  visible.
+- Snags larger than 12 megapixels are scaled down to fit.
+- Chrome allows two captures a second, so a long element takes a moment.
 - Browsers expose the clipboard only on `https` pages. On plain `http` pages
   the snag is saved in the popup but not copied.
 

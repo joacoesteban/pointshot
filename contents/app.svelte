@@ -16,6 +16,7 @@
   import { ShotLibrary } from '~/lib/shot-library'
   import { Snagger } from '~/lib/snagger'
   import { Stage } from '~/lib/stage'
+  import { Stitcher } from '~/lib/stitcher'
   import { themeController } from '~/lib/theme-controller'
   import { pickElementStream, togglePopupStream } from '~/messages'
 
@@ -30,7 +31,11 @@
   // svelte-ignore state_referenced_locally
   const picker = new ElementPicker(host)
   // svelte-ignore state_referenced_locally
-  const snagger = new Snagger(new Stage(container), library)
+  const snagger = new Snagger(
+    new Stitcher(new Stage(container)),
+    library,
+    host,
+  )
   const shots$ = library.shots$
 
   const idle$: Observable<Element | null> = of(null)
@@ -63,12 +68,12 @@
     picking = true
     target$ = aimed$
     const hint = toast(
-      'Click or press Enter to snag. Arrows change the element, Esc cancels.',
+      'Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels.',
       { duration: Infinity },
     )
     picked$.subscribe({
-      next: (element) => {
-        void snagger.snag(element).match(
+      next: ({ element, framing }) => {
+        void snagger.snag(element, framing).match(
           () => toast.success('Copied to clipboard'),
           (error) => toast.error(explain(error)),
         )

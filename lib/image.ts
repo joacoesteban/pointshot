@@ -1,28 +1,11 @@
-import { Result, ResultAsync, err, ok } from 'neverthrow'
+import { ResultAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
-import { CaptureError, EmptyAreaError, toError } from './errors'
-
-export type Area = Readonly<Record<'left' | 'top' | 'width' | 'height', number>>
+import { CaptureError, toError } from './errors'
 
 const PNG = 'image/png'
 const WEBP = 'image/webp'
 // Bounding box of a thumbnail, in device pixels: twice the popup card's width keeps it sharp on high-density screens.
 const THUMBNAIL_SIZE = 480
-
-const visibleArea = (
-  { left, top, right, bottom }: DOMRect,
-  viewport: Readonly<Record<'width' | 'height', number>>,
-): Result<Area, EmptyAreaError> => {
-  const area = {
-    left: Math.max(left, 0),
-    top: Math.max(top, 0),
-    width: Math.min(right, viewport.width) - Math.max(left, 0),
-    height: Math.min(bottom, viewport.height) - Math.max(top, 0),
-  }
-  return match(area)
-    .with({ width: P.number.gt(0), height: P.number.gt(0) }, (area) => ok(area))
-    .otherwise(() => err(new EmptyAreaError()))
-}
 
 export class Img {
   static dataUrlToBlob(dataUrl: string): Blob {
@@ -82,40 +65,5 @@ export class Img {
         )
       })
       .andThen((thumbnail) => Img.blobToDataUrl(thumbnail))
-  }
-
-  // captureVisibleTab renders the whole window, scrollbars included, at device pixels, so the ratio to innerWidth also absorbs page zoom.
-  static crop(
-    capture: Blob,
-    rect: DOMRect,
-    viewport: Readonly<Record<'width' | 'height', number>>,
-  ): ResultAsync<{ png: Blob; area: Area }, CaptureError | EmptyAreaError> {
-    return visibleArea(rect, viewport)
-      .asyncAndThen((area) =>
-        Img.bitmap(capture).map((bitmap) => ({ area, bitmap })),
-      )
-      .andThen(({ area, bitmap }) => {
-        const scale = bitmap.width / window.innerWidth
-        const [x, y, width, height] = [
-          area.left,
-          area.top,
-          area.width,
-          area.height,
-        ].map((value) => Math.round(value * scale)) as [
-          number,
-          number,
-          number,
-          number,
-        ]
-        const canvas = new OffscreenCanvas(width, height)
-        canvas
-          .getContext('2d')
-          ?.drawImage(bitmap, x, y, width, height, 0, 0, width, height)
-        bitmap.close()
-        return ResultAsync.fromPromise(
-          canvas.convertToBlob({ type: PNG }),
-          toError(CaptureError),
-        ).map((png) => ({ png, area }))
-      })
   }
 }

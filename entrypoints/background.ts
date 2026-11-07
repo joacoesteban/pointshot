@@ -4,6 +4,7 @@ import { browser, type Browser } from 'wxt/browser'
 import { defineBackground } from 'wxt/utils/define-background'
 import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
+import { Throttle } from '~/background/throttle'
 import { CaptureError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import {
@@ -53,11 +54,16 @@ const sendToActiveTab = (send: Send) =>
       .otherwise(() => okAsync(undefined)),
   )
 
+// Chrome rejects captureVisibleTab calls beyond two a second.
+const captures = new Throttle(500)
+
 const captureTab = (sender: Browser.runtime.MessageSender) =>
   match(sender)
     .with({ tab: { windowId: P.select(P.number) } }, (windowId) =>
       ResultAsync.fromPromise(
-        browser.tabs.captureVisibleTab(windowId, { format: 'png' }),
+        captures.run(() =>
+          browser.tabs.captureVisibleTab(windowId, { format: 'png' }),
+        ),
         toError(CaptureError),
       ),
     )

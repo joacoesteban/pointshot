@@ -18,12 +18,18 @@ import {
   withLatestFrom,
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
+import type { Framing } from './region'
 
 type Point = Readonly<Record<'x' | 'y', number>>
 
 type Aim = {
   readonly element: Element | null
   readonly trail: readonly Element[]
+}
+
+export type Pick = {
+  readonly element: Element
+  readonly framing: Framing
 }
 
 type Step =
@@ -49,6 +55,12 @@ type Arrow = keyof typeof ARROWS
 const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
 
 const isArrow = (key: string): key is Arrow => key in ARROWS
+
+const framingOf = (shiftKey: boolean): Framing =>
+  match(shiftKey)
+    .with(true, () => 'padded' as const)
+    .with(false, () => 'element' as const)
+    .exhaustive()
 
 const rendered = (element: Element) => element.getClientRects().length > 0
 
@@ -193,8 +205,11 @@ export class ElementPicker {
       keys$.pipe(filter(({ key }) => key === 'Enter')),
     ).pipe(
       withLatestFrom(target$),
-      map(([, element]) => element),
-      filter((element): element is Element => element !== null),
+      map(([{ shiftKey }, element]) => ({
+        element,
+        framing: framingOf(shiftKey),
+      })),
+      filter((pick): pick is Pick => pick.element !== null),
     )
 
     const picked$ = merge(pressed$, chosen$).pipe(
