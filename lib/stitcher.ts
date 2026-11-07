@@ -24,18 +24,37 @@ type Styled = Element & ElementCSSInlineStyle
 const isStyled = (element: Element): element is Styled =>
   element instanceof HTMLElement || element instanceof SVGElement
 
-const conceal = (elements: readonly Element[]) => {
-  const saved = elements.filter(isStyled).map(({ style }) => ({
-    style,
-    value: style.getPropertyValue('visibility'),
-    priority: style.getPropertyPriority('visibility'),
-  }))
-  saved.forEach(({ style }) => {
-    style.setProperty('visibility', 'hidden', 'important')
+const HIDDEN = { visibility: 'hidden' }
+// Laid out as relative with no offsets, a sticky element stays where it sits before sticking, so every tile shows it in place.
+const UNSTUCK = {
+  position: 'relative',
+  top: 'auto',
+  right: 'auto',
+  bottom: 'auto',
+  left: 'auto',
+}
+
+const override = (
+  elements: readonly Element[],
+  properties: Readonly<Record<string, string>>,
+) => {
+  const styles = elements.filter(isStyled).map(({ style }) => style)
+  const saved = styles.flatMap((style) =>
+    Object.keys(properties).map((name) => ({
+      style,
+      name,
+      value: style.getPropertyValue(name),
+      priority: style.getPropertyPriority(name),
+    })),
+  )
+  styles.forEach((style) => {
+    Object.entries(properties).forEach(([name, value]) => {
+      style.setProperty(name, value, 'important')
+    })
   })
   return () => {
-    saved.forEach(({ style, value, priority }) => {
-      style.setProperty('visibility', value, priority)
+    saved.forEach(({ style, name, value, priority }) => {
+      style.setProperty(name, value, priority)
     })
   }
 }
@@ -99,9 +118,11 @@ export class Stitcher {
   ) {
     const origin = scrolled()
     const corner = { x: area.left, y: area.top }
-    const reveal = conceal(pinned.outside)
+    const reveal = override(pinned.outside, HIDDEN)
+    const restick = override(pinned.sticky, UNSTUCK)
     const restore = () => {
       reveal()
+      restick()
       scrollTo(origin)
     }
     context.imageSmoothingQuality = 'high'
@@ -110,8 +131,8 @@ export class Stitcher {
         (drawn, tile) =>
           drawn.andThen((captured) => {
             scrollTo(tile)
-            // Sticky parts of the element belong where a tile first captured them, not repeated on later tiles.
-            const show = conceal(captured)
+            // Fixed parts of the element belong where a tile first captured them, not repeated on later tiles.
+            const show = override(captured, HIDDEN)
             return ResultAsync.fromSafePromise(Stage.painted())
               .andThen(captureTab)
               .andTee(show)
@@ -142,7 +163,7 @@ export class Stitcher {
                 bitmap.close()
                 return [
                   ...captured,
-                  ...pinned.inside.filter(
+                  ...pinned.fixed.filter(
                     (element) =>
                       !captured.includes(element) &&
                       overlaps(

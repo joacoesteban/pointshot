@@ -14,7 +14,8 @@ export type Plan = {
   readonly clip: { readonly box: Area; readonly radii: DOMPointInit[] } | null
   readonly pinned: {
     readonly outside: readonly Element[]
-    readonly inside: readonly Element[]
+    readonly fixed: readonly Element[]
+    readonly sticky: readonly Element[]
   }
 }
 
@@ -80,8 +81,10 @@ export const axis = (
     )
     .otherwise(() => steps(start, length, span))
 
+const positionOf = (element: Element) => getComputedStyle(element).position
+
 const isPinned = (element: Element) =>
-  ['fixed', 'sticky'].includes(getComputedStyle(element).position)
+  ['fixed', 'sticky'].includes(positionOf(element))
 
 const lineage = (element: Element): Element[] =>
   match(element.parentElement)
@@ -182,7 +185,14 @@ export class Region {
                 .exhaustive(),
               pinned: {
                 outside: pinned.filter((other) => !element.contains(other)),
-                inside: pinned.filter((other) => element.contains(other)),
+                fixed: pinned.filter(
+                  (other) =>
+                    element.contains(other) && positionOf(other) === 'fixed',
+                ),
+                sticky: pinned.filter(
+                  (other) =>
+                    element.contains(other) && positionOf(other) === 'sticky',
+                ),
               },
             }),
           )
