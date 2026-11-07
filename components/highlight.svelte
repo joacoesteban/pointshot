@@ -54,7 +54,7 @@
     style:width={`${String($frame$.bounds.width)}px`}
     style:height={`${String($frame$.bounds.height)}px`}
     style:border-radius={$frame$.radius}>
-    <span class="tag made-tommy bg-blur bg-blur:soft bg-blur:round">
+    <span class="tag bg-blur bg-blur:soft bg-blur:round">
       <b>{$frame$.label}</b>
       <span class="opacity-60">
         {Math.round($frame$.bounds.width)} × {Math.round($frame$.bounds.height)}
