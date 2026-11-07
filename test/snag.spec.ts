@@ -245,7 +245,7 @@ test('stitches an element taller than the viewport and restores the scroll', asy
   await expect(page.getByText('Copied to clipboard')).toBeVisible({
     timeout: 10_000,
   })
-  // The fixed #bubble sits over the element, so any black pixel means it was not hidden; a clear one is a seam between tiles.
+  // The black #sticky child, 300 × 40, shows up 850 px down, below the first tile: one copy of it, no more, means it was captured once and hidden after. The fixed black #bubble sits over the element too, so extra black pixels mean it was not hidden. A clear pixel is a seam between tiles.
   expect(await clipboardImage(page)).toEqual({
     width: 300,
     height: 1500,
@@ -253,7 +253,7 @@ test('stitches an element taller than the viewport and restores the scroll', asy
       [255, 0, 0, 255],
       [0, 0, 255, 255],
     ],
-    black: 0,
+    black: 300 * 40,
     clear: 0,
   })
   expect(await page.evaluate(() => window.scrollY)).toBe(0)

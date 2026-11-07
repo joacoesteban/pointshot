@@ -2,7 +2,14 @@ import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { CaptureError, toError } from './errors'
 import { Img } from './image'
-import { intersect, scrolled, type Area, type Plan, type Point } from './region'
+import {
+  intersect,
+  scrolled,
+  shift,
+  type Area,
+  type Plan,
+  type Point,
+} from './region'
 import { ReplyCodec } from './reply'
 import { Stage } from './stage'
 import { captureVisibleTab } from '~/messages'
@@ -31,6 +38,11 @@ const conceal = (elements: readonly Element[]) => {
       style.setProperty('visibility', value, priority)
     })
   }
+}
+
+const overlaps = (a: Area, b: Area) => {
+  const { width, height } = intersect(a, b)
+  return width > 0 && height > 0
 }
 
 const scrollTo = ({ x, y }: Point) => {
@@ -94,16 +106,12 @@ export class Stitcher {
     }
     context.imageSmoothingQuality = 'high'
     return tiles
-      .reduce<ResultAsync<void, CaptureError>>(
-        (drawn, tile, index) =>
-          drawn.andThen(() => {
+      .reduce<ResultAsync<readonly Element[], CaptureError>>(
+        (drawn, tile) =>
+          drawn.andThen((captured) => {
             scrollTo(tile)
-            // Sticky parts of the element belong where the first tile shows them, not repeated on every tile.
-            const show = conceal(
-              match(index)
-                .with(0, () => [])
-                .otherwise(() => pinned.inside),
-            )
+            // Sticky parts of the element belong where a tile first captured them, not repeated on later tiles.
+            const show = conceal(captured)
             return ResultAsync.fromSafePromise(Stage.painted())
               .andThen(captureTab)
               .andTee(show)
@@ -132,9 +140,20 @@ export class Stitcher {
                   )
                   .otherwise(() => undefined)
                 bitmap.close()
+                return [
+                  ...captured,
+                  ...pinned.inside.filter(
+                    (element) =>
+                      !captured.includes(element) &&
+                      overlaps(
+                        shift(element.getBoundingClientRect(), at),
+                        part,
+                      ),
+                  ),
+                ]
               })
           }),
-        okAsync(undefined),
+        okAsync([]),
       )
       .andTee(restore)
       .orTee(restore)
