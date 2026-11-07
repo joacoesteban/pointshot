@@ -26,7 +26,9 @@ const isStyled = (element: Element): element is Styled =>
 
 const HIDDEN = { visibility: 'hidden' }
 // Laid out as relative with no offsets, a sticky element stays where it sits before sticking, so every tile shows it in place.
+// Sticky always makes a stacking context and relative does not, so isolation keeps negative z-index children painting above it.
 const UNSTUCK = {
+  isolation: 'isolate',
   position: 'relative',
   top: 'auto',
   right: 'auto',
