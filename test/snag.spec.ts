@@ -328,3 +328,98 @@ test('flags the toolbar on pages that refuse content scripts', async ({
   await expect(page.getByTestId('snag-popup')).toHaveClass(/visible/)
   await expect.poll(badge).toMatchObject({ text: '' })
 })
+
+test('captures an element cut off by a scrolling container whole', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+    document.querySelector('#scroller')?.scrollTo(0, 200)
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#list')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#list')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 180,
+    height: 600,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    clear: 0,
+  })
+  expect(
+    await page.evaluate(() => ({
+      window: window.scrollY,
+      scroller: document.querySelector('#scroller')?.scrollTop,
+      height: document.querySelector('#scroller')?.getBoundingClientRect()
+        .height,
+    })),
+  ).toEqual({ window: 1100, scroller: 200, height: 150 })
+})
+
+test('captures the whole content of a picked scrolling container', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#scroller')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#list')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#scroller')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({ width: 200, height: 600 })
+})
+
+test('captures a scrolling pane of an app shell that hides the page overflow', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    document.body.style.cssText = 'margin: 0; height: 100vh; overflow: hidden'
+    document.body.innerHTML = `
+      <div id="shell" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden">
+        <header style="height: 50px; flex: none; background: #000000"></header>
+        <main id="pane" style="flex: 1; min-height: 0; overflow: auto">
+          <div style="height: 2000px; background: linear-gradient(#ff0000 0 50%, #0000ff 50% 100%)"></div>
+        </main>
+      </div>`
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pane')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('main#pane')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 15_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({
+    height: 2000,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    clear: 0,
+  })
+  expect(
+    await page.evaluate(() => ({
+      body: getComputedStyle(document.body).overflow,
+      pane: document.querySelector('#pane')?.getBoundingClientRect().height,
+    })),
+  ).toEqual({ body: 'hidden', pane: 650 })
+})
