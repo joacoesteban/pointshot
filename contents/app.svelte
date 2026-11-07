@@ -19,19 +19,25 @@
   import { themeController } from '~/lib/theme-controller'
   import { pickElementStream, togglePopupStream } from '~/messages'
 
-  export let host: HTMLElement
-  export let container: HTMLElement
+  type Props = {
+    host: HTMLElement
+    container: HTMLElement
+  }
+
+  const { host, container }: Props = $props()
 
   const library = new ShotLibrary()
+  // svelte-ignore state_referenced_locally
   const picker = new ElementPicker(host)
+  // svelte-ignore state_referenced_locally
   const snagger = new Snagger(new Stage(container), library)
   const shots$ = library.shots$
 
   const idle$: Observable<Element | null> = of(null)
 
-  let visible = false
-  let picking = false
-  let target$ = idle$
+  let visible = $state(false)
+  let picking = $state(false)
+  let target$ = $state(idle$)
 
   const explain = (error: Error) =>
     match(error)
@@ -84,19 +90,19 @@
       .otherwise(() => undefined)
   }
 
-  function copy({ detail: { dataUrl } }: CustomEvent<Shot>) {
+  function copy({ dataUrl }: Shot) {
     void Clipboard.writePng(Promise.resolve(Img.dataUrlToBlob(dataUrl))).match(
       () => toast.success('Copied to clipboard'),
       (error) => toast.error(explain(error)),
     )
   }
 
-  function download({ detail }: CustomEvent<Shot>) {
-    Download.shot(detail, host)
+  function download(shot: Shot) {
+    Download.shot(shot, host)
   }
 
-  function remove({ detail }: CustomEvent<Shot>) {
-    void library.remove(detail).mapErr((error) => toast.error(explain(error)))
+  function remove(shot: Shot) {
+    void library.remove(shot).mapErr((error) => toast.error(explain(error)))
   }
 
   togglePopupStream.subscribe(toggle)
@@ -108,11 +114,13 @@
     {visible}
     ghost={picking}
     shots={$shots$}
-    on:close={() => (visible = false)}
-    on:pick={pick}
-    on:copy={copy}
-    on:download={download}
-    on:remove={remove} />
+    onclose={() => {
+      visible = false
+    }}
+    onpick={pick}
+    oncopy={copy}
+    ondownload={download}
+    onremove={remove} />
   <Highlight {target$} />
   <Filters />
   <Toaster />

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
   import { flip } from 'svelte/animate'
   import { draggable } from '~/lib/draggable'
   import type { Shot } from '~/lib/shot'
@@ -8,17 +7,27 @@
   import ShotCard from './shot-card.svelte'
   import SymbolButton from './symbol-button.svelte'
 
-  export let visible = false
-  export let ghost = false
-  export let shots: Shot[] = []
+  type Props = {
+    visible: boolean
+    ghost: boolean
+    shots: Shot[]
+    onclose: () => void
+    onpick: () => void
+    oncopy: (shot: Shot) => void
+    ondownload: (shot: Shot) => void
+    onremove: (shot: Shot) => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    close: undefined
-    pick: undefined
-    copy: Shot
-    download: Shot
-    remove: Shot
-  }>()
+  const {
+    visible,
+    ghost,
+    shots,
+    onclose,
+    onpick,
+    oncopy,
+    ondownload,
+    onremove,
+  }: Props = $props()
 </script>
 
 <div
@@ -38,7 +47,7 @@
         size="40px"
         padding="30%"
         disabled={ghost}
-        on:click={() => dispatch('close')} />
+        onclick={onclose} />
     </header>
 
     <main class="px-1">
@@ -49,7 +58,12 @@
               animate:flip={{ duration: 300 }}
               in:transitionIn
               out:transitionOut>
-              <ShotCard {shot} disabled={ghost} on:copy on:download on:remove />
+              <ShotCard
+                {shot}
+                disabled={ghost}
+                {oncopy}
+                {ondownload}
+                {onremove} />
             </div>
           {/each}
         </div>
@@ -67,7 +81,7 @@
       <Button
         testId="snag-pick"
         disabled={ghost}
-        on:click={() => dispatch('pick')}>Snag</Button>
+        onclick={onpick}>Snag</Button>
       <p class="text-xs opacity-50 mt-2">
         Esc cancels · ↑ ↓ walk the tree
       </p>

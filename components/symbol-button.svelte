@@ -1,30 +1,39 @@
 <script lang="ts">
-  import { Id } from '~/lib/id'
   import type { SymbolName } from '~/lib/symbols'
   import Button from './button.svelte'
   import Symbol from './symbol.svelte'
 
-  export let name: SymbolName
-  export let size = '50px'
-  export let padding = '15%'
-  export let opaque = false
-  export let disabled = false
-  export let glassy = false
-  export let colorSeed = Id.random()
-  export let title = ''
-  export let testId: string | undefined = undefined
+  type Props = {
+    name: SymbolName
+    title: string
+    onclick: (event: MouseEvent) => void
+    size?: string
+    padding?: string
+    opaque?: boolean
+    disabled?: boolean
+    glassy?: boolean
+  }
+
+  const {
+    name,
+    title,
+    onclick,
+    size = '50px',
+    padding = '15%',
+    opaque = false,
+    disabled = false,
+    glassy = false,
+  }: Props = $props()
 </script>
 
 <Button
   {opaque}
   {disabled}
   {glassy}
-  {colorSeed}
   {title}
-  {testId}
-  round={true}
+  {onclick}
+  round
   roundSize={size}
-  roundPadding={padding}
-  on:click>
+  roundPadding={padding}>
   <Symbol {name} />
 </Button>

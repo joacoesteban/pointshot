@@ -4,14 +4,17 @@
     fromEvent,
     map,
     merge,
-    of,
     startWith,
     type Observable,
   } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { transitionIn, transitionOut } from '~/lib/transitions'
 
-  export let target$: Observable<Element | null> = of(null)
+  type Props = {
+    target$: Observable<Element | null>
+  }
+
+  const { target$ }: Props = $props()
 
   const reflow$ = merge(
     fromEvent(window, 'scroll', { capture: true, passive: true }),
@@ -30,7 +33,8 @@
         .join(''),
     ].join('')
 
-  $: frame$ = combineLatest([target$, reflow$]).pipe(
+  const frame$ = $derived(
+    combineLatest([target$, reflow$]).pipe(
     map(([target]) =>
       match(target)
         .with(P.instanceOf(Element), (target) => ({
@@ -39,6 +43,7 @@
           label: label(target),
         }))
         .otherwise(() => null),
+    ),
     ),
   )
 </script>

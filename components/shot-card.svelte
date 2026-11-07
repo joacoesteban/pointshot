@@ -1,26 +1,26 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
   import { siteOf, type Shot } from '~/lib/shot'
   import SymbolButton from './symbol-button.svelte'
 
-  export let shot: Shot
-  export let disabled = false
+  type Props = {
+    shot: Shot
+    disabled: boolean
+    oncopy: (shot: Shot) => void
+    ondownload: (shot: Shot) => void
+    onremove: (shot: Shot) => void
+  }
 
-  const dispatch = createEventDispatcher<{
-    copy: Shot
-    download: Shot
-    remove: Shot
-  }>()
+  const { shot, disabled, oncopy, ondownload, onremove }: Props = $props()
 
-  $: ({ url, width, height, createdAt, dataUrl, title } = shot)
-  $: host = siteOf(url)
+  const { url, width, height, createdAt, dataUrl, title } = $derived(shot)
+  const host = $derived(siteOf(url))
 </script>
 
 <article class="card bg-blur bg-blur:soft" data-testid="snag-shot" {title}>
   <div class="thumbnail">
-    <canvas use:paint={dataUrl} />
+    <canvas use:paint={dataUrl}></canvas>
     <div class="actions">
       <SymbolButton
         name="docOnDoc"
@@ -30,7 +30,9 @@
         glassy
         opaque
         {disabled}
-        on:click={() => dispatch('copy', shot)} />
+        onclick={() => {
+          oncopy(shot)
+        }} />
       <SymbolButton
         name="squareAndArrowDown"
         title="Download"
@@ -39,7 +41,9 @@
         glassy
         opaque
         {disabled}
-        on:click={() => dispatch('download', shot)} />
+        onclick={() => {
+          ondownload(shot)
+        }} />
       <SymbolButton
         name="trashFill"
         title="Delete"
@@ -48,7 +52,9 @@
         glassy
         opaque
         {disabled}
-        on:click={() => dispatch('remove', shot)} />
+        onclick={() => {
+          onremove(shot)
+        }} />
     </div>
   </div>
   <footer class="flex flex-col px-3 py-2 text-xs leading-tight">

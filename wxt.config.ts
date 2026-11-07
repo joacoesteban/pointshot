@@ -1,5 +1,4 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { defaultClientConditions } from 'vite'
 import { defineConfig } from 'wxt'
 
 export default defineConfig({
@@ -41,11 +40,6 @@ export default defineConfig({
   vite: () => ({
     // Svelte injects component styles at runtime next to the component, which lands them inside the popup's shadow root.
     plugins: [svelte({ emitCss: false })],
-    resolve: {
-      // vite-plugin-svelte 3 targets Vite 5 and sets `conditions: ['svelte']`, which on Vite 6 replaces the defaults.
-      // Without `browser`, `svelte` resolves to its SSR runtime, where onMount is a no-op.
-      conditions: [...defaultClientConditions],
-    },
     build: {
       // Content scripts resolve asset URLs against the host page, so fonts ship as data URLs.
       assetsInlineLimit: (file: string) => /\.woff2?$/.test(file) || undefined,

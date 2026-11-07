@@ -1,10 +1,14 @@
 <script lang="ts">
   import { symbols, type SymbolName } from '~/lib/symbols'
 
-  export let size = '100%'
-  export let name: SymbolName
+  type Props = {
+    name: SymbolName
+    size?: string
+  }
 
-  $: ({ path, geometry } = symbols[name])
+  const { name, size = '100%' }: Props = $props()
+
+  const { path, geometry } = $derived(symbols[name])
 
   const scaled = (ratio: number) => `calc(${size} * ${String(ratio)})`
 </script>
