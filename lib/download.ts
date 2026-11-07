@@ -1,7 +1,7 @@
-import type { Shot } from './shot'
+import { siteOf, type Shot } from './shot'
 
 const fileName = ({ url, createdAt }: Shot) =>
-  `snag-${new URL(url).hostname}-${new Date(createdAt)
+  `snag-${siteOf(url)}-${new Date(createdAt)
     .toISOString()
     .replace(/[:.]/g, '-')}.png`
 

@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
-  import type { Shot } from '~/lib/shot'
+  import { siteOf, type Shot } from '~/lib/shot'
   import SymbolButton from './symbol-button.svelte'
 
   export let shot: Shot
@@ -15,7 +15,7 @@
   }>()
 
   $: ({ url, width, height, createdAt, dataUrl, title } = shot)
-  $: host = new URL(url).hostname
+  $: host = siteOf(url)
 </script>
 
 <article class="card bg-blur bg-blur:soft" data-testid="snag-shot" {title}>
