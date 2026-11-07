@@ -6,12 +6,14 @@ download, or delete it later.
 
 ## Use
 
-| Action                    | How                                                 |
-| ------------------------- | --------------------------------------------------- |
-| Open the popup            | Click the toolbar icon, or press `Alt+S`            |
-| Pick an element           | Press **Snag** in the popup, or press `Alt+Shift+S` |
-| Select the parent / child | `↑` / `↓` while picking                             |
-| Cancel                    | `Esc`                                               |
+| Action                             | How                                                 |
+| ---------------------------------- | --------------------------------------------------- |
+| Open the popup                     | Click the toolbar icon, or press `Alt+S`            |
+| Pick an element                    | Press **Snag** in the popup, or press `Alt+Shift+S` |
+| Select the parent / child          | `↑` / `↓` while picking                             |
+| Select the previous / next sibling | `←` / `→` while picking                             |
+| Snag the selected element          | Click, or press `Enter`                             |
+| Cancel                             | `Esc`                                               |
 
 The popup keeps the 100 most recent snags.
 

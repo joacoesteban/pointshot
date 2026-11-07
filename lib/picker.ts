@@ -28,8 +28,7 @@ type Aim = {
 
 type Step =
   | { readonly kind: 'point'; readonly element: Element | null }
-  | { readonly kind: 'up' }
-  | { readonly kind: 'down' }
+  | { readonly kind: 'up' | 'down' | 'previous' | 'next' }
 
 const capture = { capture: true } as const
 
@@ -37,6 +36,32 @@ const swallow = (event: Event) => {
   event.preventDefault()
   event.stopImmediatePropagation()
 }
+
+const ARROWS = {
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+  ArrowLeft: 'previous',
+  ArrowRight: 'next',
+} as const
+
+type Arrow = keyof typeof ARROWS
+
+const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
+
+const isArrow = (key: string): key is Arrow => key in ARROWS
+
+const rendered = (element: Element) => element.getClientRects().length > 0
+
+const siblingOf = (element: Element, offset: -1 | 1) => {
+  const siblings = match(element.parentElement)
+    .with(P.instanceOf(Element), ({ children }) =>
+      [...children].filter(rendered),
+    )
+    .otherwise(() => [])
+  return siblings[siblings.indexOf(element) + offset]
+}
+
+const firstChildOf = ({ children }: Element) => [...children].find(rendered)
 
 const climbable = (element: Element) =>
   match(element.parentElement)
@@ -46,6 +71,11 @@ const climbable = (element: Element) =>
         .otherwise(() => parent),
     )
     .otherwise(() => null)
+
+const land = (aim: Aim, element: Element | undefined): Aim =>
+  match(element)
+    .with(P.instanceOf(Element), (element) => ({ element, trail: [] }))
+    .otherwise(() => aim)
 
 const step = (aim: Aim, next: Step): Aim =>
   match([aim, next] as const)
@@ -68,6 +98,15 @@ const step = (aim: Aim, next: Step): Aim =>
           trail: [child, ...rest],
         },
       ]) => ({ element: child, trail: rest }),
+    )
+    .with([{ element: P.instanceOf(Element) }, { kind: 'down' }], ([aim]) =>
+      land(aim, firstChildOf(aim.element)),
+    )
+    .with([{ element: P.instanceOf(Element) }, { kind: 'previous' }], ([aim]) =>
+      land(aim, siblingOf(aim.element, -1)),
+    )
+    .with([{ element: P.instanceOf(Element) }, { kind: 'next' }], ([aim]) =>
+      land(aim, siblingOf(aim.element, 1)),
     )
     .otherwise(([aim]) => aim)
 
@@ -101,9 +140,8 @@ export class ElementPicker {
     const ended$ = new Subject<void>()
 
     const keys$ = fromEvent<KeyboardEvent>(window, 'keydown', capture).pipe(
-      filter(({ key }) => ['ArrowUp', 'ArrowDown', 'Escape'].includes(key)),
+      filter(({ key }) => KEYS.includes(key)),
       tap<KeyboardEvent>(swallow),
-      map(({ key }) => key),
       share(),
     )
 
@@ -123,11 +161,9 @@ export class ElementPicker {
         ),
       ),
       keys$.pipe(
-        map((key) =>
-          match(key)
-            .with('ArrowUp', (): Step => ({ kind: 'up' }))
-            .otherwise((): Step => ({ kind: 'down' })),
-        ),
+        map(({ key }) => key),
+        filter(isArrow),
+        map((key): Step => ({ kind: ARROWS[key] })),
       ),
     ).pipe(
       scan(step, { element: null, trail: [] }),
@@ -148,18 +184,22 @@ export class ElementPicker {
       ignoreElements(),
     )
 
-    // Subscribers run inside the click dispatch, which keeps the user activation the clipboard asks for.
-    const clicked$ = fromEvent<MouseEvent>(window, 'click', capture).pipe(
-      filter(({ target }) => !this.isOwn(target)),
-      tap<MouseEvent>(swallow),
+    // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
+    const chosen$ = merge(
+      fromEvent<MouseEvent>(window, 'click', capture).pipe(
+        filter(({ target }) => !this.isOwn(target)),
+        tap<MouseEvent>(swallow),
+      ),
+      keys$.pipe(filter(({ key }) => key === 'Enter')),
+    ).pipe(
       withLatestFrom(target$),
       map(([, element]) => element),
       filter((element): element is Element => element !== null),
     )
 
-    const picked$ = merge(pressed$, clicked$).pipe(
+    const picked$ = merge(pressed$, chosen$).pipe(
       take(1),
-      takeUntil(keys$.pipe(filter((key) => key === 'Escape'))),
+      takeUntil(keys$.pipe(filter(({ key }) => key === 'Escape'))),
       finalize(() => {
         ended$.next()
         ended$.complete()

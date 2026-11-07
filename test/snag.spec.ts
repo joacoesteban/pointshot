@@ -86,6 +86,29 @@ test('picks an element, copies it to the clipboard and stores it', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(1)
 })
 
+test('walks siblings and children and snags with Enter', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  const highlight = page.getByTestId('snag-highlight')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('div#parent')
+  await page.keyboard.press('ArrowRight')
+  await expect(highlight).toContainText('svg#logo')
+  await page.keyboard.press('ArrowLeft')
+  await expect(highlight).toContainText('div#parent')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#target')
+
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({ width: 400, height: 300 })
+})
+
 test('swallows the picking click so the page does not react', async ({
   page,
   togglePopup,
@@ -107,10 +130,10 @@ test('escape cancels picking without capturing', async ({
   await page.getByTestId('snag-pick').click()
   await hover(page, '#target')
   await expect(page.getByTestId('snag-highlight')).toBeVisible()
-  await expect(page.getByText('Press ESC to cancel')).toBeVisible()
+  await expect(page.getByText('Click or press Enter to snag')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('snag-highlight')).toBeHidden()
-  await expect(page.getByText('Press ESC to cancel')).toBeHidden()
+  await expect(page.getByText('Click or press Enter to snag')).toBeHidden()
   await page.mouse.down()
   await page.mouse.up()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)

@@ -83,7 +83,7 @@
         disabled={ghost}
         onclick={onpick}>Snag</Button>
       <p class="text-xs opacity-50 mt-2">
-        Esc cancels · ↑ ↓ walk the tree
+        Esc cancels · ↑ ↓ ← → walk the page
       </p>
     </footer>
   </div>

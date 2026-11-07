@@ -63,7 +63,7 @@
     picking = true
     target$ = aimed$
     const hint = toast(
-      'Click to snag, ↑ ↓ to change element. Press ESC to cancel.',
+      'Click or press Enter to snag. Arrows change the element, Esc cancels.',
       { duration: Infinity },
     )
     picked$.subscribe({
