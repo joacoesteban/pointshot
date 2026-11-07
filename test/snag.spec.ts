@@ -299,3 +299,32 @@ test('keeps a margin of page around the element with Shift', async ({
     ],
   })
 })
+
+test('flags the toolbar on pages that refuse content scripts', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await page.goto('chrome://version')
+  await togglePopup()
+  const badge = () =>
+    background.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      })
+      const tabId = tab?.id ?? -1
+      return {
+        text: await chrome.action.getBadgeText({ tabId }),
+        title: await chrome.action.getTitle({ tabId }),
+      }
+    })
+  await expect
+    .poll(badge)
+    .toEqual({ text: '!', title: 'Snag cannot run on this page' })
+
+  await page.goto(FIXTURE_URL)
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).toHaveClass(/visible/)
+  await expect.poll(badge).toMatchObject({ text: '' })
+})
