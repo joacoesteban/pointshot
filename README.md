@@ -13,7 +13,7 @@ download, or delete it later.
 | Select the parent / child | `↑` / `↓` while picking                             |
 | Cancel                    | `Esc`                                               |
 
-The popup keeps the 50 most recent snags, fewer when they add up to more than 48 MiB.
+The popup keeps the 100 most recent snags.
 
 ## Limits
 

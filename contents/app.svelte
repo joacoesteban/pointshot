@@ -90,15 +90,30 @@
       .otherwise(() => undefined)
   }
 
-  function copy({ dataUrl }: Shot) {
-    void Clipboard.writePng(Promise.resolve(Img.dataUrlToBlob(dataUrl))).match(
+  function copy(shot: Shot) {
+    void Clipboard.writePng(
+      library.imageUrl(shot).map((url) => Img.dataUrlToBlob(url)),
+    ).match(
       () => toast.success('Copied to clipboard'),
-      (error) => toast.error(explain(error)),
+      (error) =>
+        toast.error(
+          match(error)
+            .with(
+              P.instanceOf(ClipboardError),
+              () => 'The page blocked the clipboard',
+            )
+            .otherwise(explain),
+        ),
     )
   }
 
   function download(shot: Shot) {
-    Download.shot(shot, host)
+    void library.imageUrl(shot).match(
+      (imageUrl) => {
+        Download.shot(shot, imageUrl, host)
+      },
+      (error) => toast.error(explain(error)),
+    )
   }
 
   function remove(shot: Shot) {

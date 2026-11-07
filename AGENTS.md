@@ -55,8 +55,12 @@ release.
   that picked the element is the user gesture the clipboard needs.
 - Shot IDs are minted in the background, because `crypto.randomUUID` is
   missing on insecure pages.
-- The store keeps 50 shots and at most 48 MiB of data URLs, since every
-  listing crosses a message channel capped at 64 MiB.
+- The background stores each shot's full image as a `Blob` next to a small
+  WebP thumbnail. Listings carry only thumbnails; the full image crosses the
+  message channel once to be saved and again only to be copied or downloaded
+  (`ShotLibrary.imageUrl`). Saves and removals reply with the change, not the
+  whole list.
+- Shots saved by 1.0.0 were migrated with their full image as the thumbnail.
 
 ## Conventions
 

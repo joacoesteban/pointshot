@@ -36,22 +36,19 @@ export class Snagger {
   // Runs synchronously up to the clipboard write so the click that picked the element still counts as the user gesture.
   snag(element: Element) {
     const captured = this.capture(element)
-    const png = new Promise<Blob>((resolve, reject) => {
-      void captured.match(({ png }) => {
-        resolve(png)
-      }, reject)
-    })
-    const copied = Clipboard.writePng(png)
+    const copied = Clipboard.writePng(captured.map(({ png }) => png))
     const saved = captured.andThen(({ png, area }) =>
-      Img.blobToDataUrl(png).andThen((dataUrl) =>
-        this.library.save({
-          createdAt: Date.now(),
-          url: location.href,
-          title: document.title,
-          width: Math.round(area.width),
-          height: Math.round(area.height),
-          dataUrl,
-        }),
+      ResultAsync.combine([Img.blobToDataUrl(png), Img.thumbnail(png)]).andThen(
+        ([image, thumbnail]) =>
+          this.library.save({
+            createdAt: Date.now(),
+            url: location.href,
+            title: document.title,
+            width: Math.round(area.width),
+            height: Math.round(area.height),
+            thumbnail,
+            image,
+          }),
       ),
     )
     return ResultAsync.combine([saved, copied])

@@ -12,6 +12,7 @@ import {
   pickElement,
   removeShotStream,
   saveShotStream,
+  shotImageUrlStream,
   togglePopup,
 } from '~/messages'
 
@@ -66,6 +67,9 @@ export default defineBackground(() => {
   })
   removeShotStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.remove(id)).then(respond)
+  })
+  shotImageUrlStream.subscribe(([id, , respond]) => {
+    void ReplyCodec.encode(store.imageUrl(id)).then(respond)
   })
 
   toolbarAction().onClicked.addListener(() => {

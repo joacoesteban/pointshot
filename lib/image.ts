@@ -5,6 +5,9 @@ import { CaptureError, EmptyAreaError, toError } from './errors'
 export type Area = Readonly<Record<'left' | 'top' | 'width' | 'height', number>>
 
 const PNG = 'image/png'
+const WEBP = 'image/webp'
+// Bounding box of a thumbnail, in device pixels: twice the popup card's width keeps it sharp on high-density screens.
+const THUMBNAIL_SIZE = 480
 
 const visibleArea = (
   { left, top, right, bottom }: DOMRect,
@@ -56,6 +59,29 @@ export class Img {
       createImageBitmap(blob),
       toError(CaptureError),
     )
+  }
+
+  static thumbnail(png: Blob): ResultAsync<string, CaptureError> {
+    return Img.bitmap(png)
+      .andThen((bitmap) => {
+        const scale = Math.min(
+          1,
+          THUMBNAIL_SIZE / Math.max(bitmap.width, bitmap.height),
+        )
+        const canvas = new OffscreenCanvas(
+          Math.max(1, Math.round(bitmap.width * scale)),
+          Math.max(1, Math.round(bitmap.height * scale)),
+        )
+        canvas
+          .getContext('2d')
+          ?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+        bitmap.close()
+        return ResultAsync.fromPromise(
+          canvas.convertToBlob({ type: WEBP, quality: 0.85 }),
+          toError(CaptureError),
+        )
+      })
+      .andThen((thumbnail) => Img.blobToDataUrl(thumbnail))
   }
 
   // captureVisibleTab renders the whole window, scrollbars included, at device pixels, so the ratio to innerWidth also absorbs page zoom.

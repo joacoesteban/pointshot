@@ -14,13 +14,13 @@
 
   const { shot, disabled, oncopy, ondownload, onremove }: Props = $props()
 
-  const { url, width, height, createdAt, dataUrl, title } = $derived(shot)
+  const { url, width, height, createdAt, thumbnail, title } = $derived(shot)
   const host = $derived(siteOf(url))
 </script>
 
 <article class="card bg-blur bg-blur:soft" data-testid="snag-shot" {title}>
   <div class="thumbnail">
-    <canvas use:paint={dataUrl}></canvas>
+    <canvas use:paint={thumbnail}></canvas>
     <div class="actions">
       <SymbolButton
         name="docOnDoc"

@@ -10,7 +10,13 @@ const write = ResultAsync.fromThrowable(
 
 export class Clipboard {
   // Must be called synchronously inside a user gesture; the image itself may resolve later.
-  static writePng(png: Promise<Blob>): ResultAsync<void, ClipboardError> {
-    return write(png)
+  static writePng(
+    png: ResultAsync<Blob, Error>,
+  ): ResultAsync<void, ClipboardError> {
+    return write(
+      new Promise<Blob>((resolve, reject) => {
+        void png.match(resolve, reject)
+      }),
+    )
   }
 }

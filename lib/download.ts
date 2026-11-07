@@ -6,10 +6,9 @@ const fileName = ({ url, createdAt }: Shot) =>
     .replace(/[:.]/g, '-')}.png`
 
 export class Download {
-  static shot(shot: Shot, root: Node) {
-    const { dataUrl } = shot
+  static shot(shot: Shot, imageUrl: string, root: Node) {
     const anchor = document.createElement('a')
-    anchor.href = dataUrl
+    anchor.href = imageUrl
     anchor.download = fileName(shot)
     root.appendChild(anchor)
     anchor.click()

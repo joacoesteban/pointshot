@@ -6,7 +6,7 @@ type Pixel = readonly [number, number, number]
 const clipboardImage = (page: Page) =>
   page.evaluate(async () => {
     const [item] = await navigator.clipboard.read()
-    if (!item) return null
+    if (!item?.types.includes('image/png')) return null
     const bitmap = await createImageBitmap(await item.getType('image/png'))
     const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
     const context = canvas.getContext('2d')
@@ -118,6 +118,34 @@ test('deletes a stored shot', async ({ page, togglePopup }) => {
   await shot.getByRole('button', { name: 'Delete' }).click()
   await expect(shot).toHaveCount(0)
   await expect(page.getByTestId('snag-popup')).toContainText('No snags yet')
+})
+
+test('copies and downloads a stored shot at full size', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#parent')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  await page.evaluate(() => navigator.clipboard.writeText(''))
+
+  const shot = page.getByTestId('snag-shot')
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Copy' }).click()
+  await expect
+    .poll(() => clipboardImage(page))
+    .toMatchObject({ width: 400, height: 300 })
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    shot.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.png$/)
 })
 
 test('saves the shot on http pages, where the clipboard is unavailable', async ({
