@@ -129,6 +129,49 @@ const visibleRect = (element: Element) =>
       ),
     )
 
+const NOTHING_PINNED: Plan['pinned'] = { outside: [], fixed: [], sticky: [] }
+
+const client = () => {
+  const { clientWidth, clientHeight } = document.documentElement
+  return { width: clientWidth, height: clientHeight }
+}
+
+const screenAt = (origin: Point): Area =>
+  shift({ left: 0, top: 0, ...client() }, origin)
+
+const wholePage = (): Area => {
+  const { scrollWidth, scrollHeight } = document.documentElement
+  return { left: 0, top: 0, width: scrollWidth, height: scrollHeight }
+}
+
+const tilesOver = (area: Area, origin: Point) => {
+  const { width, height } = client()
+  return axis(area.top, area.height, origin.y, height).flatMap((y) =>
+    axis(area.left, area.width, origin.x, width).map((x) => ({ x, y })),
+  )
+}
+
+const pinnedOf = (host: Element, except: readonly Element[]) =>
+  [...document.querySelectorAll('*')].filter(
+    (other) =>
+      !except.includes(other) && !host.contains(other) && isPinned(other),
+  )
+
+const checked = (plan: Plan) =>
+  match(plan)
+    .with({ area: { width: P.number.gt(0), height: P.number.gt(0) } }, (plan) =>
+      okAsync<Plan, EmptyAreaError>(plan),
+    )
+    .otherwise(() => errAsync(new EmptyAreaError()))
+
+// The rectangle two corners span, whichever way the drag went.
+export const span = (a: Point, b: Point): Area => ({
+  left: Math.min(a.x, b.x),
+  top: Math.min(a.y, b.y),
+  width: Math.abs(a.x - b.x),
+  height: Math.abs(a.y - b.y),
+})
+
 export class Region {
   static plan(
     element: Element,
@@ -138,75 +181,81 @@ export class Region {
     return ResultAsync.fromSafePromise(visibleRect(element)).andThen(
       (visible) => {
         const origin = scrolled()
-        const { clientWidth, clientHeight, scrollWidth, scrollHeight } =
-          document.documentElement
-        const screen = shift(
-          { left: 0, top: 0, width: clientWidth, height: clientHeight },
-          origin,
-        )
-        const page = {
-          left: 0,
-          top: 0,
-          width: scrollWidth,
-          height: scrollHeight,
-        }
         const ancestors = [element, ...Dom.ancestors(element)]
         const bounds = match(ancestors.find(isPinned))
-          .with(P.nonNullable, () => screen)
-          .otherwise(() => page)
+          .with(P.nonNullable, () => screenAt(origin))
+          .otherwise(wholePage)
         const framed = match(framing)
           .with('element', () => shift(visible, origin))
           .with('padded', () => grow(shift(visible, origin), MARGIN))
           .exhaustive()
         const area = intersect(framed, bounds)
         const box = shift(Dom.rect(element), origin)
-        const pinned = [...document.querySelectorAll('*')].filter(
-          (other) =>
-            !ancestors.includes(other) &&
-            !host.contains(other) &&
-            isPinned(other),
-        )
-        const tiles = axis(
-          area.top,
-          area.height,
-          origin.y,
-          clientHeight,
-        ).flatMap((y) =>
-          axis(area.left, area.width, origin.x, clientWidth).map((x) => ({
-            x,
-            y,
-          })),
-        )
-        return match(area)
-          .with({ width: P.number.gt(0), height: P.number.gt(0) }, (area) =>
-            okAsync<Plan, EmptyAreaError>({
-              area,
-              tiles,
-              clip: match(framing)
-                .with('element', () => {
-                  const style = Dom.style(element)
-                  return {
-                    box,
-                    radii: CORNERS.map((corner) => radius(style[corner], box)),
-                  }
-                })
-                .with('padded', () => null)
-                .exhaustive(),
-              pinned: {
-                outside: pinned.filter((other) => !element.contains(other)),
-                fixed: pinned.filter(
-                  (other) =>
-                    element.contains(other) && positionOf(other) === 'fixed',
-                ),
-                sticky: pinned.filter(
-                  (other) =>
-                    element.contains(other) && positionOf(other) === 'sticky',
-                ),
-              },
-            }),
-          )
-          .otherwise(() => errAsync(new EmptyAreaError()))
+        const pinned = pinnedOf(host, ancestors)
+        return checked({
+          area,
+          tiles: tilesOver(area, origin),
+          clip: match(framing)
+            .with('element', () => {
+              const style = Dom.style(element)
+              return {
+                box,
+                radii: CORNERS.map((corner) => radius(style[corner], box)),
+              }
+            })
+            .with('padded', () => null)
+            .exhaustive(),
+          pinned: {
+            outside: pinned.filter((other) => !element.contains(other)),
+            fixed: pinned.filter(
+              (other) =>
+                element.contains(other) && positionOf(other) === 'fixed',
+            ),
+            sticky: pinned.filter(
+              (other) =>
+                element.contains(other) && positionOf(other) === 'sticky',
+            ),
+          },
+        })
       },
     )
+  }
+
+  // What the window shows, fixed elements included.
+  static visible(): ResultAsync<Plan, EmptyAreaError> {
+    const origin = scrolled()
+    return checked({
+      area: screenAt(origin),
+      tiles: [origin],
+      clip: null,
+      pinned: NOTHING_PINNED,
+    })
+  }
+
+  // A rectangle of the window, in viewport coordinates.
+  static selection(rect: Area): ResultAsync<Plan, EmptyAreaError> {
+    const origin = scrolled()
+    return checked({
+      area: intersect(shift(rect, origin), screenAt(origin)),
+      tiles: [origin],
+      clip: null,
+      pinned: NOTHING_PINNED,
+    })
+  }
+
+  // The whole document. Fixed elements show once, where the first tile finds them, and sticky ones stay in place.
+  static page(host: Element): ResultAsync<Plan, EmptyAreaError> {
+    const area = wholePage()
+    const pinned = pinnedOf(host, [])
+    return checked({
+      area,
+      tiles: tilesOver(area, scrolled()),
+      clip: null,
+      pinned: {
+        outside: [],
+        fixed: pinned.filter((other) => positionOf(other) === 'fixed'),
+        sticky: pinned.filter((other) => positionOf(other) === 'sticky'),
+      },
+    })
   }
 }

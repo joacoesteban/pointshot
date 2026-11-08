@@ -6,6 +6,7 @@
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
+  import Selection from '~/components/selection.svelte'
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
   import { DisposeBag } from '~/lib/dispose-bag'
@@ -20,12 +21,18 @@
   import { ElementPicker } from '~/lib/picker'
   import type { Shot } from '~/lib/shot'
   import { ShotLibrary } from '~/lib/shot-library'
-  import { Snagger } from '~/lib/snagger'
+  import { Snagger, type Target } from '~/lib/snagger'
   import { Stage } from '~/lib/stage'
   import { Stitcher } from '~/lib/stitcher'
   import { themeController } from '~/lib/theme-controller'
   import { DEFAULT_SETTINGS, SettingsStore } from '~/lib/settings'
-  import { pickElementStream, togglePopupStream } from '~/messages'
+  import type { Area } from '~/lib/region'
+  import {
+    captureModeStream,
+    pickElementStream,
+    togglePopupStream,
+    type Mode,
+  } from '~/messages'
 
   type Props = {
     host: HTMLElement
@@ -44,7 +51,9 @@
   const idle$: Observable<Element | null> = of(null)
 
   let visible = $state(false)
-  let picking = $state(false)
+  let picking = $state<boolean>(false)
+  let selecting = $state<boolean>(false)
+  let selectionHint = $state<string | undefined>()
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
 
@@ -69,12 +78,61 @@
       )
       .otherwise(({ message }) => `Could not snag that: ${message}`)
 
+  const busy = $derived(picking || selecting)
+
+  const density = () =>
+    match(settings.density)
+      .with('device', () => devicePixelRatio)
+      .with('css', () => 1)
+      .exhaustive()
+
+  function snag(target: Target) {
+    void snagger.snag(target, density()).match(
+      (downscaled) =>
+        toast.success(
+          match(downscaled)
+            .with(true, () => 'Copied to clipboard, scaled down to fit')
+            .with(false, () => 'Copied to clipboard')
+            .exhaustive(),
+        ),
+      (error) => toast.error(explain(error)),
+    )
+  }
+
   function pick(delay = 0) {
-    match(picking)
+    match(busy)
       .with(false, () => {
         startPicking(delay)
       })
       .otherwise(() => undefined)
+  }
+
+  function capture(mode: Mode) {
+    match({ mode, busy })
+      .with({ busy: true }, () => undefined)
+      .with({ mode: 'selection' }, () => {
+        selecting = true
+        selectionHint = toast('Drag over the area to snag. Esc cancels.', {
+          duration: Infinity,
+        })
+      })
+      .with({ mode: 'visible' }, () => {
+        snag({ kind: 'visible' })
+      })
+      .with({ mode: 'page' }, () => {
+        snag({ kind: 'page' })
+      })
+      .exhaustive()
+  }
+
+  function endSelection() {
+    selecting = false
+    toast.dismiss(selectionHint)
+  }
+
+  function select(rect: Area) {
+    endSelection()
+    snag({ kind: 'selection', rect })
   }
 
   const countdown = (seconds: number) =>
@@ -102,10 +160,7 @@
       })
     picked$.subscribe({
       next: ({ element, framing }) => {
-        void snagger.snag(element, framing).match(
-          () => toast.success('Copied to clipboard'),
-          (error) => toast.error(explain(error)),
-        )
+        snag({ kind: 'element', element, framing })
       },
       complete: () => {
         dispose()
@@ -159,12 +214,15 @@
   pickElementStream.subscribe(() => {
     pick()
   })
+  captureModeStream.subscribe(([mode]) => {
+    capture(mode)
+  })
 </script>
 
 <div use:themeController>
   <Popup
     {visible}
-    ghost={picking}
+    ghost={busy}
     shots={$shots$}
     onclose={() => {
       visible = false
@@ -175,10 +233,14 @@
     onpicklater={() => {
       pick(settings.delay)
     }}
+    oncapture={capture}
     oncopy={copy}
     ondownload={download}
     onremove={remove} />
   <Highlight {target$} />
+  {#if selecting}
+    <Selection onpick={select} oncancel={endSelection} />
+  {/if}
   <Filters />
   <Toaster />
 </div>

@@ -14,6 +14,9 @@ download, or delete it later.
 | Select the previous / next sibling | `←` / `→` while picking                                          |
 | Snag the selected element          | Click, or press `Enter`                                          |
 | Snag it with a margin of page      | Hold `Shift` while snagging                                      |
+| Snag an area                       | Press the frame in the popup, then drag over the page            |
+| Snag what the window shows         | Press the window in the popup                                    |
+| Snag the whole page                | Press the page in the popup                                      |
 | Snag after a countdown             | Press the timer in the popup, then hover or open what to capture |
 | Cancel                             | `Esc`                                                            |
 

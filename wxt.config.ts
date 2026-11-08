@@ -30,6 +30,15 @@ export default defineConfig({
         },
         description: 'Pick an element to screenshot.',
       },
+      'snag-selection': {
+        description: 'Drag over an area to screenshot.',
+      },
+      'snag-visible': {
+        description: 'Screenshot what the window shows.',
+      },
+      'snag-page': {
+        description: 'Screenshot the whole page.',
+      },
     },
     browser_specific_settings: {
       gecko: {

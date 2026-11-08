@@ -18,6 +18,8 @@ const KEY = 'settings'
 const Shape = z.object({
   limit: z.number().int().min(10).max(1000).catch(100),
   delay: z.number().int().min(1).max(10).catch(3),
+  // Device keeps the screen's pixel density, CSS takes one image pixel per CSS pixel.
+  density: z.enum(['device', 'css']).catch('device'),
 })
 
 export const DEFAULT_SETTINGS = Shape.parse({})

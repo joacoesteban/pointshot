@@ -64,10 +64,14 @@ const captureTab = () =>
 export class Stitcher {
   constructor(private readonly stage: Stage) {}
 
-  shoot(plan: Plan): ResultAsync<Blob, CaptureError> {
+  // Density is image pixels per CSS pixel. Snags past the size limits come out at a lower one.
+  shoot(
+    plan: Plan,
+    density: number,
+  ): ResultAsync<{ png: Blob; downscaled: boolean }, CaptureError> {
     const { width, height } = plan.area
     const scale = Math.min(
-      devicePixelRatio,
+      density,
       Math.sqrt(MAX_PIXELS / (width * height)),
       MAX_SIDE / Math.max(width, height),
     )
@@ -77,7 +81,9 @@ export class Stitcher {
     )
     return match(canvas.getContext('2d'))
       .with(P.nonNullable, (context) =>
-        this.stage.offstage(() => this.draw(context, plan, scale)),
+        this.stage
+          .offstage(() => this.draw(context, plan, scale))
+          .map((png) => ({ png, downscaled: scale < density })),
       )
       .otherwise(() =>
         errAsync(new CaptureError('Could not allocate a canvas for the snag')),
