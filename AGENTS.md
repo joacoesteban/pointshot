@@ -23,8 +23,9 @@ grant the optional `downloads` permission. The first run needs
 `pnpm exec playwright install chromium`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, `bundle:all` and the
-tests on every PR to `main`. A `v*.*.*` tag publishes the zips as a GitHub
-release.
+tests on every PR to `main`. Once they pass on `main`, it runs
+`npm version patch` and pushes the commit and tag, unless that commit is
+already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 
 ## Layout
 
