@@ -1,5 +1,6 @@
 <script lang="ts">
   import { filter, fromEvent } from 'rxjs'
+  import { match, P } from 'ts-pattern'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
   import { siteOf, textOf, type Shot, type ShotText } from '~/lib/shot'
@@ -14,6 +15,7 @@
     oncopytext: (text: string, label: string) => void
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
+    onedit: (shot: Shot, image: string) => void
   }
 
   const {
@@ -24,6 +26,7 @@
     oncopytext,
     ondownload,
     onremove,
+    onedit,
   }: Props = $props()
 
   const { url, title, width, height, createdAt } = $derived(shot)
@@ -110,6 +113,20 @@
           glassy
           onclick={() => {
             ondownload(shot)
+          }} />
+        <SymbolButton
+          name="pencil"
+          title="Edit"
+          size="38px"
+          padding="28%"
+          glassy
+          disabled={image === null}
+          onclick={() => {
+            match(image)
+              .with(P.string, (image) => {
+                onedit(shot, image)
+              })
+              .otherwise(() => undefined)
           }} />
         <SymbolButton
           name="trashFill"

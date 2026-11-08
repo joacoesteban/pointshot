@@ -3,6 +3,7 @@ import { match } from 'ts-pattern'
 import { Clipboard } from './clipboard'
 import { Img } from './image'
 import { Region, type Area, type Framing } from './region'
+import type { Shot } from './shot'
 import type { ShotLibrary } from './shot-library'
 import type { Stitcher } from './stitcher'
 import { Unclip } from './unclip'
@@ -16,6 +17,8 @@ export type Target =
   | { readonly kind: 'visible' }
   | { readonly kind: 'page' }
   | { readonly kind: 'selection'; readonly rect: Area }
+
+export type Source = Pick<Shot, 'url' | 'title' | 'width' | 'height'>
 
 export class Snagger {
   constructor(
@@ -53,23 +56,36 @@ export class Snagger {
   // Resolves to whether the snag had to be scaled down to fit.
   snag(target: Target, density: number) {
     const captured = this.capture(target, density)
-    const copied = Clipboard.writePng(captured.map(({ png }) => png))
-    const saved = captured.andThen(({ png, area }) =>
+    return this.keep(
+      captured.map(({ png }) => png),
+      captured.map(({ area }) => ({
+        url: location.href,
+        title: document.title,
+        width: Math.round(area.width),
+        height: Math.round(area.height),
+      })),
+    )
+      .andThen(() => captured)
+      .map(({ downscaled }) => downscaled)
+  }
+
+  // Copies an image and saves it as a new shot. Like snag, it must be called inside the user gesture.
+  keep(
+    png: ResultAsync<Blob, Error>,
+    source: ResultAsync<Source, Error>,
+  ): ResultAsync<void, Error> {
+    const copied = Clipboard.writePng(png)
+    const saved = ResultAsync.combine([png, source]).andThen(([png, source]) =>
       ResultAsync.combine([Img.blobToDataUrl(png), Img.thumbnail(png)]).andThen(
         ([image, thumbnail]) =>
           this.library.save({
+            ...source,
             createdAt: Date.now(),
-            url: location.href,
-            title: document.title,
-            width: Math.round(area.width),
-            height: Math.round(area.height),
             thumbnail,
             image,
           }),
       ),
     )
-    return ResultAsync.combine([saved, copied])
-      .andThen(() => captured)
-      .map(({ downscaled }) => downscaled)
+    return ResultAsync.combine([saved, copied]).map(() => undefined)
   }
 }
