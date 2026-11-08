@@ -4,6 +4,7 @@ import { Img } from './image'
 import { Region, type Framing } from './region'
 import type { ShotLibrary } from './shot-library'
 import type { Stitcher } from './stitcher'
+import { Unclip } from './unclip'
 
 export class Snagger {
   constructor(
@@ -13,9 +14,13 @@ export class Snagger {
   ) {}
 
   private capture(element: Element, framing: Framing) {
-    return Region.plan(element, framing, this.host).andThen((plan) =>
-      this.stitcher.shoot(plan).map((png) => ({ png, area: plan.area })),
-    )
+    const close = Unclip.open(element)
+    return Region.plan(element, framing, this.host)
+      .andThen((plan) =>
+        this.stitcher.shoot(plan).map((png) => ({ png, area: plan.area })),
+      )
+      .andTee(close)
+      .orTee(close)
   }
 
   // Runs synchronously up to the clipboard write so the click that picked the element still counts as the user gesture.

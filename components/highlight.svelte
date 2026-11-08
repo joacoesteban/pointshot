@@ -8,6 +8,7 @@
     type Observable,
   } from 'rxjs'
   import { match, P } from 'ts-pattern'
+  import { Dom } from '~/lib/dom'
   import { transitionIn, transitionOut } from '~/lib/transitions'
 
   type Props = {
@@ -35,15 +36,15 @@
 
   const frame$ = $derived(
     combineLatest([target$, reflow$]).pipe(
-    map(([target]) =>
-      match(target)
-        .with(P.instanceOf(Element), (target) => ({
-          bounds: target.getBoundingClientRect(),
-          radius: getComputedStyle(target).borderRadius,
-          label: label(target),
-        }))
-        .otherwise(() => null),
-    ),
+      map(([target]) =>
+        match(target)
+          .with(P.when(Dom.isElement), (target) => ({
+            bounds: Dom.rect(target),
+            radius: Dom.style(target).borderRadius,
+            label: label(target),
+          }))
+          .otherwise(() => null),
+      ),
     ),
   )
 </script>

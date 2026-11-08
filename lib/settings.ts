@@ -17,6 +17,7 @@ const KEY = 'settings'
 
 const Shape = z.object({
   limit: z.number().int().min(10).max(1000).catch(100),
+  delay: z.number().int().min(1).max(10).catch(3),
 })
 
 export const DEFAULT_SETTINGS = Shape.parse({})

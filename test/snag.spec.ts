@@ -328,3 +328,256 @@ test('flags the toolbar on pages that refuse content scripts', async ({
   await expect(page.getByTestId('snag-popup')).toHaveClass(/visible/)
   await expect.poll(badge).toMatchObject({ text: '' })
 })
+
+test('captures an element cut off by a scrolling container whole', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+    document.querySelector('#scroller')?.scrollTo(0, 200)
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#list')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#list')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 180,
+    height: 600,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    clear: 0,
+  })
+  expect(
+    await page.evaluate(() => ({
+      window: window.scrollY,
+      scroller: document.querySelector('#scroller')?.scrollTop,
+      height: document.querySelector('#scroller')?.getBoundingClientRect()
+        .height,
+    })),
+  ).toEqual({ window: 1100, scroller: 200, height: 150 })
+})
+
+test('captures the whole content of a picked scrolling container', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#scroller')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#list')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#scroller')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({ width: 200, height: 600 })
+})
+
+test('captures a scrolling pane of an app shell that hides the page overflow', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    document.body.style.cssText = 'margin: 0; height: 100vh; overflow: hidden'
+    document.body.innerHTML = `
+      <div id="shell" style="height: 100vh; display: flex; flex-direction: column; overflow: hidden">
+        <header style="height: 50px; flex: none; background: #000000"></header>
+        <main id="pane" style="flex: 1; min-height: 0; overflow: auto">
+          <div style="height: 2000px; background: linear-gradient(#ff0000 0 50%, #0000ff 50% 100%)"></div>
+        </main>
+      </div>`
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pane')
+  await page.keyboard.press('ArrowUp')
+  await expect(page.getByTestId('snag-highlight')).toContainText('main#pane')
+  await page.keyboard.press('Enter')
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 15_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({
+    height: 2000,
+    corners: [
+      [255, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+    clear: 0,
+  })
+  expect(
+    await page.evaluate(() => ({
+      body: getComputedStyle(document.body).overflow,
+      pane: document.querySelector('#pane')?.getBoundingClientRect().height,
+    })),
+  ).toEqual({ body: 'hidden', pane: 650 })
+})
+
+test('picks inside an open shadow root', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#shadow-host')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(highlight).toContainText('div#shadow-inner')
+  await expect(highlight).toContainText('200 × 60')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('div#shadow-host')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#shadow-inner')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 200,
+    height: 60,
+    corners: [
+      [0, 170, 255, 255],
+      [0, 170, 255, 255],
+    ],
+  })
+})
+
+test('picks inside a same-origin frame', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#frame')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(highlight).toContainText('div#framed')
+  await expect(highlight).toContainText('200 × 150')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('iframe#frame')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#framed')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 200,
+    height: 150,
+    corners: [
+      [255, 136, 0, 255],
+      [255, 136, 0, 255],
+    ],
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('200 × 150')
+  expect(page.url()).toBe(FIXTURE_URL)
+})
+
+test('restores inline overflow longhands after opening a container', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+    const scroller = document.querySelector<HTMLElement>('#scroller')
+    scroller?.style.removeProperty('overflow')
+    scroller?.style.setProperty('overflow-y', 'auto')
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#scroller')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({ width: 180, height: 600 })
+  expect(
+    await page.evaluate(
+      () => document.querySelector<HTMLElement>('#scroller')?.style.overflowY,
+    ),
+  ).toBe('auto')
+})
+
+test('a countdown snags what is under the pointer when it ends', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { delay: 2 } }),
+  )
+  // A menu that opens over its button, under a pointer that does not move.
+  await page.evaluate(() => {
+    const opener = document.querySelector<HTMLElement>('#target')
+    opener?.addEventListener('click', () => {
+      const menu = document.createElement('div')
+      menu.id = 'menu'
+      menu.style.cssText =
+        'position: absolute; top: 160px; left: 150px; width: 260px; height: 220px; background: #222222'
+      document.body.append(menu)
+    })
+  })
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag after a countdown' }).click()
+  await hover(page, '#target')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.locator('#menu')).toBeVisible()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(1, {
+    timeout: 5_000,
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('260 × 220')
+})
+
+test('cuts a framed element to its clipping ancestors', async ({
+  page,
+  togglePopup,
+}) => {
+  await page
+    .frameLocator('#frame')
+    .locator('body')
+    .evaluate((body) => {
+      const framed = body.querySelector('#framed')
+      const clipper = document.createElement('div')
+      clipper.style.cssText = 'width: 120px; overflow: hidden'
+      framed?.replaceWith(clipper)
+      clipper.append(framed ?? '')
+    })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  // 60, 80 into the frame, past its 2 px border at 320, 440.
+  await page.mouse.move(382, 522, { steps: 4 })
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#framed')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  // The 200 px #framed starts 20 px into its 120 px clipper.
+  expect(await clipboardImage(page)).toMatchObject({ width: 100, height: 150 })
+})
+
+test('snags what is under the pointer when the countdown ends', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { delay: 2 } }),
+  )
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag after a countdown' }).click()
+  await expect(
+    page.getByText('Snagging what is under the pointer'),
+  ).toBeVisible()
+  await page.locator('#link').click()
+  expect(page.url()).toBe(`${FIXTURE_URL}#clicked`)
+  await hover(page, '#target')
+  await expect(page.getByTestId('snag-shot')).toHaveCount(1, {
+    timeout: 5_000,
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('200 × 120')
+  await expect(page.getByTestId('snag-highlight')).toBeHidden()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({ width: 200, height: 120 })
+})

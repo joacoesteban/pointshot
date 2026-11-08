@@ -13,6 +13,7 @@
     shots: Shot[]
     onclose: () => void
     onpick: () => void
+    onpicklater: () => void
     oncopy: (shot: Shot) => void
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
@@ -24,6 +25,7 @@
     shots,
     onclose,
     onpick,
+    onpicklater,
     oncopy,
     ondownload,
     onremove,
@@ -78,10 +80,18 @@
     </main>
 
     <footer class="flex flex-col items-center sticky bottom-0 pt-4">
-      <Button
-        testId="snag-pick"
-        disabled={ghost}
-        onclick={onpick}>Snag</Button>
+      <div class="flex items-center gap-2">
+        <Button testId="snag-pick" disabled={ghost} onclick={onpick}
+          >Snag</Button>
+        <SymbolButton
+          name="timer"
+          title="Snag after a countdown"
+          size="40px"
+          padding="26%"
+          glassy
+          disabled={ghost}
+          onclick={onpicklater} />
+      </div>
       <p class="text-xs opacity-50 mt-2">
         ↑ ↓ ← → walk the page · ⇧ adds a margin · Esc cancels
       </p>

@@ -1,4 +1,5 @@
 import {
+  EMPTY,
   type Observable,
   Subject,
   distinctUntilChanged,
@@ -15,9 +16,11 @@ import {
   take,
   takeUntil,
   tap,
+  timer,
   withLatestFrom,
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
+import { Dom } from './dom'
 import type { Framing } from './region'
 
 type Point = Readonly<Record<'x' | 'y', number>>
@@ -53,8 +56,13 @@ const ARROWS = {
 type Arrow = keyof typeof ARROWS
 
 const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
+// A timed pick leaves the page usable, to open the menu or hover state to snag, so it only takes Escape.
+const TIMED_KEYS = ['Escape']
 
 const isArrow = (key: string): key is Arrow => key in ARROWS
+
+const isPick = (pick: { element: Element | null }): pick is Pick =>
+  pick.element !== null
 
 const framingOf = (shiftKey: boolean): Framing =>
   match(shiftKey)
@@ -65,28 +73,21 @@ const framingOf = (shiftKey: boolean): Framing =>
 const rendered = (element: Element) => element.getClientRects().length > 0
 
 const siblingOf = (element: Element, offset: -1 | 1) => {
-  const siblings = match(element.parentElement)
-    .with(P.instanceOf(Element), ({ children }) =>
-      [...children].filter(rendered),
-    )
-    .otherwise(() => [])
+  const siblings = Dom.siblings(element).filter(rendered)
   return siblings[siblings.indexOf(element) + offset]
 }
 
-const firstChildOf = ({ children }: Element) => [...children].find(rendered)
+const firstChildOf = (element: Element) => Dom.children(element).find(rendered)
 
-const climbable = (element: Element) =>
-  match(element.parentElement)
-    .with(P.instanceOf(Element), (parent) =>
-      match(parent.tagName.toUpperCase())
-        .with('BODY', 'HTML', () => null)
-        .otherwise(() => parent),
-    )
-    .otherwise(() => null)
+// The page roots are skipped: the top document's lead nowhere, and a frame's lead out to the frame.
+const climbable = (element: Element): Element | null =>
+  match(Dom.parent(element))
+    .with({ tagName: P.union('BODY', 'HTML') }, climbable)
+    .otherwise((parent) => parent)
 
 const land = (aim: Aim, element: Element | undefined): Aim =>
   match(element)
-    .with(P.instanceOf(Element), (element) => ({ element, trail: [] }))
+    .with(P.when(Dom.isElement), (element) => ({ element, trail: [] }))
     .otherwise(() => aim)
 
 export const step = (aim: Aim, next: Step): Aim =>
@@ -95,7 +96,7 @@ export const step = (aim: Aim, next: Step): Aim =>
       element,
       trail: [],
     }))
-    .with([{ element: P.instanceOf(Element) }, { kind: 'up' }], ([aim]) =>
+    .with([{ element: P.when(Dom.isElement) }, { kind: 'up' }], ([aim]) =>
       match(climbable(aim.element))
         .with(null, () => aim)
         .otherwise((parent) => ({
@@ -104,23 +105,29 @@ export const step = (aim: Aim, next: Step): Aim =>
         })),
     )
     .with(
-      [{ trail: [P.instanceOf(Element), ...P.array()] }, { kind: 'down' }],
+      [{ trail: [P.when(Dom.isElement), ...P.array()] }, { kind: 'down' }],
       ([
         {
           trail: [child, ...rest],
         },
       ]) => ({ element: child, trail: rest }),
     )
-    .with([{ element: P.instanceOf(Element) }, { kind: 'down' }], ([aim]) =>
+    .with([{ element: P.when(Dom.isElement) }, { kind: 'down' }], ([aim]) =>
       land(aim, firstChildOf(aim.element)),
     )
-    .with([{ element: P.instanceOf(Element) }, { kind: 'previous' }], ([aim]) =>
+    .with([{ element: P.when(Dom.isElement) }, { kind: 'previous' }], ([aim]) =>
       land(aim, siblingOf(aim.element, -1)),
     )
-    .with([{ element: P.instanceOf(Element) }, { kind: 'next' }], ([aim]) =>
+    .with([{ element: P.when(Dom.isElement) }, { kind: 'next' }], ([aim]) =>
       land(aim, siblingOf(aim.element, 1)),
     )
     .otherwise(([aim]) => aim)
+
+const listen = <E extends Event>(
+  views: readonly Window[],
+  type: string,
+  options: AddEventListenerOptions,
+) => merge(...views.map((view) => fromEvent<E>(view, type, options)))
 
 export class ElementPicker {
   private readonly pointer$: Observable<Point>
@@ -137,37 +144,54 @@ export class ElementPicker {
     this.pointer$.subscribe()
   }
 
-  private elementAt({ x, y }: Point) {
-    const [element = null] = document
-      .elementsFromPoint(x, y)
-      .filter(
-        (element) =>
-          (element instanceof HTMLElement || element instanceof SVGElement) &&
-          !this.host.contains(element),
-      )
-    return element
+  private elementAt(point: Point) {
+    return Dom.elementAt(
+      document,
+      point,
+      (element) => !this.host.contains(element),
+    )
   }
 
-  pick() {
+  // With a delay in seconds, the element under the pointer when it runs out is snagged, and the page keeps its clicks meanwhile.
+  pick(delay = 0) {
     const ended$ = new Subject<void>()
+    const keys = match(delay)
+      .with(0, () => KEYS)
+      .otherwise(() => TIMED_KEYS)
 
-    const keys$ = fromEvent<KeyboardEvent>(window, 'keydown', capture).pipe(
-      filter(({ key }) => KEYS.includes(key)),
+    // Events inside same-origin frames stay in their window, so the picker listens there too.
+    const frames = Dom.frames()
+    const views = [window, ...frames.map(({ view }) => view)]
+
+    const keys$ = listen<KeyboardEvent>(views, 'keydown', capture).pipe(
+      filter(({ key }) => keys.includes(key)),
       tap<KeyboardEvent>(swallow),
       share(),
     )
 
+    const pointer$ = merge(
+      this.pointer$,
+      ...frames.map(({ view, document }) =>
+        fromEvent<PointerEvent>(view, 'pointermove', capture).pipe(
+          map(({ clientX, clientY }) => {
+            const { x, y } = Dom.offset(document)
+            return { x: clientX + x, y: clientY + y }
+          }),
+        ),
+      ),
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }))
+
     // Scrolling moves the page under a still pointer, so the pointed element is resolved again.
-    const scrolled$ = fromEvent(window, 'scroll', {
+    const scrolled$ = listen(views, 'scroll', {
       capture: true,
       passive: true,
     }).pipe(
-      withLatestFrom(this.pointer$),
+      withLatestFrom(pointer$),
       map(([, point]) => point),
     )
 
     const target$ = merge(
-      merge(this.pointer$, scrolled$).pipe(
+      merge(pointer$, scrolled$).pipe(
         map(
           (point): Step => ({ kind: 'point', element: this.elementAt(point) }),
         ),
@@ -186,31 +210,61 @@ export class ElementPicker {
       shareReplay({ bufferSize: 1, refCount: true }),
     )
 
-    const pressed$ = merge(
-      ...['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'auxclick'].map(
-        (type) => fromEvent<MouseEvent>(window, type, capture),
-      ),
-    ).pipe(
-      filter(({ target }) => !this.isOwn(target)),
-      tap<MouseEvent>(swallow),
-      ignoreElements(),
-    )
+    const aimed = (trigger$: Observable<{ readonly shiftKey: boolean }>) =>
+      trigger$.pipe(
+        withLatestFrom(target$),
+        map(([{ shiftKey }, element]) => ({
+          element,
+          framing: framingOf(shiftKey),
+        })),
+      )
+
+    const pressed$ = match(delay)
+      .with(0, () =>
+        merge(
+          ...[
+            'pointerdown',
+            'pointerup',
+            'mousedown',
+            'mouseup',
+            'auxclick',
+          ].map((type) => listen<MouseEvent>(views, type, capture)),
+        ).pipe(
+          filter(({ target }) => !this.isOwn(target)),
+          tap<MouseEvent>(swallow),
+          ignoreElements(),
+        ),
+      )
+      .otherwise(() => EMPTY)
 
     // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
-    const chosen$ = merge(
-      fromEvent<MouseEvent>(window, 'click', capture).pipe(
-        filter(({ target }) => !this.isOwn(target)),
-        tap<MouseEvent>(swallow),
-      ),
-      keys$.pipe(filter(({ key }) => key === 'Enter')),
-    ).pipe(
-      withLatestFrom(target$),
-      map(([{ shiftKey }, element]) => ({
-        element,
-        framing: framingOf(shiftKey),
-      })),
-      filter((pick): pick is Pick => pick.element !== null),
-    )
+    // A timer has no such activation, so a timed snag may only be saved.
+    const chosen$ = match(delay)
+      .with(0, () =>
+        aimed(
+          merge(
+            listen<MouseEvent>(views, 'click', capture).pipe(
+              filter(({ target }) => !this.isOwn(target)),
+              tap<MouseEvent>(swallow),
+            ),
+            keys$.pipe(filter(({ key }) => key === 'Enter')),
+          ),
+        ).pipe(filter(isPick)),
+      )
+      .otherwise((delay) =>
+        // Resolved when the time is up, since clicking open a menu changes what is under a still pointer.
+        timer(delay * 1000).pipe(
+          withLatestFrom(pointer$.pipe(startWith(null))),
+          map(([, point]) => ({
+            element: match(point)
+              .with(P.nonNullable, (point) => this.elementAt(point))
+              .otherwise(() => null),
+            framing: 'element' as const,
+          })),
+          take(1),
+          filter(isPick),
+        ),
+      )
 
     const picked$ = merge(pressed$, chosen$).pipe(
       take(1),

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import cameraViewfinder from '~/assets/symbols/camera.viewfinder.json'
 import docOnDoc from '~/assets/symbols/doc.on.doc.json'
+import timer from '~/assets/symbols/timer.json'
 import squareAndArrowDown from '~/assets/symbols/square.and.arrow.down.json'
 import trashFill from '~/assets/symbols/trash.fill.json'
 import xMark from '~/assets/symbols/xmark.json'
@@ -27,6 +28,7 @@ const raw = {
   cameraViewfinder,
   docOnDoc,
   squareAndArrowDown,
+  timer,
   trashFill,
   xMark,
 }

@@ -1,5 +1,6 @@
 import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
+import { Dom } from './dom'
 import { EmptyAreaError } from './errors'
 
 export type Area = Readonly<Record<'left' | 'top' | 'width' | 'height', number>>
@@ -81,15 +82,10 @@ export const axis = (
     )
     .otherwise(() => steps(start, length, span))
 
-const positionOf = (element: Element) => getComputedStyle(element).position
+const positionOf = (element: Element) => Dom.style(element).position
 
 const isPinned = (element: Element) =>
   ['fixed', 'sticky'].includes(positionOf(element))
-
-const lineage = (element: Element): Element[] =>
-  match(element.parentElement)
-    .with(P.instanceOf(Element), (parent) => [element, ...lineage(parent)])
-    .otherwise(() => [element])
 
 export const radius = (
   value: string,
@@ -106,8 +102,9 @@ export const radius = (
   return { x: length(x, width), y: length(y, height) }
 }
 
-const visibleRect = (element: Element) =>
-  new Promise<DOMRectReadOnly>((resolve) => {
+// Relative to the root document's viewport, cut by the element's clipping ancestors.
+const observedRect = (element: Element, root: Document | null = null) =>
+  new Promise<Area>((resolve) => {
     const observer = new IntersectionObserver(
       (entries) => {
         observer.disconnect()
@@ -115,10 +112,22 @@ const visibleRect = (element: Element) =>
           resolve(intersectionRect)
         })
       },
-      { rootMargin: UNBOUNDED },
+      { root, rootMargin: UNBOUNDED },
     )
     observer.observe(element)
   })
+
+// An element in a frame is observed in its own document, then cut to what each enclosing frame shows.
+const visibleRect = (element: Element) =>
+  match(Dom.documents(element.ownerDocument))
+    .with([P._], () => observedRect(element))
+    .otherwise((documents) =>
+      observedRect(element, element.ownerDocument).then((rect) =>
+        documents
+          .map((document) => Dom.viewport(document))
+          .reduce(intersect, shift(rect, Dom.offset(element.ownerDocument))),
+      ),
+    )
 
 export class Region {
   static plan(
@@ -141,16 +150,16 @@ export class Region {
           width: scrollWidth,
           height: scrollHeight,
         }
-        const ancestors = lineage(element)
+        const ancestors = [element, ...Dom.ancestors(element)]
         const bounds = match(ancestors.find(isPinned))
-          .with(P.instanceOf(Element), () => screen)
+          .with(P.nonNullable, () => screen)
           .otherwise(() => page)
         const framed = match(framing)
           .with('element', () => shift(visible, origin))
           .with('padded', () => grow(shift(visible, origin), MARGIN))
           .exhaustive()
         const area = intersect(framed, bounds)
-        const box = shift(element.getBoundingClientRect(), origin)
+        const box = shift(Dom.rect(element), origin)
         const pinned = [...document.querySelectorAll('*')].filter(
           (other) =>
             !ancestors.includes(other) &&
@@ -175,7 +184,7 @@ export class Region {
               tiles,
               clip: match(framing)
                 .with('element', () => {
-                  const style = getComputedStyle(element)
+                  const style = Dom.style(element)
                   return {
                     box,
                     radii: CORNERS.map((corner) => radius(style[corner], box)),

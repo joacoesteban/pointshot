@@ -2,6 +2,7 @@ import { ResultAsync, errAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { CaptureError, toError } from './errors'
 import { Img } from './image'
+import { InlineStyle } from './inline-style'
 import {
   intersect,
   scrolled,
@@ -19,11 +20,6 @@ const MAX_PIXELS = 12_000_000
 // Chrome fails to allocate canvases with a longer side.
 const MAX_SIDE = 16_384
 
-type Styled = Element & ElementCSSInlineStyle
-
-const isStyled = (element: Element): element is Styled =>
-  element instanceof HTMLElement || element instanceof SVGElement
-
 const HIDDEN = { visibility: 'hidden' }
 // Laid out as relative with no offsets, a sticky element stays where it sits before sticking, so every tile shows it in place.
 // Sticky always makes a stacking context and relative does not, so isolation keeps negative z-index children painting above it.
@@ -34,31 +30,6 @@ const UNSTUCK = {
   right: 'auto',
   bottom: 'auto',
   left: 'auto',
-}
-
-const override = (
-  elements: readonly Element[],
-  properties: Readonly<Record<string, string>>,
-) => {
-  const styles = elements.filter(isStyled).map(({ style }) => style)
-  const saved = styles.flatMap((style) =>
-    Object.keys(properties).map((name) => ({
-      style,
-      name,
-      value: style.getPropertyValue(name),
-      priority: style.getPropertyPriority(name),
-    })),
-  )
-  styles.forEach((style) => {
-    Object.entries(properties).forEach(([name, value]) => {
-      style.setProperty(name, value, 'important')
-    })
-  })
-  return () => {
-    saved.forEach(({ style, name, value, priority }) => {
-      style.setProperty(name, value, priority)
-    })
-  }
 }
 
 const overlaps = (a: Area, b: Area) => {
@@ -120,8 +91,8 @@ export class Stitcher {
   ) {
     const origin = scrolled()
     const corner = { x: area.left, y: area.top }
-    const reveal = override(pinned.outside, HIDDEN)
-    const restick = override(pinned.sticky, UNSTUCK)
+    const reveal = InlineStyle.override(pinned.outside, HIDDEN)
+    const restick = InlineStyle.override(pinned.sticky, UNSTUCK)
     const restore = () => {
       reveal()
       restick()
@@ -134,7 +105,7 @@ export class Stitcher {
           drawn.andThen((captured) => {
             scrollTo(tile)
             // Fixed parts of the element belong where a tile first captured them, not repeated on later tiles.
-            const show = override(captured, HIDDEN)
+            const show = InlineStyle.override(captured, HIDDEN)
             return ResultAsync.fromSafePromise(Stage.painted())
               .andThen(captureTab)
               .andTee(show)
