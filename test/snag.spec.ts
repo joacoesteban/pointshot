@@ -1064,3 +1064,119 @@ test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
   expect(image?.at).not.toEqual([[51, 102, 255, 255]])
   expect(image?.at).not.toEqual([[255, 51, 102, 255]])
 })
+
+const optionsUrl = (background: { url: () => string }) =>
+  new URL('/options.html', background.url()).href
+
+test('changes settings on the options page', async ({
+  context,
+  background,
+}) => {
+  const options = await context.newPage()
+  await options.goto(optionsUrl(background))
+  await expect(options.getByRole('heading', { name: 'snag' })).toBeVisible()
+  await expect(
+    options.getByText('Toggle the Snag popup on the current page.'),
+  ).toBeVisible()
+
+  const keep = options.getByRole('spinbutton', { name: 'Snags to keep' })
+  await keep.fill('20')
+  await keep.press('Enter')
+  await options.getByRole('combobox', { name: 'Theme' }).selectOption('dark')
+  await options.getByRole('combobox', { name: 'Format' }).selectOption('webp')
+  await expect(options.getByRole('slider', { name: 'Quality' })).toBeVisible()
+  await expect
+    .poll(() => background.evaluate(() => chrome.storage.local.get('settings')))
+    .toMatchObject({ settings: { limit: 20, theme: 'dark', format: 'webp' } })
+  await expect(options.locator('[data-snag-theme-root]')).toHaveAttribute(
+    'data-theme',
+    'dark',
+  )
+
+  await options.getByRole('button', { name: 'Copy diagnostics' }).click()
+  await expect(options.getByText('Copied diagnostics')).toBeVisible()
+  expect(await options.evaluate(() => navigator.clipboard.readText())).toMatch(
+    /^Snag \d+\.\d+\.\d+\n.*\nSettings: \{"limit":20/,
+  )
+})
+
+test('turns Save As back off when downloads are refused', async ({
+  context,
+  background,
+}) => {
+  const options = await context.newPage()
+  await options.goto(optionsUrl(background))
+  // The end-to-end build holds the permission already, so refusal is simulated.
+  await options.evaluate(() => {
+    Object.assign(chrome.permissions, { request: () => Promise.resolve(false) })
+  })
+  const saveAs = options.getByRole('checkbox', { name: 'Ask where to save' })
+  await saveAs.click()
+  await expect(
+    options.getByText('Snag needs permission to manage downloads for this'),
+  ).toBeVisible()
+  await expect(saveAs).not.toBeChecked()
+  expect(
+    await background.evaluate(() => chrome.storage.local.get('settings')),
+  ).not.toMatchObject({ settings: { saveAs: true } })
+})
+
+test('keeps failed copies for the diagnostics', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await page.goto(INSECURE_FIXTURE_URL)
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shot = page.getByTestId('snag-shot')
+  await expect(shot).toHaveCount(1)
+  const errors = () =>
+    background.evaluate(async () => {
+      const { 'recent-errors': recent } =
+        await chrome.storage.local.get('recent-errors')
+      return ([] as unknown[]).concat(recent ?? []).length
+    })
+  await expect.poll(errors).toBe(1)
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Copy' }).click()
+  await expect(
+    page.getByText('The page blocked the clipboard', { exact: true }),
+  ).toBeVisible()
+  await expect.poll(errors).toBe(2)
+})
+
+test('opens the options from the popup', async ({
+  page,
+  context,
+  background,
+  togglePopup,
+}) => {
+  await togglePopup()
+  const [options] = await Promise.all([
+    context.waitForEvent('page'),
+    page.getByRole('button', { name: 'Options' }).click(),
+  ])
+  await expect(options).toHaveURL(optionsUrl(background))
+})
+
+test.describe('in Spanish', () => {
+  test.use({ lang: 'es-419' })
+
+  test('speaks Argentinian Spanish', async ({ page, togglePopup }) => {
+    await togglePopup()
+    const popup = page.getByTestId('snag-popup')
+    await expect(popup).toContainText('Todavía no hay capturas')
+    await expect(popup).toContainText('Elegí un elemento')
+    await page.getByRole('button', { name: 'Capturar', exact: true }).click()
+    await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
+    await hover(page, '#target')
+    await page.mouse.down()
+    await page.mouse.up()
+    await expect(page.getByText('Copiado al portapapeles')).toBeVisible()
+    await expect(page.getByTestId('snag-shot')).toContainText('este minuto')
+  })
+})

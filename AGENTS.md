@@ -96,3 +96,8 @@ The compiler and linter enforce most of these; `pnpm check` must pass.
 - Data shapes are `zod` schemas with their types inferred (`ShotSchema`), and
   untyped input such as the symbol JSON goes through `parse`.
 - Prettier: no semicolons, single quotes, trailing commas, 80 columns.
+- Copy lives in `public/_locales/<locale>/messages.json`, English (`en`) and
+  Argentinian Spanish (`es_419`, voseo), and is read through `t()` in
+  `lib/i18n.ts`, typed by the English keys. Each file names its locale in a
+  `locale` message, which dates follow. E2E tests pick the language with
+  `test.use({ lang })`.

@@ -4,6 +4,9 @@ import type { NewShot, Reply, Saved, Shot } from '~/lib/shot'
 export const [togglePopup, togglePopupStream] =
   getMessage<undefined>('toggle-popup')
 
+export const [openOptions, openOptionsStream] =
+  getMessage<undefined>('open-options')
+
 export const [pickElement, pickElementStream] =
   getMessage<undefined>('pick-element')
 

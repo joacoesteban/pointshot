@@ -20,12 +20,15 @@ const fixture = readFileSync(
 type ClickEvent = { dispatch: () => void }
 
 export const test = base.extend<{
+  // The browser's interface language, which picks the extension's locale.
+  lang: string
   context: BrowserContext
   background: Worker
   page: Page
   togglePopup: () => Promise<void>
 }>({
-  context: async ({}, use) => {
+  lang: ['en-US', { option: true }],
+  context: async ({ lang }, use) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       viewport: { width: 1000, height: 700 },
@@ -34,6 +37,7 @@ export const test = base.extend<{
       // Keeps a classic scrollbar, so the crop is checked against a client width narrower than the captured window.
       ignoreDefaultArgs: ['--hide-scrollbars'],
       args: [
+        `--lang=${lang}`,
         `--disable-extensions-except=${extensionPath}`,
         `--load-extension=${extensionPath}`,
       ],

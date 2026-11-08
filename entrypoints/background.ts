@@ -6,9 +6,11 @@ import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
 import { Throttle } from '~/background/throttle'
 import { CaptureError, DownloadError, toError } from '~/lib/errors'
+import { t } from '~/lib/i18n'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import {
+  openOptionsStream,
   downloadFileStream,
   type FileDownload,
   captureMode,
@@ -71,7 +73,7 @@ const sendToActiveTab = (send: Send) =>
             flag(tabId, '', browser.runtime.getManifest().name)
           })
           .orTee(() => {
-            flag(tabId, '!', 'Snag cannot run on this page')
+            flag(tabId, '!', t('blockedPage'))
           }),
       )
       .otherwise(() => okAsync(undefined)),
@@ -128,6 +130,9 @@ export default defineBackground(() => {
   })
   removeShotsStream.subscribe(([ids, , respond]) => {
     void ReplyCodec.encode(store.remove(ids)).then(respond)
+  })
+  openOptionsStream.subscribe(() => {
+    void browser.runtime.openOptionsPage()
   })
   downloadFileStream.subscribe(([file, , respond]) => {
     void ReplyCodec.encode(download(file)).then(respond)

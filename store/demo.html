@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lumen: plans and pricing</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          16px/1.5 Inter,
+          'Helvetica Neue',
+          Arial,
+          sans-serif;
+        color: #1d2433;
+        background: linear-gradient(160deg, #f4f1ff, #eef7ff 60%, #fff);
+        min-height: 100vh;
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        padding: 24px 64px;
+        font-weight: 600;
+      }
+      nav b {
+        font-size: 22px;
+        color: #5b3cf5;
+        margin-right: auto;
+      }
+      header {
+        padding: 24px 64px 8px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 44px;
+        letter-spacing: -0.02em;
+      }
+      header p {
+        margin: 8px 0 0;
+        color: #5c6478;
+        font-size: 18px;
+      }
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(3, 280px);
+        gap: 24px;
+        padding: 32px 64px;
+      }
+      .plan {
+        padding: 28px;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 12px 32px #2a1d7a14;
+      }
+      .plan.featured {
+        color: #fff;
+        background: linear-gradient(150deg, #6b4cff, #3b82f6);
+      }
+      .plan h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .price {
+        margin: 12px 0;
+        font-size: 40px;
+        font-weight: 800;
+      }
+      .price small {
+        font-size: 16px;
+        font-weight: 500;
+        opacity: 0.7;
+      }
+      ul {
+        margin: 0 0 20px;
+        padding: 0 0 0 18px;
+      }
+      button {
+        width: 100%;
+        padding: 12px;
+        border: 0;
+        border-radius: 12px;
+        font: inherit;
+        font-weight: 700;
+        color: #5b3cf5;
+        background: #efeaff;
+      }
+      .featured button {
+        color: #3b2bb3;
+        background: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <b>lumen</b><span>Product</span><span>Pricing</span><span>Docs</span>
+    </nav>
+    <header>
+      <h1>Plans that grow with you</h1>
+      <p>Start free, upgrade when your dashboards do.</p>
+    </header>
+    <section class="plans">
+      <article class="plan">
+        <h2>Starter</h2>
+        <div class="price">$0 <small>/ month</small></div>
+        <ul>
+          <li>3 dashboards</li>
+          <li>7 days of history</li>
+          <li>Email reports</li>
+        </ul>
+        <button>Start free</button>
+      </article>
+      <article class="plan featured" id="featured">
+        <h2>Team</h2>
+        <div class="price">$24 <small>/ month</small></div>
+        <ul>
+          <li>Unlimited dashboards</li>
+          <li>1 year of history</li>
+          <li>Slack alerts</li>
+        </ul>
+        <button>Try Team</button>
+      </article>
+      <article class="plan">
+        <h2>Enterprise</h2>
+        <div class="price">Talk to us</div>
+        <ul>
+          <li>Single sign-on</li>
+          <li>Audit log</li>
+          <li>Dedicated support</li>
+        </ul>
+        <button>Contact sales</button>
+      </article>
+    </section>
+  </body>
+</html>

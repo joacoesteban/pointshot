@@ -1,0 +1,350 @@
+{
+  "locale": {
+    "message": "es-419"
+  },
+  "name": {
+    "message": "Snag: capturá cualquier elemento"
+  },
+  "description": {
+    "message": "Capturá cualquier elemento de la página. Elegilo con el mouse y lo tenés en el portapapeles."
+  },
+  "commandToggle": {
+    "message": "Mostrar u ocultar Snag en la página actual."
+  },
+  "commandPick": {
+    "message": "Elegir un elemento para capturar."
+  },
+  "commandSelection": {
+    "message": "Arrastrar sobre un área para capturarla."
+  },
+  "commandVisible": {
+    "message": "Capturar lo que muestra la ventana."
+  },
+  "commandPage": {
+    "message": "Capturar la página entera."
+  },
+  "blockedPage": {
+    "message": "Snag no puede funcionar en esta página"
+  },
+  "close": {
+    "message": "Cerrar"
+  },
+  "options": {
+    "message": "Opciones"
+  },
+  "searchSnags": {
+    "message": "Buscar capturas"
+  },
+  "site": {
+    "message": "Sitio"
+  },
+  "allSites": {
+    "message": "Todos los sitios"
+  },
+  "deleteAll": {
+    "message": "Borrar todas"
+  },
+  "deleteShown": {
+    "message": "Borrar $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchTitle": {
+    "message": "Ninguna captura coincide"
+  },
+  "noMatchBody": {
+    "message": "Probá con otra búsqueda u otro sitio."
+  },
+  "emptyTitle": {
+    "message": "Todavía no hay capturas"
+  },
+  "emptyBody": {
+    "message": "Elegí un elemento y va directo a tu portapapeles."
+  },
+  "deletedOne": {
+    "message": "Se borró 1 captura"
+  },
+  "deletedMany": {
+    "message": "Se borraron $COUNT$ capturas",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "undo": {
+    "message": "Deshacer"
+  },
+  "snag": {
+    "message": "Capturar"
+  },
+  "snagArea": {
+    "message": "Capturar un área"
+  },
+  "snagVisible": {
+    "message": "Capturar lo que muestra la ventana"
+  },
+  "snagPage": {
+    "message": "Capturar la página entera"
+  },
+  "snagLater": {
+    "message": "Capturar después de una cuenta regresiva"
+  },
+  "keysHint": {
+    "message": "↑ ↓ ← → recorren la página · Shift suma un margen · Esc cancela"
+  },
+  "open": {
+    "message": "Abrir"
+  },
+  "copy": {
+    "message": "Copiar"
+  },
+  "download": {
+    "message": "Descargar"
+  },
+  "delete": {
+    "message": "Borrar"
+  },
+  "edit": {
+    "message": "Editar"
+  },
+  "copyAs": {
+    "message": "Copiar como"
+  },
+  "markdown": {
+    "message": "Markdown"
+  },
+  "dataUrl": {
+    "message": "Data URL"
+  },
+  "pageLink": {
+    "message": "Enlace a la página"
+  },
+  "copiedText": {
+    "message": "Copiado: $WHAT$",
+    "placeholders": {
+      "what": {
+        "content": "$1"
+      }
+    }
+  },
+  "editSnag": {
+    "message": "Editar captura"
+  },
+  "tools": {
+    "message": "Herramientas"
+  },
+  "toolArrow": {
+    "message": "Flecha"
+  },
+  "toolRectangle": {
+    "message": "Rectángulo"
+  },
+  "toolText": {
+    "message": "Texto"
+  },
+  "toolBlur": {
+    "message": "Desenfocar"
+  },
+  "toolCrop": {
+    "message": "Recortar"
+  },
+  "color": {
+    "message": "Color"
+  },
+  "colorRed": {
+    "message": "Rojo"
+  },
+  "colorYellow": {
+    "message": "Amarillo"
+  },
+  "colorGreen": {
+    "message": "Verde"
+  },
+  "colorBlue": {
+    "message": "Azul"
+  },
+  "colorBlack": {
+    "message": "Negro"
+  },
+  "colorWhite": {
+    "message": "Blanco"
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "saveEdit": {
+    "message": "Guardar como captura nueva"
+  },
+  "typeThenEnter": {
+    "message": "Escribí y presioná Enter"
+  },
+  "pickHint": {
+    "message": "Hacé clic o presioná Enter para capturar, con Shift para sumar un margen. Las flechas cambian el elemento, Esc cancela."
+  },
+  "countdown": {
+    "message": "Capturando lo que esté bajo el puntero en $SECONDS$… Esc cancela.",
+    "placeholders": {
+      "seconds": {
+        "content": "$1"
+      }
+    }
+  },
+  "selectionHint": {
+    "message": "Arrastrá sobre el área que querés capturar. Esc cancela."
+  },
+  "copied": {
+    "message": "Copiado al portapapeles"
+  },
+  "copiedScaled": {
+    "message": "Copiado al portapapeles, achicado para que entre"
+  },
+  "savedAndCopied": {
+    "message": "Guardado y copiado al portapapeles"
+  },
+  "savedClipboardBlocked": {
+    "message": "Se guardó, pero la página bloqueó el portapapeles"
+  },
+  "nothingVisible": {
+    "message": "No hay nada visible para capturar"
+  },
+  "storageFull": {
+    "message": "Se copió, pero el almacenamiento está lleno. Borrá algunas capturas para guardar más"
+  },
+  "notSaved": {
+    "message": "Se copió, pero no se pudo guardar"
+  },
+  "couldNotSnag": {
+    "message": "No se pudo capturar: $REASON$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "clipboardBlocked": {
+    "message": "La página bloqueó el portapapeles"
+  },
+  "couldNotDelete": {
+    "message": "No se pudieron borrar esas capturas"
+  },
+  "optionsTitle": {
+    "message": "Opciones de Snag"
+  },
+  "sectionCapture": {
+    "message": "Captura"
+  },
+  "resolution": {
+    "message": "Resolución"
+  },
+  "resolutionHelp": {
+    "message": "Pantalla conserva el detalle en las pantallas de alta densidad."
+  },
+  "resolutionDevice": {
+    "message": "Píxeles de pantalla"
+  },
+  "resolutionCss": {
+    "message": "Un píxel por píxel CSS"
+  },
+  "countdownLabel": {
+    "message": "Cuenta regresiva"
+  },
+  "countdownHelp": {
+    "message": "Cuánto espera el temporizador antes de capturar."
+  },
+  "seconds": {
+    "message": "$SECONDS$ s",
+    "placeholders": {
+      "seconds": {
+        "content": "$1"
+      }
+    }
+  },
+  "sectionDownloads": {
+    "message": "Descargas"
+  },
+  "format": {
+    "message": "Formato"
+  },
+  "formatHelp": {
+    "message": "Lo que copiás sigue en PNG, el único formato que acepta el portapapeles."
+  },
+  "quality": {
+    "message": "Calidad"
+  },
+  "folder": {
+    "message": "Carpeta"
+  },
+  "folderHelp": {
+    "message": "Dentro de tu carpeta de descargas. Dejala vacía para guardar ahí."
+  },
+  "saveAs": {
+    "message": "Preguntar dónde guardar"
+  },
+  "saveAsHelp": {
+    "message": "Mostrar el diálogo Guardar como en cada descarga."
+  },
+  "downloadsPermission": {
+    "message": "Para esto, Snag necesita permiso para administrar descargas"
+  },
+  "sectionLibrary": {
+    "message": "Biblioteca"
+  },
+  "keep": {
+    "message": "Capturas a guardar"
+  },
+  "keepHelp": {
+    "message": "Las más viejas se borran cuando hay más."
+  },
+  "sectionAppearance": {
+    "message": "Apariencia"
+  },
+  "theme": {
+    "message": "Tema"
+  },
+  "themeSystem": {
+    "message": "Igual que el sistema"
+  },
+  "themeLight": {
+    "message": "Claro"
+  },
+  "themeDark": {
+    "message": "Oscuro"
+  },
+  "sectionShortcuts": {
+    "message": "Atajos de teclado"
+  },
+  "notSet": {
+    "message": "Sin asignar"
+  },
+  "changeShortcuts": {
+    "message": "Cambiar atajos"
+  },
+  "firefoxShortcuts": {
+    "message": "Cambialos en Complementos y temas, desde el engranaje, en Administrar atajos de extensiones."
+  },
+  "sectionHelp": {
+    "message": "Ayuda"
+  },
+  "diagnostics": {
+    "message": "Diagnóstico"
+  },
+  "diagnosticsHelp": {
+    "message": "Versión, navegador, opciones y errores recientes, para pegar en un reporte. Sin direcciones de páginas."
+  },
+  "copyDiagnostics": {
+    "message": "Copiar diagnóstico"
+  },
+  "copiedDiagnostics": {
+    "message": "Diagnóstico copiado"
+  },
+  "couldNotCopyDiagnostics": {
+    "message": "No se pudo copiar el diagnóstico"
+  },
+  "settingNotSaved": {
+    "message": "No se pudo guardar la opción"
+  }
+}

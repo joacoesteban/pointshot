@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '~/lib/i18n'
   import { filter, fromEvent } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { age } from '~/lib/age'
@@ -32,9 +33,9 @@
   const { url, title, width, height, createdAt } = $derived(shot)
 
   const texts: readonly { text: ShotText; label: string }[] = [
-    { text: 'markdown', label: 'Markdown' },
-    { text: 'dataUrl', label: 'Data URL' },
-    { text: 'link', label: 'Page link' },
+    { text: 'markdown', label: t('markdown') },
+    { text: 'dataUrl', label: t('dataUrl') },
+    { text: 'link', label: t('pageLink') },
   ]
 
   $effect(() => {
@@ -79,7 +80,7 @@
       </div>
       <SymbolButton
         name="xMark"
-        title="Close"
+        title={t('close')}
         opaque
         size="36px"
         padding="30%"
@@ -98,7 +99,7 @@
       <div class="flex items-center gap-2">
         <SymbolButton
           name="docOnDoc"
-          title="Copy"
+          title={t('copy')}
           size="38px"
           padding="28%"
           glassy
@@ -107,7 +108,7 @@
           }} />
         <SymbolButton
           name="squareAndArrowDown"
-          title="Download"
+          title={t('download')}
           size="38px"
           padding="28%"
           glassy
@@ -116,7 +117,7 @@
           }} />
         <SymbolButton
           name="pencil"
-          title="Edit"
+          title={t('edit')}
           size="38px"
           padding="28%"
           glassy
@@ -130,7 +131,7 @@
           }} />
         <SymbolButton
           name="trashFill"
-          title="Delete"
+          title={t('delete')}
           size="38px"
           padding="28%"
           glassy
@@ -139,7 +140,7 @@
           }} />
       </div>
       <div class="flex items-center gap-1 text-xs">
-        <span class="opacity-60 mr-1">Copy as</span>
+        <span class="opacity-60 mr-1">{t('copyAs')}</span>
         {#each texts as { text, label } (text)}
           <button
             type="button"

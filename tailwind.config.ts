@@ -4,7 +4,11 @@ import themes from 'daisyui/src/theming/themes'
 
 export default {
   darkMode: 'media',
-  content: ['./components/**/*.svelte', './contents/**/*.svelte'],
+  content: [
+    './components/**/*.svelte',
+    './contents/**/*.svelte',
+    './entrypoints/**/*.svelte',
+  ],
   plugins: [daisyui],
   daisyui: {
     themes: [

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '~/lib/i18n'
   import type { ResultAsync } from 'neverthrow'
   import { filter, fromEvent } from 'rxjs'
   import { match, P } from 'ts-pattern'
@@ -31,20 +32,20 @@
   const { shot, image, onclose, onsave }: Props = $props()
 
   const TOOLS: readonly { tool: Tool; name: SymbolName; title: string }[] = [
-    { tool: 'arrow', name: 'arrow', title: 'Arrow' },
-    { tool: 'rectangle', name: 'rectangle', title: 'Rectangle' },
-    { tool: 'text', name: 'text', title: 'Text' },
-    { tool: 'blur', name: 'blur', title: 'Blur' },
-    { tool: 'crop', name: 'crop', title: 'Crop' },
+    { tool: 'arrow', name: 'arrow', title: t('toolArrow') },
+    { tool: 'rectangle', name: 'rectangle', title: t('toolRectangle') },
+    { tool: 'text', name: 'text', title: t('toolText') },
+    { tool: 'blur', name: 'blur', title: t('toolBlur') },
+    { tool: 'crop', name: 'crop', title: t('toolCrop') },
   ]
 
   const COLORS = [
-    { color: '#ff3b30', label: 'Red' },
-    { color: '#ffcc00', label: 'Yellow' },
-    { color: '#34c759', label: 'Green' },
-    { color: '#0a84ff', label: 'Blue' },
-    { color: '#1c1c1e', label: 'Black' },
-    { color: '#ffffff', label: 'White' },
+    { color: '#ff3b30', label: t('colorRed') },
+    { color: '#ffcc00', label: t('colorYellow') },
+    { color: '#34c759', label: t('colorGreen') },
+    { color: '#0a84ff', label: t('colorBlue') },
+    { color: '#1c1c1e', label: t('colorBlack') },
+    { color: '#ffffff', label: t('colorWhite') },
   ] as const
 
   // Sizes in CSS pixels of the page the snag came from, scaled by the image's density.
@@ -292,9 +293,12 @@
 </script>
 
 <div class="editor" data-testid="snag-editor" in:transitionIn out:transitionOut>
-  <div class="panel bg-blur" role="dialog" aria-label="Edit snag">
+  <div class="panel bg-blur" role="dialog" aria-label={t('editSnag')}>
     <header class="flex flex-wrap items-center gap-2 mb-3">
-      <div class="flex items-center gap-1" role="toolbar" aria-label="Tools">
+      <div
+        class="flex items-center gap-1"
+        role="toolbar"
+        aria-label={t('tools')}>
         {#each TOOLS as { tool: option, name, title } (option)}
           <SymbolButton
             {name}
@@ -312,7 +316,7 @@
       <div
         class="flex items-center gap-1 mx-2"
         role="radiogroup"
-        aria-label="Color">
+        aria-label={t('color')}>
         {#each COLORS as { color: option, label } (option)}
           <button
             type="button"
@@ -328,7 +332,7 @@
       </div>
       <SymbolButton
         name="undo"
-        title="Undo"
+        title={t('undo')}
         size="36px"
         padding="26%"
         glassy
@@ -337,9 +341,10 @@
           history = history.slice(0, -1)
         }} />
       <div class="flex-1"></div>
-      <button type="button" class="chip" onclick={onclose}>Cancel</button>
+      <button type="button" class="chip" onclick={onclose}
+        >{t('cancel')}</button>
       <Button testId="snag-save-edit" disabled={bitmap === null} onclick={save}
-        >Save as new snag</Button>
+        >{t('saveEdit')}</Button>
     </header>
 
     <div class="stage">
@@ -364,8 +369,8 @@
         {#if typing}
           <input
             class="text-entry"
-            aria-label="Text"
-            placeholder="Type, then Enter"
+            aria-label={t('toolText')}
+            placeholder={t('typeThenEnter')}
             style:left={percent(typing.at.x, size.width)}
             style:top={percent(typing.at.y, size.height)}
             style:outline-color={color}

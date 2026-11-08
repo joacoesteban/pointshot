@@ -1,3 +1,21 @@
 [tools]
 node = "24"
 pnpm = "10.14.0"
+
+[tasks."firefox:lint"]
+description = "Build for Firefox and lint the build with web-ext"
+run = [
+  "pnpm build:firefox",
+  "pnpm dlx web-ext@8 lint --source-dir build/firefox-mv2",
+]
+
+[tasks."firefox:run"]
+description = "Build for Firefox and open it in a temporary profile"
+run = [
+  "pnpm build:firefox",
+  "pnpm dlx web-ext@8 run --source-dir build/firefox-mv2",
+]
+
+[tasks."store:screenshots"]
+description = "Take the store screenshots, in English and Spanish, into build/store"
+run = ["pnpm build:e2e", "pnpm exec playwright test --config store/playwright.config.ts"]
