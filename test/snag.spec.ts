@@ -985,6 +985,51 @@ test('annotates and crops a snag into a new one', async ({
   })
 })
 
+test('keeps text still being typed when the edit is saved', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('ArrowUp')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shots = page.getByTestId('snag-shot')
+  await shots.hover()
+  await shots.getByRole('button', { name: 'Open' }).click()
+  await page
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Edit' })
+    .click()
+  const editor = page.getByTestId('snag-editor')
+  const canvas = editor.locator('canvas')
+  await expect.poll(async () => (await canvas.boundingBox())?.width).toBe(400)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('The editor canvas is not visible')
+  await editor.getByRole('button', { name: 'Text' }).click()
+  await editor.getByRole('radio', { name: 'Black' }).click()
+  await page.mouse.click(box.x + 20, box.y + 20)
+  await editor.getByRole('textbox', { name: 'Text' }).fill('Look')
+  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+  await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
+  // The blue and pink #parent has nothing near black, so near-black pixels are the #1c1c1e text.
+  const dark = await page.evaluate(async () => {
+    const [item] = await navigator.clipboard.read()
+    const bitmap = await createImageBitmap(
+      await (item ?? new ClipboardItem({})).getType('image/png'),
+    )
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+    const context = canvas.getContext('2d')
+    context?.drawImage(bitmap, 0, 0)
+    const data = context?.getImageData(0, 0, bitmap.width, bitmap.height).data
+    return Array.from({ length: (data?.length ?? 0) / 4 }, (_, index) =>
+      [0, 1, 2].every((channel) => (data?.[index * 4 + channel] ?? 255) < 60),
+    ).filter(Boolean).length
+  })
+  expect(dark).toBeGreaterThan(50)
+})
+
 test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
   await togglePopup()
   await page.getByTestId('snag-pick').click()

@@ -260,6 +260,7 @@
   }
 
   function save() {
+    finishTyping()
     match(bitmap)
       .with(P.nonNullable, (bitmap) => {
         const { width, height } = sketch.crop ?? size
