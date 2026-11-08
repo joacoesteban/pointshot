@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { QuotaError } from '~/lib/errors'
 import type { NewShot, Saved } from '~/lib/shot'
 import { SnagDB } from './db'
 import { ShotStore } from './shot-store'
@@ -30,7 +31,7 @@ afterEach(() => {
 
 describe('ShotStore', () => {
   it('returns the saved shot without its image', async () => {
-    const { shot, evicted } = (await store.save(shotAt(1)))._unsafeUnwrap()
+    const { shot, evicted } = (await store.save(shotAt(1), 100))._unsafeUnwrap()
     expect(shot).toEqual({
       id: shot.id,
       createdAt: 1,
@@ -51,7 +52,7 @@ describe('ShotStore', () => {
     ).reduce<Promise<Saved[]>>(
       async (saved, createdAt) => [
         ...(await saved),
-        (await store.save(shotAt(createdAt)))._unsafeUnwrap(),
+        (await store.save(shotAt(createdAt), 100))._unsafeUnwrap(),
       ],
       Promise.resolve([]),
     )
@@ -66,8 +67,24 @@ describe('ShotStore', () => {
     )
   })
 
+  it('evicts down to a lower limit on the next save', async () => {
+    await store.save(shotAt(1), 100)
+    await store.save(shotAt(2), 100)
+    const { evicted } = (await store.save(shotAt(3), 1))._unsafeUnwrap()
+    expect(evicted).toHaveLength(2)
+    expect((await store.list())._unsafeUnwrap()).toHaveLength(1)
+  })
+
+  it('tells a full disk apart from other storage failures', async () => {
+    vi.spyOn(db, 'transaction').mockRejectedValue(
+      new Dexie.AbortError('Aborted', new Dexie.QuotaExceededError()),
+    )
+    const error = (await store.save(shotAt(1), 100))._unsafeUnwrapErr()
+    expect(error).toBeInstanceOf(QuotaError)
+  })
+
   it('drops a removed shot from the list', async () => {
-    const { shot } = (await store.save(shotAt(1)))._unsafeUnwrap()
+    const { shot } = (await store.save(shotAt(1), 100))._unsafeUnwrap()
     await store.remove(shot.id)
     expect((await store.list())._unsafeUnwrap()).toEqual([])
   })

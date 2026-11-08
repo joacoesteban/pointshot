@@ -9,7 +9,12 @@
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
   import { Download } from '~/lib/download'
-  import { ClipboardError, EmptyAreaError, StorageError } from '~/lib/errors'
+  import {
+    ClipboardError,
+    EmptyAreaError,
+    QuotaError,
+    StorageError,
+  } from '~/lib/errors'
   import { Img } from '~/lib/image'
   import { ElementPicker } from '~/lib/picker'
   import type { Shot } from '~/lib/shot'
@@ -51,6 +56,10 @@
         () => 'Saved, but the page blocked the clipboard',
       )
       .with(P.instanceOf(EmptyAreaError), () => 'Nothing visible to snag')
+      .with(
+        P.instanceOf(QuotaError),
+        () => 'Copied, but storage is full. Delete some snags to keep more',
+      )
       .with(
         P.instanceOf(StorageError),
         () => 'Copied, but it could not be saved',

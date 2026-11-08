@@ -7,6 +7,7 @@ import { ShotStore } from '~/background/shot-store'
 import { Throttle } from '~/background/throttle'
 import { CaptureError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
+import { SettingsStore } from '~/lib/settings'
 import {
   captureVisibleTabStream,
   listShotsStream,
@@ -41,15 +42,34 @@ const inject = (tabId: number) =>
 const deliver = (send: Send, tabId: number) =>
   ResultAsync.fromPromise(send({ tabId }), toError(CaptureError))
 
+const toolbarAction = () =>
+  match(import.meta.env.MANIFEST_VERSION)
+    .with(2, () => browser.browserAction)
+    .otherwise(() => browser.action)
+
+// Tab-specific badge and title, which the browser resets when the tab navigates.
+const flag = (tabId: number, text: string, title: string) => {
+  const action = toolbarAction()
+  void Promise.all([
+    action.setBadgeText({ tabId, text }),
+    action.setTitle({ tabId, title }),
+  ])
+}
+
 // The content script is injected on first use, so a tab without a receiver gets it before the message is sent again.
 // Tabs that block content scripts, like the Web Store or chrome:// pages, fail both.
 const sendToActiveTab = (send: Send) =>
   activeTabId().andThen((tabId) =>
     match(tabId)
       .with(P.number, (tabId) =>
-        deliver(send, tabId).orElse(() =>
-          inject(tabId).andThen(() => deliver(send, tabId)),
-        ),
+        deliver(send, tabId)
+          .orElse(() => inject(tabId).andThen(() => deliver(send, tabId)))
+          .andTee(() => {
+            flag(tabId, '', browser.runtime.getManifest().name)
+          })
+          .orTee(() => {
+            flag(tabId, '!', 'Snag cannot run on this page')
+          }),
       )
       .otherwise(() => okAsync(undefined)),
   )
@@ -71,11 +91,6 @@ const captureTab = (sender: Browser.runtime.MessageSender) =>
       errAsync(new CaptureError('Capture requested outside a tab')),
     )
 
-const toolbarAction = () =>
-  match(import.meta.env.MANIFEST_VERSION)
-    .with(2, () => browser.browserAction)
-    .otherwise(() => browser.action)
-
 export default defineBackground(() => {
   const store = new ShotStore(new SnagDB())
 
@@ -86,7 +101,9 @@ export default defineBackground(() => {
     void ReplyCodec.encode(store.list()).then(respond)
   })
   saveShotStream.subscribe(([shot, , respond]) => {
-    void ReplyCodec.encode(store.save(shot)).then(respond)
+    void ReplyCodec.encode(
+      SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
+    ).then(respond)
   })
   removeShotStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.remove(id)).then(respond)
@@ -94,6 +111,8 @@ export default defineBackground(() => {
   shotImageUrlStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.imageUrl(id)).then(respond)
   })
+
+  void toolbarAction().setBadgeBackgroundColor({ color: '#ff3366' })
 
   toolbarAction().onClicked.addListener(() => {
     void sendToActiveTab(togglePopup.toTab)

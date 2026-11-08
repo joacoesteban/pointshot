@@ -15,7 +15,11 @@ export class ClipboardError extends Error {
 }
 
 export class StorageError extends Error {
-  override readonly name = 'StorageError'
+  override readonly name: 'StorageError' | 'QuotaError' = 'StorageError'
+}
+
+export class QuotaError extends StorageError {
+  override readonly name = 'QuotaError'
 }
 
 export type ErrorKind<E extends Error> = new (

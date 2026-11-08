@@ -22,7 +22,7 @@ export type Saved = {
 
 export type Reply<T> =
   | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly error: string }
+  | { readonly ok: false; readonly error: string; readonly kind: string }
 
 // Pages without a host, like file:// ones, are named after their scheme.
 export const siteOf = (url: string) =>
