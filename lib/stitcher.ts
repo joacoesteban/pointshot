@@ -119,12 +119,12 @@ export class Stitcher {
               .map((bitmap) => {
                 const at = scrolled()
                 const { clientWidth, clientHeight } = document.documentElement
-                const part = intersect(area, {
-                  left: at.x,
-                  top: at.y,
-                  width: clientWidth,
-                  height: clientHeight,
-                })
+                const viewport = { width: clientWidth, height: clientHeight }
+                // A tile near the end of the page scrolls less than planned and overlaps the one before, so it only draws its planned part: redrawing the overlap would paint over fixed elements an earlier tile captured.
+                const part = intersect(
+                  intersect(area, { left: tile.x, top: tile.y, ...viewport }),
+                  { left: at.x, top: at.y, ...viewport },
+                )
                 // captureVisibleTab renders the whole window, scrollbars included, at device pixels, so the ratio to innerWidth also absorbs page zoom.
                 const source = bitmap.width / window.innerWidth
                 match(part)

@@ -629,6 +629,30 @@ test('snags the whole page, with fixed elements once', async ({
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
 })
 
+test('keeps a fixed element where a clamped last tile overlaps it', async ({
+  page,
+  togglePopup,
+}) => {
+  // A page 1000 px tall in a 700 px window: the second tile, planned at 700, can only scroll to 300 and overlaps the first from 300 to 700.
+  await page.evaluate(() => {
+    document.body.style.height = '1000px'
+    document
+      .querySelectorAll('body > :not(#bubble):not(script)')
+      .forEach((element) => {
+        element.remove()
+      })
+  })
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag the whole page' }).click()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 15_000,
+  })
+  expect(await clipboardImage(page, [[725, 625]])).toMatchObject({
+    height: 1000,
+    at: [[0, 0, 0, 255]],
+  })
+})
+
 test('snags an area dragged over the page', async ({ page, togglePopup }) => {
   await togglePopup()
   await page.getByRole('button', { name: 'Snag an area' }).click()
