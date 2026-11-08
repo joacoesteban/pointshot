@@ -53,7 +53,9 @@
   let site = $state<string | null>(null)
 
   const sites = $derived(sitesOf(shots))
-  const shown = $derived(filterShots(shots, { query, site }))
+  // A site whose snags are all gone stops filtering, so its select can disappear without hiding the rest.
+  const filteredSite = $derived(sites.find((each) => each === site) ?? null)
+  const shown = $derived(filterShots(shots, { query, site: filteredSite }))
 
   // Keys typed in the popup stop there, so the page's shortcuts do not see them.
   const contain = (event: KeyboardEvent) => {

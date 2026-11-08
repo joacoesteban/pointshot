@@ -21,12 +21,18 @@ const UNDO_WINDOW = 5_000
 export class ShotLibrary {
   private readonly shots$$ = new BehaviorSubject<Shot[]>([])
   private readonly removed$$ = new BehaviorSubject<readonly Shot[]>([])
+  // Removals sent to the background, past undoing but hidden until it replies.
+  private readonly committing$$ = new BehaviorSubject<readonly string[]>([])
   private readonly flush$ = new Subject<void>()
   private readonly failures$$ = new Subject<StorageError>()
 
-  readonly shots$ = combineLatest([this.shots$$, this.removed$$]).pipe(
-    map(([shots, removed]) => {
-      const ids = removed.map(({ id }) => id)
+  readonly shots$ = combineLatest([
+    this.shots$$,
+    this.removed$$,
+    this.committing$$,
+  ]).pipe(
+    map(([shots, removed, committing]) => {
+      const ids = [...removed.map(({ id }) => id), ...committing]
       return shots.filter(({ id }) => !ids.includes(id))
     }),
   )
@@ -77,8 +83,12 @@ export class ShotLibrary {
     const ids = this.removed$$.value.map(({ id }) => id)
     return match(ids)
       .with([], () => okAsync<Shot[], StorageError>(this.shots$$.value))
-      .otherwise((ids) =>
-        ReplyCodec.decode(removeShots(ids), StorageError)
+      .otherwise((ids) => {
+        this.committing$$.next([...this.committing$$.value, ...ids])
+        this.removed$$.next(
+          this.removed$$.value.filter(({ id }) => !ids.includes(id)),
+        )
+        return ReplyCodec.decode(removeShots(ids), StorageError)
           .map(() => this.publish(this.without(ids)))
           .orTee((error) => {
             this.failures$$.next(error)
@@ -88,14 +98,14 @@ export class ShotLibrary {
           })
           .orTee(() => {
             this.settle(ids)
-          }),
-      )
+          })
+      })
   }
 
   // A failed removal shows its shots again, since they are still stored.
   private settle(ids: readonly string[]) {
-    this.removed$$.next(
-      this.removed$$.value.filter(({ id }) => !ids.includes(id)),
+    this.committing$$.next(
+      this.committing$$.value.filter((id) => !ids.includes(id)),
     )
   }
 

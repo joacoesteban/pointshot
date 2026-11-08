@@ -787,6 +787,30 @@ test('searches snags and deletes the ones shown', async ({
   await expect(page.getByTestId('snag-undo')).toContainText('Deleted 2 snags')
 })
 
+test('stops filtering by a site once its snags are gone', async ({
+  context,
+  page,
+  togglePopup,
+}) => {
+  const other = 'https://other.test/boxes.html'
+  await context.route(other, (route) =>
+    route.fulfill({ path: 'test/fixtures/boxes.html' }),
+  )
+  await togglePopup()
+  await snagTarget(page, '#target')
+  await page.goto(other)
+  await togglePopup()
+  await snagTarget(page, '#pill')
+  const shots = page.getByTestId('snag-shot')
+  await expect(shots).toHaveCount(2)
+  await page.getByRole('combobox', { name: 'Site' }).selectOption('other.test')
+  await expect(shots).toHaveCount(1)
+  await page.getByRole('button', { name: 'Delete 1' }).click()
+  await expect(page.getByRole('combobox', { name: 'Site' })).toBeHidden()
+  await expect(shots).toHaveCount(1)
+  await expect(shots).toContainText('200 × 120')
+})
+
 test('keeps keys typed in the search away from the page', async ({
   page,
   togglePopup,
