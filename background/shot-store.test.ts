@@ -85,7 +85,7 @@ describe('ShotStore', () => {
 
   it('drops a removed shot from the list', async () => {
     const { shot } = (await store.save(shotAt(1), 100))._unsafeUnwrap()
-    await store.remove(shot.id)
+    await store.remove([shot.id])
     expect((await store.list())._unsafeUnwrap()).toEqual([])
   })
 })

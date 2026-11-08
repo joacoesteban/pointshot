@@ -17,8 +17,9 @@ pnpm bundle:all   # zips for Chrome and Firefox in build/
 ```
 
 The e2e build (`--mode e2e`) differs from production only in asking for
-`<all_urls>`: tests open the popup by dispatching `action.onClicked`, which
-does not grant `activeTab`. The first run needs
+`<all_urls>` and `downloads` up front: tests open the popup by dispatching
+`action.onClicked`, which does not grant `activeTab`, and Playwright cannot
+grant the optional `downloads` permission. The first run needs
 `pnpm exec playwright install chromium`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, `bundle:all` and the

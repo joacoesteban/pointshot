@@ -11,7 +11,17 @@ export default defineConfig({
   },
   manifest: ({ mode }) => ({
     name: 'Snag: Screenshot Any Element',
-    permissions: ['storage', 'unlimitedStorage', 'activeTab', 'scripting'],
+    permissions: [
+      'storage',
+      'unlimitedStorage',
+      'activeTab',
+      'scripting',
+      // Playwright cannot grant optional permissions, so the end-to-end build asks for downloads up front.
+      ...match(mode)
+        .with('e2e', () => ['downloads'])
+        .otherwise(() => []),
+    ],
+    optional_permissions: ['downloads'],
     // Playwright cannot click the toolbar, which is what grants activeTab, so the end-to-end build asks for every host up front.
     host_permissions: match(mode)
       .with('e2e', () => ['<all_urls>'])

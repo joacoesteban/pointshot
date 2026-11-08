@@ -5,15 +5,17 @@ import { defineBackground } from 'wxt/utils/define-background'
 import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
 import { Throttle } from '~/background/throttle'
-import { CaptureError, toError } from '~/lib/errors'
+import { CaptureError, DownloadError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import {
+  downloadFileStream,
+  type FileDownload,
   captureMode,
   captureVisibleTabStream,
   listShotsStream,
   pickElement,
-  removeShotStream,
+  removeShotsStream,
   saveShotStream,
   shotImageUrlStream,
   togglePopup,
@@ -92,6 +94,24 @@ const captureTab = (sender: Browser.runtime.MessageSender) =>
       errAsync(new CaptureError('Capture requested outside a tab')),
     )
 
+const download = ({ url, filename, saveAs }: FileDownload) =>
+  ResultAsync.fromPromise(
+    browser.permissions.contains({ permissions: ['downloads'] }),
+    toError(DownloadError),
+  ).andThen((granted) =>
+    match(granted)
+      .with(true, () =>
+        ResultAsync.fromPromise(
+          browser.downloads.download({ url, filename, saveAs }),
+          toError(DownloadError),
+        ),
+      )
+      .with(false, () =>
+        errAsync(new DownloadError('Downloads are not allowed')),
+      )
+      .exhaustive(),
+  )
+
 export default defineBackground(() => {
   const store = new ShotStore(new SnagDB())
 
@@ -106,8 +126,11 @@ export default defineBackground(() => {
       SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
     ).then(respond)
   })
-  removeShotStream.subscribe(([id, , respond]) => {
-    void ReplyCodec.encode(store.remove(id)).then(respond)
+  removeShotsStream.subscribe(([ids, , respond]) => {
+    void ReplyCodec.encode(store.remove(ids)).then(respond)
+  })
+  downloadFileStream.subscribe(([file, , respond]) => {
+    void ReplyCodec.encode(download(file)).then(respond)
   })
   shotImageUrlStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.imageUrl(id)).then(respond)

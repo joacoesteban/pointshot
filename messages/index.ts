@@ -26,10 +26,21 @@ export const [saveShot, saveShotStream] = getMessage<NewShot, Reply<Saved>>(
   { async: true },
 )
 
-export const [removeShot, removeShotStream] = getMessage<
-  string,
+export const [removeShots, removeShotsStream] = getMessage<
+  readonly string[],
   Reply<undefined>
->('remove-shot', { async: true })
+>('remove-shots', { async: true })
+
+export type FileDownload = {
+  readonly url: string
+  readonly filename: string
+  readonly saveAs: boolean
+}
+
+export const [downloadFile, downloadFileStream] = getMessage<
+  FileDownload,
+  Reply<number>
+>('download-file', { async: true })
 
 export const [shotImageUrl, shotImageUrlStream] = getMessage<
   string,

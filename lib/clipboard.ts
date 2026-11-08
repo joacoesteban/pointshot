@@ -8,7 +8,16 @@ const write = ResultAsync.fromThrowable(
   toError(ClipboardError),
 )
 
+const writeText = ResultAsync.fromThrowable(
+  (text: string) => navigator.clipboard.writeText(text),
+  toError(ClipboardError),
+)
+
 export class Clipboard {
+  static writeText(text: string): ResultAsync<void, ClipboardError> {
+    return writeText(text)
+  }
+
   // Must be called synchronously inside a user gesture; the image itself may resolve later.
   static writePng(
     png: ResultAsync<Blob, Error>,

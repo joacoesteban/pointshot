@@ -29,3 +29,34 @@ export const siteOf = (url: string) =>
   match(new URL(url))
     .with({ hostname: '' }, ({ protocol }) => protocol.replace(/:$/, ''))
     .otherwise(({ hostname }) => hostname)
+
+export type Filter = {
+  readonly query: string
+  readonly site: string | null
+}
+
+export const filterShots = (
+  shots: readonly Shot[],
+  { query, site }: Filter,
+) => {
+  const needle = query.trim().toLowerCase()
+  return shots.filter(
+    ({ url, title }) =>
+      match(site)
+        .with(null, () => true)
+        .otherwise((site) => siteOf(url) === site) &&
+      [title, url].some((text) => text.toLowerCase().includes(needle)),
+  )
+}
+
+export const sitesOf = (shots: readonly Shot[]) =>
+  [...new Set(shots.map(({ url }) => siteOf(url)))].sort()
+
+export type ShotText = 'markdown' | 'dataUrl' | 'link'
+
+export const textOf = (text: ShotText, { url, title }: Shot, image: string) =>
+  match(text)
+    .with('markdown', () => `![${title.replace(/[[\]]/g, '')}](${image})`)
+    .with('dataUrl', () => image)
+    .with('link', () => url)
+    .exhaustive()

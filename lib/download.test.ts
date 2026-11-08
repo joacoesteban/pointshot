@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fileName } from './download'
+import { fileName, pathOf } from './download'
 import type { Shot } from './shot'
 
 const shot: Shot = {
@@ -19,5 +19,16 @@ describe('fileName', () => {
     )
     expect(fileName(shot, 'jpeg')).toMatch(/\.jpg$/)
     expect(fileName(shot, 'webp')).toMatch(/\.webp$/)
+  })
+})
+
+describe('pathOf', () => {
+  it('puts the file in a folder of the download folder', () => {
+    expect(pathOf('Snag/shots', 'a.png')).toBe('Snag/shots/a.png')
+  })
+
+  it('drops empty and relative parts and replaces reserved characters', () => {
+    expect(pathOf(' /../Snag\\./what?/ ', 'a.png')).toBe('Snag/what_/a.png')
+    expect(pathOf('', 'a.png')).toBe('a.png')
   })
 })

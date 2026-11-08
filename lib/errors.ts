@@ -22,6 +22,10 @@ export class QuotaError extends StorageError {
   override readonly name = 'QuotaError'
 }
 
+export class DownloadError extends Error {
+  override readonly name = 'DownloadError'
+}
+
 export type ErrorKind<E extends Error> = new (
   message: string,
   options?: ErrorOptions,
