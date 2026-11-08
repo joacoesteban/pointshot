@@ -11,6 +11,7 @@
     opaque?: boolean
     glassy?: boolean
     disabled?: boolean
+    pressed?: boolean | undefined
     roundSize?: string
     roundPadding?: string
     title?: string
@@ -24,6 +25,7 @@
     opaque = false,
     glassy = false,
     disabled = false,
+    pressed,
     roundSize = '',
     roundPadding = '',
     title = '',
@@ -49,10 +51,12 @@
     {title}
     aria-label={title || undefined}
     data-testid={testId}
+    aria-pressed={pressed}
     class="outer f-center btn"
     class:round
     class:opaque
     class:glassy
+    class:pressed
     style:--gradient-top={topGradient}
     style:--gradient-bottom={bottomGradient}
     style:--focus-color={focusColor}

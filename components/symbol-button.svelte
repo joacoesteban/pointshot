@@ -11,6 +11,7 @@
     padding?: string
     opaque?: boolean
     disabled?: boolean
+    pressed?: boolean | undefined
     glassy?: boolean
   }
 
@@ -22,6 +23,7 @@
     padding = '15%',
     opaque = false,
     disabled = false,
+    pressed,
     glassy = false,
   }: Props = $props()
 </script>
@@ -29,6 +31,7 @@
 <Button
   {opaque}
   {disabled}
+  {pressed}
   {glassy}
   {title}
   {onclick}

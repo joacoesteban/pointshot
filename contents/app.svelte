@@ -2,10 +2,11 @@
   import '~/lib/fonts-importer'
   import { match, P } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { okAsync } from 'neverthrow'
+  import { okAsync, type ResultAsync } from 'neverthrow'
   import { fromEvent, of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
+  import Editor from '~/components/editor.svelte'
   import Popup from '~/components/popup.svelte'
   import Preview from '~/components/preview.svelte'
   import Selection from '~/components/selection.svelte'
@@ -64,6 +65,7 @@
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
   let previewing = $state<{ shot: Shot; image: string | null } | null>(null)
+  let editing = $state<{ shot: Shot; image: string } | null>(null)
   let position = $state<Position | null>(null)
 
   const placement = $derived({
@@ -278,6 +280,25 @@
     )
   }
 
+  function edit(shot: Shot, image: string) {
+    previewing = null
+    editing = { shot, image }
+  }
+
+  function saveEdit(
+    png: ResultAsync<Blob, Error>,
+    size: { readonly width: number; readonly height: number },
+  ) {
+    const source = match(editing)
+      .with(P.nonNullable, ({ shot: { url, title } }) => ({ url, title }))
+      .otherwise(() => ({ url: location.href, title: document.title }))
+    editing = null
+    void snagger.keep(png, okAsync({ ...source, ...size })).match(
+      () => toast.success('Saved and copied to clipboard'),
+      (error) => toast.error(explain(error)),
+    )
+  }
+
   function copyText(text: string, label: string) {
     void Clipboard.writeText(text).match(
       () => toast.success(`Copied ${label}`),
@@ -338,7 +359,17 @@
       ondownload={download}
       onremove={(shot) => {
         remove([shot])
-      }} />
+      }}
+      onedit={edit} />
+  {/if}
+  {#if editing}
+    <Editor
+      shot={editing.shot}
+      image={editing.image}
+      onclose={() => {
+        editing = null
+      }}
+      onsave={saveEdit} />
   {/if}
   <Highlight {target$} />
   {#if selecting}

@@ -918,3 +918,104 @@ test('downloads into a folder through the downloads API', async ({
       requested: expect.stringMatching(/^Snag shots\/snag-snag\.test-.*\.png$/),
     })
 })
+
+test('annotates and crops a snag into a new one', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('ArrowUp')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shots = page.getByTestId('snag-shot')
+  await expect(shots).toHaveCount(1)
+  await shots.hover()
+  await shots.getByRole('button', { name: 'Open' }).click()
+  await page
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Edit' })
+    .click()
+  const editor = page.getByTestId('snag-editor')
+  await expect(editor).toBeVisible()
+  const canvas = editor.locator('canvas')
+  // The editor scales in, so the canvas is measured once it shows the 400 px snag at full size.
+  await expect.poll(async () => (await canvas.boundingBox())?.width).toBe(400)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('The editor canvas is not visible')
+  const drag = async (from: [number, number], to: [number, number]) => {
+    await page.mouse.move(box.x + from[0], box.y + from[1])
+    await page.mouse.down()
+    await page.mouse.move(box.x + to[0], box.y + to[1], { steps: 5 })
+    await page.mouse.up()
+  }
+
+  await editor.getByRole('button', { name: 'Rectangle' }).click()
+  await drag([10, 10], [100, 80])
+  await editor.getByRole('button', { name: 'Text' }).click()
+  await page.mouse.click(box.x + 150, box.y + 150)
+  await editor.getByRole('textbox', { name: 'Text' }).fill('Look')
+  await editor.getByRole('textbox', { name: 'Text' }).press('Enter')
+  await editor.getByRole('button', { name: 'Undo' }).click()
+  await editor.getByRole('button', { name: 'Crop' }).click()
+  await drag([5, 5], [205, 155])
+  await expect(editor.getByTestId('snag-crop')).toBeVisible()
+  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+
+  await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
+  await expect(editor).toBeHidden()
+  await expect(shots).toHaveCount(2)
+  await expect(shots.first()).toContainText('200 × 150')
+  // The rectangle's 3 px stroke runs down x = 10 of the snag, so x = 5 of the crop; the pink #target starts at 100, 90.
+  expect(
+    await clipboardImage(page, [
+      [5, 40],
+      [150, 120],
+      [30, 40],
+    ]),
+  ).toMatchObject({
+    width: 200,
+    height: 150,
+    at: [
+      [255, 59, 48, 255],
+      [255, 51, 102, 255],
+      [51, 102, 255, 255],
+    ],
+  })
+})
+
+test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('ArrowUp')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shots = page.getByTestId('snag-shot')
+  await shots.hover()
+  await shots.getByRole('button', { name: 'Open' }).click()
+  await page
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Edit' })
+    .click()
+  const editor = page.getByTestId('snag-editor')
+  const canvas = editor.locator('canvas')
+  // The editor scales in, so the canvas is measured once it shows the 400 px snag at full size.
+  await expect.poll(async () => (await canvas.boundingBox())?.width).toBe(400)
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('The editor canvas is not visible')
+  await editor.getByRole('button', { name: 'Blur' }).click()
+  // Over the left edge of the pink #target, which starts at x = 100 of the snag.
+  await page.mouse.move(box.x + 85, box.y + 100)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 125, box.y + 140, { steps: 4 })
+  await page.mouse.up()
+  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+  await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
+  // Cells are 10 px, so the cell from x = 95 to 105 mixes five columns of blue with five of pink.
+  const image = await clipboardImage(page, [[100, 120]])
+  expect(image?.at).toHaveLength(1)
+  expect(image?.at).not.toEqual([[51, 102, 255, 255]])
+  expect(image?.at).not.toEqual([[255, 51, 102, 255]])
+})
