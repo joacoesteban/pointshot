@@ -346,5 +346,17 @@
   },
   "settingNotSaved": {
     "message": "Could not save the setting"
+  },
+  "version": {
+    "message": "version"
+  },
+  "sourceCode": {
+    "message": "Source code"
+  },
+  "reportBug": {
+    "message": "Report a bug"
+  },
+  "madeBy": {
+    "message": "With 🧠 + 🩷 by"
   }
 }

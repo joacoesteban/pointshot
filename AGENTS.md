@@ -39,6 +39,7 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 - `lib/`: content-side logic, one class per file (`Snagger`, `ElementPicker`,
   `ShotLibrary`, `Stage`, `Img`, `Clipboard`, ...).
 - `components/`: Svelte components. `contents/app.svelte` is the root.
+  `components/README.md` documents each one and the shared style classes.
 - `messages/index.ts`: every runtime message, typed through
   `@extend-chrome/messages`.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
@@ -100,5 +101,6 @@ The compiler and linter enforce most of these; `pnpm check` must pass.
 - Copy lives in `public/_locales/<locale>/messages.json`, English (`en`) and
   Argentinian Spanish (`es_419`, voseo), and is read through `t()` in
   `lib/i18n.ts`, typed by the English keys. Each file names its locale in a
-  `locale` message, which dates follow. E2E tests pick the language with
+  `locale` message, which dates follow. After adding a key, run
+  `pnpm exec wxt prepare` so `t()` accepts it. E2E tests pick the language with
   `test.use({ lang })`.

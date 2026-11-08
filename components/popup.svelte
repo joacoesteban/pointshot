@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import { flip } from 'svelte/animate'
   import { match } from 'ts-pattern'
@@ -80,14 +81,14 @@
   use:draggable={placement}>
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
     <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
-      <h2 class="font-black text-2xl m-0 opacity-25">snag</h2>
+      <h2 class="font-black m-0 opacity-25">snag</h2>
       <div class="flex items-center gap-2">
         <SymbolButton
           name="gear"
           title={t('options')}
           size="40px"
           padding="28%"
-          glassy
+          opaque
           disabled={ghost}
           onclick={onoptions} />
         <SymbolButton
@@ -105,7 +106,7 @@
       <div class="toolbar flex items-center gap-2 mb-3 px-1" role="search">
         <input
           type="search"
-          class="input input-sm input-bordered flex-1 min-w-0"
+          class="input input-sm input-bordered field flex-1 min-w-0"
           placeholder={t('searchSnags')}
           aria-label={t('searchSnags')}
           onkeydown={contain}
@@ -114,7 +115,7 @@
           bind:value={query} />
         {#if sites.length > 1}
           <select
-            class="select select-sm select-bordered max-w-[9rem]"
+            class="select select-sm select-bordered field max-w-[9rem]"
             aria-label={t('site')}
             onkeydown={contain}
             onkeyup={contain}
@@ -126,9 +127,10 @@
             {/each}
           </select>
         {/if}
-        <button
-          type="button"
-          class="chip"
+        <Button
+          small
+          opaque
+          colorSeed={COLOR_SEEDS.cancel}
           disabled={ghost || shown.length === 0}
           onclick={() => {
             onremove(shown)
@@ -136,7 +138,7 @@
           {match(shown.length)
             .with(shots.length, () => t('deleteAll'))
             .otherwise((count) => t('deleteShown', String(count)))}
-        </button>
+        </Button>
       </div>
     {/if}
 
@@ -181,8 +183,8 @@
           in:transitionIn
           out:transitionOut>
           <span>{deleted(removed.length)}</span>
-          <button type="button" class="chip" onclick={onundo}
-            >{t('undo')}</button>
+          <Button small opaque icon="undo" onclick={onundo}
+            >{t('undo')}</Button>
         </div>
       {/if}
       <div class="flex items-center gap-2">

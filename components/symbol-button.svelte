@@ -11,8 +11,9 @@
     padding?: string
     opaque?: boolean
     disabled?: boolean
-    pressed?: boolean | undefined
+    highlight?: boolean | undefined
     glassy?: boolean
+    colorSeed?: string | undefined
   }
 
   const {
@@ -23,16 +24,18 @@
     padding = '15%',
     opaque = false,
     disabled = false,
-    pressed,
+    highlight,
     glassy = false,
+    colorSeed,
   }: Props = $props()
 </script>
 
 <Button
   {opaque}
   {disabled}
-  {pressed}
+  {highlight}
   {glassy}
+  {colorSeed}
   {title}
   {onclick}
   round

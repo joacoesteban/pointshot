@@ -6,6 +6,7 @@
   import { paint } from '~/lib/paint'
   import { siteOf, textOf, type Shot, type ShotText } from '~/lib/shot'
   import { transitionIn, transitionOut } from '~/lib/transitions'
+  import Button from './button.svelte'
   import SymbolButton from './symbol-button.svelte'
 
   type Props = {
@@ -142,13 +143,13 @@
       <div class="flex items-center gap-1 text-xs">
         <span class="opacity-60 mr-1">{t('copyAs')}</span>
         {#each texts as { text, label } (text)}
-          <button
-            type="button"
-            class="chip"
+          <Button
+            small
+            opaque
             disabled={image === null}
             onclick={() => {
               oncopytext(textOf(text, shot, image ?? ''), label)
-            }}>{label}</button>
+            }}>{label}</Button>
         {/each}
       </div>
     </footer>

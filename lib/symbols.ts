@@ -6,6 +6,7 @@ import crop from '~/assets/symbols/crop.json'
 import docOnDoc from '~/assets/symbols/doc.on.doc.json'
 import expand from '~/assets/symbols/expand.json'
 import gear from '~/assets/symbols/gear.json'
+import github from '~/assets/symbols/github.json'
 import page from '~/assets/symbols/page.json'
 import pencil from '~/assets/symbols/pencil.json'
 import rectangle from '~/assets/symbols/rectangle.json'
@@ -46,6 +47,7 @@ const raw = {
   docOnDoc,
   expand,
   gear,
+  github,
   page,
   pencil,
   rectangle,
