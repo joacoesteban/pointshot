@@ -64,10 +64,14 @@ const captureTab = () =>
 export class Stitcher {
   constructor(private readonly stage: Stage) {}
 
-  shoot(plan: Plan): ResultAsync<Blob, CaptureError> {
+  // Density is image pixels per CSS pixel. Snags past the size limits come out at a lower one.
+  shoot(
+    plan: Plan,
+    density: number,
+  ): ResultAsync<{ png: Blob; downscaled: boolean }, CaptureError> {
     const { width, height } = plan.area
     const scale = Math.min(
-      devicePixelRatio,
+      density,
       Math.sqrt(MAX_PIXELS / (width * height)),
       MAX_SIDE / Math.max(width, height),
     )
@@ -77,7 +81,9 @@ export class Stitcher {
     )
     return match(canvas.getContext('2d'))
       .with(P.nonNullable, (context) =>
-        this.stage.offstage(() => this.draw(context, plan, scale)),
+        this.stage
+          .offstage(() => this.draw(context, plan, scale))
+          .map((png) => ({ png, downscaled: scale < density })),
       )
       .otherwise(() =>
         errAsync(new CaptureError('Could not allocate a canvas for the snag')),
@@ -113,12 +119,12 @@ export class Stitcher {
               .map((bitmap) => {
                 const at = scrolled()
                 const { clientWidth, clientHeight } = document.documentElement
-                const part = intersect(area, {
-                  left: at.x,
-                  top: at.y,
-                  width: clientWidth,
-                  height: clientHeight,
-                })
+                const viewport = { width: clientWidth, height: clientHeight }
+                // A tile near the end of the page scrolls less than planned and overlaps the one before, so it only draws its planned part: redrawing the overlap would paint over fixed elements an earlier tile captured.
+                const part = intersect(
+                  intersect(area, { left: tile.x, top: tile.y, ...viewport }),
+                  { left: at.x, top: at.y, ...viewport },
+                )
                 // captureVisibleTab renders the whole window, scrollbars included, at device pixels, so the ratio to innerWidth also absorbs page zoom.
                 const source = bitmap.width / window.innerWidth
                 match(part)

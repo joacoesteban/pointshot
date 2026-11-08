@@ -9,6 +9,7 @@ import { CaptureError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import {
+  captureMode,
   captureVisibleTabStream,
   listShotsStream,
   pickElement,
@@ -122,6 +123,15 @@ export default defineBackground(() => {
     void match(command)
       .with('toggle-popup', () => sendToActiveTab(togglePopup.toTab))
       .with('pick-element', () => sendToActiveTab(pickElement.toTab))
+      .with('snag-selection', () =>
+        sendToActiveTab((options) => captureMode('selection', options)),
+      )
+      .with('snag-visible', () =>
+        sendToActiveTab((options) => captureMode('visible', options)),
+      )
+      .with('snag-page', () =>
+        sendToActiveTab((options) => captureMode('page', options)),
+      )
       .otherwise(() => undefined)
   })
 })

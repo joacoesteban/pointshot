@@ -2,6 +2,7 @@
   import { flip } from 'svelte/animate'
   import { draggable } from '~/lib/draggable'
   import type { Shot } from '~/lib/shot'
+  import type { Mode } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
   import ShotCard from './shot-card.svelte'
@@ -14,6 +15,7 @@
     onclose: () => void
     onpick: () => void
     onpicklater: () => void
+    oncapture: (mode: Mode) => void
     oncopy: (shot: Shot) => void
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
@@ -26,10 +28,17 @@
     onclose,
     onpick,
     onpicklater,
+    oncapture,
     oncopy,
     ondownload,
     onremove,
   }: Props = $props()
+
+  const modes = [
+    { name: 'region', title: 'Snag an area', mode: 'selection' },
+    { name: 'window', title: 'Snag what the window shows', mode: 'visible' },
+    { name: 'page', title: 'Snag the whole page', mode: 'page' },
+  ] as const
 </script>
 
 <div
@@ -83,6 +92,18 @@
       <div class="flex items-center gap-2">
         <Button testId="snag-pick" disabled={ghost} onclick={onpick}
           >Snag</Button>
+        {#each modes as { name, title, mode } (mode)}
+          <SymbolButton
+            {name}
+            {title}
+            size="40px"
+            padding="26%"
+            glassy
+            disabled={ghost}
+            onclick={() => {
+              oncapture(mode)
+            }} />
+        {/each}
         <SymbolButton
           name="timer"
           title="Snag after a countdown"

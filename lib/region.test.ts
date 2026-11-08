@@ -5,6 +5,7 @@ import {
   intersect,
   radius,
   shift,
+  span,
   steps,
   type Area,
 } from './region'
@@ -86,5 +87,13 @@ describe('radius', () => {
 
   it('resolves percentages against the width and the height', () => {
     expect(radius('50%', area)).toEqual({ x: 100, y: 50 })
+  })
+})
+
+describe('span', () => {
+  it('spans two corners whichever way the drag went', () => {
+    expect(span({ x: 300, y: 230 }, { x: 100, y: 130 })).toEqual(
+      box(100, 130, 200, 100),
+    )
   })
 })

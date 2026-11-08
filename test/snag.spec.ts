@@ -3,8 +3,11 @@ import { expect, FIXTURE_URL, INSECURE_FIXTURE_URL, test } from './fixtures'
 
 type Pixel = readonly [number, number, number, number]
 
-const clipboardImage = (page: Page) =>
-  page.evaluate(async () => {
+const clipboardImage = (
+  page: Page,
+  points: readonly (readonly [number, number])[] = [],
+) =>
+  page.evaluate(async (points) => {
     const [item] = await navigator.clipboard.read()
     if (!item?.types.includes('image/png')) return null
     const bitmap = await createImageBitmap(await item.getType('image/png'))
@@ -26,8 +29,9 @@ const clipboardImage = (page: Page) =>
         ([r, g, b, a]) => r === 0 && g === 0 && b === 0 && a === 255,
       ).length,
       clear: pixels.filter(([, , , a]) => a === 0).length,
+      at: points.map(pixel),
     }
-  })
+  }, points)
 
 const center = async (page: Page, selector: string) => {
   const box = await page.locator(selector).boundingBox()
@@ -255,6 +259,7 @@ test('stitches an element taller than the viewport and restores the scroll', asy
     ],
     black: 300 * 30,
     clear: 0,
+    at: [],
   })
   expect(await page.evaluate(() => window.scrollY)).toBe(0)
   await expect(page.locator('#bubble')).toBeVisible()
@@ -580,4 +585,154 @@ test('snags what is under the pointer when the countdown ends', async ({
   await expect(page.getByTestId('snag-highlight')).toBeHidden()
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
   expect(await clipboardImage(page)).toMatchObject({ width: 200, height: 120 })
+})
+
+test('snags what the window shows, without the popup', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag what the window shows' }).click()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  // The popup sits over the red half of #tall at 700, 200.
+  expect(await clipboardImage(page, [[700, 200]])).toMatchObject({
+    width: 980,
+    height: 700,
+    at: [[255, 0, 0, 255]],
+  })
+})
+
+test('snags the whole page, with fixed elements once', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag the whole page' }).click()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 15_000,
+  })
+  // The fixed #bubble shows where the first tile found it, at 700, 600, and not again a window lower, over the blue half of #tall.
+  expect(
+    await clipboardImage(page, [
+      [725, 625],
+      [725, 1325],
+    ]),
+  ).toMatchObject({
+    width: 980,
+    height: 2000,
+    clear: 0,
+    at: [
+      [0, 0, 0, 255],
+      [0, 0, 255, 255],
+    ],
+  })
+  expect(await page.evaluate(() => window.scrollY)).toBe(0)
+})
+
+test('keeps a fixed element where a clamped last tile overlaps it', async ({
+  page,
+  togglePopup,
+}) => {
+  // A page 1000 px tall in a 700 px window: the second tile, planned at 700, can only scroll to 300 and overlaps the first from 300 to 700.
+  await page.evaluate(() => {
+    document.body.style.height = '1000px'
+    document
+      .querySelectorAll('body > :not(#bubble):not(script)')
+      .forEach((element) => {
+        element.remove()
+      })
+  })
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag the whole page' }).click()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 15_000,
+  })
+  expect(await clipboardImage(page, [[725, 625]])).toMatchObject({
+    height: 1000,
+    at: [[0, 0, 0, 255]],
+  })
+})
+
+test('snags an area dragged over the page', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await expect(page.getByText('Drag over the area to snag')).toBeVisible()
+  await page.mouse.move(100, 130)
+  await page.mouse.down()
+  await page.mouse.move(200, 180, { steps: 4 })
+  await page.mouse.move(300, 230, { steps: 4 })
+  await expect(page.getByTestId('snag-selection')).toContainText('200 × 100')
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  await expect(page.getByTestId('snag-selection')).toBeHidden()
+  // From the blue #parent at the top left into the pink #target at the bottom right.
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 200,
+    height: 100,
+    corners: [
+      [51, 102, 255, 255],
+      [255, 51, 102, 255],
+    ],
+  })
+})
+
+test('escape cancels an area selection', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await expect(page.getByTestId('snag-selection')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('snag-selection')).toBeHidden()
+  await expect(page.getByText('Drag over the area to snag')).toBeHidden()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+})
+
+test('scales a snag past the size limit down and says so', async ({
+  page,
+  togglePopup,
+}) => {
+  test.setTimeout(60_000)
+  await page.evaluate(() => {
+    document.body.innerHTML =
+      '<div id="huge" style="width: 3500px; height: 3500px; background: #3366ff"></div>'
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await page.mouse.move(100, 100, { steps: 2 })
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#huge')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(
+    page.getByText('Copied to clipboard, scaled down to fit'),
+  ).toBeVisible({ timeout: 30_000 })
+  // 3500 × 3500 is 12.25 megapixels, so the side shrinks by the square root of 12 / 12.25.
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 3464,
+    height: 3464,
+  })
+})
+
+test('downloads in the format from the settings', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { format: 'jpeg', quality: 0.8 } }),
+  )
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pill')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shot = page.getByTestId('snag-shot')
+  await expect(shot).toHaveCount(1)
+  await shot.hover()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    shot.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.jpg$/)
+  const { readFile } = await import('node:fs/promises')
+  const bytes = await readFile(await download.path())
+  expect([...bytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff])
 })

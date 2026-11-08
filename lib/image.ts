@@ -1,6 +1,7 @@
-import { ResultAsync } from 'neverthrow'
+import { ResultAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { CaptureError, toError } from './errors'
+import type { Format } from './settings'
 
 const PNG = 'image/png'
 const WEBP = 'image/webp'
@@ -42,6 +43,39 @@ export class Img {
       createImageBitmap(blob),
       toError(CaptureError),
     )
+  }
+
+  // JPEG has no transparency, so transparent corners come out white instead of black.
+  static encode(
+    dataUrl: string,
+    format: Format,
+    quality: number,
+  ): ResultAsync<string, CaptureError> {
+    return match(format)
+      .with('png', () => okAsync<string, CaptureError>(dataUrl))
+      .otherwise((format) =>
+        Img.bitmap(Img.dataUrlToBlob(dataUrl))
+          .andThen((bitmap) => {
+            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height)
+            const context = canvas.getContext('2d')
+            match({ format, context })
+              .with(
+                { format: 'jpeg', context: P.nonNullable },
+                ({ context }) => {
+                  context.fillStyle = '#ffffff'
+                  context.fillRect(0, 0, canvas.width, canvas.height)
+                },
+              )
+              .otherwise(() => undefined)
+            context?.drawImage(bitmap, 0, 0)
+            bitmap.close()
+            return ResultAsync.fromPromise(
+              canvas.convertToBlob({ type: `image/${format}`, quality }),
+              toError(CaptureError),
+            )
+          })
+          .andThen((blob) => Img.blobToDataUrl(blob)),
+      )
   }
 
   static thumbnail(png: Blob): ResultAsync<string, CaptureError> {

@@ -7,6 +7,10 @@ export const [togglePopup, togglePopupStream] =
 export const [pickElement, pickElementStream] =
   getMessage<undefined>('pick-element')
 
+export type Mode = 'selection' | 'visible' | 'page'
+
+export const [captureMode, captureModeStream] = getMessage<Mode>('capture')
+
 export const [captureVisibleTab, captureVisibleTabStream] = getMessage<
   undefined,
   Reply<string>

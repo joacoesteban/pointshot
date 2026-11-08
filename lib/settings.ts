@@ -18,6 +18,11 @@ const KEY = 'settings'
 const Shape = z.object({
   limit: z.number().int().min(10).max(1000).catch(100),
   delay: z.number().int().min(1).max(10).catch(3),
+  // Device keeps the screen's pixel density, CSS takes one image pixel per CSS pixel.
+  density: z.enum(['device', 'css']).catch('device'),
+  // Downloads only: the clipboard takes PNG alone.
+  format: z.enum(['png', 'jpeg', 'webp']).catch('png'),
+  quality: z.number().min(0.5).max(1).catch(0.9),
 })
 
 export const DEFAULT_SETTINGS = Shape.parse({})
@@ -26,6 +31,8 @@ export const DEFAULT_SETTINGS = Shape.parse({})
 export const SettingsSchema = Shape.catch(DEFAULT_SETTINGS)
 
 export type Settings = z.infer<typeof SettingsSchema>
+
+export type Format = Settings['format']
 
 type Change = {
   readonly changes: Record<string, Browser.storage.StorageChange>
