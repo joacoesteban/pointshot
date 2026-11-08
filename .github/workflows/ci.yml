@@ -35,3 +35,30 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "$GITHUB_REF_NAME" build/*.zip --generate-notes
+
+  version:
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Bump the patch version
+        run: |
+          if git tag --points-at HEAD | grep -q '^v'; then
+            echo "$GITHUB_SHA is already released"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          tag=$(npm version patch)
+          git push --atomic origin HEAD:main "$tag"
+          # Tags pushed with GITHUB_TOKEN start no workflows, but
+          # workflow_dispatch events do, so run the release on the tag by hand.
+          gh workflow run ci.yml --ref "$tag"
