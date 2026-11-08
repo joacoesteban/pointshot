@@ -423,3 +423,53 @@ test('captures a scrolling pane of an app shell that hides the page overflow', a
     })),
   ).toEqual({ body: 'hidden', pane: 650 })
 })
+
+test('picks inside an open shadow root', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#shadow-host')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(highlight).toContainText('div#shadow-inner')
+  await expect(highlight).toContainText('200 × 60')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('div#shadow-host')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#shadow-inner')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 200,
+    height: 60,
+    corners: [
+      [0, 170, 255, 255],
+      [0, 170, 255, 255],
+    ],
+  })
+})
+
+test('picks inside a same-origin frame', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#frame')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(highlight).toContainText('div#framed')
+  await expect(highlight).toContainText('200 × 150')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('iframe#frame')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#framed')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({
+    width: 200,
+    height: 150,
+    corners: [
+      [255, 136, 0, 255],
+      [255, 136, 0, 255],
+    ],
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('200 × 150')
+  expect(page.url()).toBe(FIXTURE_URL)
+})

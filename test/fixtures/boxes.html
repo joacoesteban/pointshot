@@ -111,6 +111,32 @@
         "></div>
     </div>
     <div
+      id="shadow-host"
+      style="
+        position: absolute;
+        top: 620px;
+        left: 80px;
+        padding: 10px;
+        background: #000000;
+      "></div>
+    <script>
+      document
+        .querySelector('#shadow-host')
+        .attachShadow({ mode: 'open' }).innerHTML =
+        '<div id="shadow-inner" style="width: 200px; height: 60px; background: #00aaff"></div>'
+    </script>
+    <iframe
+      id="frame"
+      style="
+        position: absolute;
+        top: 440px;
+        left: 320px;
+        width: 250px;
+        height: 200px;
+        border: 2px solid #000000;
+      "
+      srcdoc="<body style='margin: 0'><div id='framed' style='margin: 20px; width: 200px; height: 150px; background: #ff8800'></div></body>"></iframe>
+    <div
       id="bubble"
       style="
         position: fixed;

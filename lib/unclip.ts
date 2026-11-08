@@ -8,7 +8,7 @@ const CLIPPING = [...SCROLLING, 'hidden', 'clip']
 const TOLERANCE = 1
 
 const clips = (element: Element, kinds: readonly string[]) => {
-  const { overflowX, overflowY } = getComputedStyle(element)
+  const { overflowX, overflowY } = Dom.style(element)
   return kinds.includes(overflowX) || kinds.includes(overflowY)
 }
 
@@ -18,21 +18,21 @@ const scrolls = (element: Element) =>
     element.scrollWidth > element.clientWidth)
 
 const cuts = (ancestor: Element, element: Element) => {
-  const outer = ancestor.getBoundingClientRect()
-  const inner = element.getBoundingClientRect()
+  const outer = Dom.rect(ancestor)
+  const inner = Dom.rect(element)
   return (
     clips(ancestor, CLIPPING) &&
     (inner.left < outer.left - TOLERANCE ||
       inner.top < outer.top - TOLERANCE ||
-      inner.right > outer.right + TOLERANCE ||
-      inner.bottom > outer.bottom + TOLERANCE)
+      inner.left + inner.width > outer.left + outer.width + TOLERANCE ||
+      inner.top + inner.height > outer.top + outer.height + TOLERANCE)
   )
 }
 
 const layoutOf = (element: Element) =>
   match(Dom.parent(element))
     .with(P.nonNullable, (parent) => {
-      const { display, flexDirection } = getComputedStyle(parent)
+      const { display, flexDirection } = Dom.style(parent)
       return { display, flexDirection }
     })
     .otherwise(() => ({ display: 'block', flexDirection: 'row' }))
@@ -45,7 +45,7 @@ const grown = (element: Element): Record<string, string> => ({
   ...match(element.scrollWidth > element.clientWidth)
     .with(true, () => ({ width: 'max-content', 'max-width': 'none' }))
     .otherwise(() => ({})),
-  ...match(getComputedStyle(element).position)
+  ...match(Dom.style(element).position)
     .with('absolute', 'fixed', () => ({ bottom: 'auto' }))
     .otherwise(() => ({})),
   ...match(layoutOf(element))

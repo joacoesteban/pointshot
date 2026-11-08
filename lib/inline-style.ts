@@ -1,7 +1,6 @@
 type Styled = Element & ElementCSSInlineStyle
 
-const isStyled = (element: Element): element is Styled =>
-  element instanceof HTMLElement || element instanceof SVGElement
+const isStyled = (element: Element): element is Styled => 'style' in element
 
 export class InlineStyle {
   // Sets each property as important and returns a function that puts back the inline values it replaced.
