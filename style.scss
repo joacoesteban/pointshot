@@ -8,6 +8,7 @@
   --bezier: cubic-bezier(0, 1, 0, 1);
   --bezier-chill: cubic-bezier(0, 1, 0.5, 1);
   --bezier-round-inverted: cubic-bezier(0.5, 0, 1, 0.5);
+  --bezier-symmetric: cubic-bezier(0.7, 0, 0.25, 1);
 }
 
 @import 'components/popup.scss';
@@ -32,6 +33,16 @@
     border-radius: 100em !important;
   }
 }
+.bg-theme,
+.bg-theme\:soft {
+  &.bg-theme {
+    background-color: var(--_blur-bg) !important;
+  }
+  &.bg-theme\:soft {
+    background-color: var(--_blur-bg-soft) !important;
+  }
+  color: var(--_blur-text-color) !important;
+}
 .browser-safari {
   .bg-blur {
     -webkit-backdrop-filter: blur(15px) hue-rotate(15deg) !important;
@@ -48,28 +59,42 @@
     backdrop-filter: blur(10px) hue-rotate(15deg) !important;
   }
 }
+.ghost,
 .force-ghost {
-  &,
-  * {
+  *,
+  &.force-ghost {
     pointer-events: none !important;
   }
-  opacity: 0.1 !important;
+  &:hover,
+  &.force-ghost {
+    opacity: 0.1 !important;
+  }
 }
 
-.chip {
-  padding: 0.3em 0.9em;
-  border-radius: 100em;
-  font-size: 12px;
-  font-weight: 600;
-  white-space: nowrap;
-  background: #8882;
-  border: 1px solid #8884;
-  transition: background 0.15s;
-  &:hover:not(:disabled) {
-    background: #8884;
+.field {
+  @apply rounded-full font-medium;
+  background-color: #fff4 !important;
+  box-shadow: inset 0 0 16px var(--_field-glow);
+  color: var(--_blur-text-color);
+  option {
+    background: oklch(var(--b1));
+    color: oklch(var(--bc));
   }
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
+}
+
+.range {
+  --range-shdw: #fff8;
+}
+
+.blend {
+  mix-blend-mode: color-dodge;
+  color: var(--options-blended-text-color);
+}
+
+.pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1.9rem;
+  font-size: 0.875em;
+  font-weight: 500;
+  background-color: oklch(var(--bc) / 0.1);
 }

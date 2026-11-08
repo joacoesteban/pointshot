@@ -11,8 +11,17 @@
     SettingsStore,
     type Settings,
   } from '~/lib/settings'
+  import { REPOSITORY_URL } from '~/lib/links'
   import { themeController } from '~/lib/theme-controller'
+  import Button from './button.svelte'
+  import Divider from './divider.svelte'
+  import Filters from './filters.svelte'
+  import Backdrop from './options/backdrop.svelte'
+  import Footer from './options/footer.svelte'
+  import Row from './options/row.svelte'
+  import SymbolButton from './symbol-button.svelte'
   import Toaster from './toaster.svelte'
+  import Toggle from './toggle.svelte'
 
   type Command = { readonly name: string; readonly shortcut: string }
 
@@ -21,6 +30,8 @@
   // The folder field and the Save As toggle hold what was typed or clicked until the permission it needs is granted or refused.
   let folder = $state('')
   let saveAs = $state(false)
+
+  const { version } = browser.runtime.getManifest()
 
   SettingsStore.changes().subscribe((next) => {
     settings = next
@@ -70,8 +81,8 @@
       })
   }
 
-  const openShortcuts = () => {
-    void browser.tabs.create({ url: 'chrome://extensions/shortcuts' })
+  const open = (url: string) => {
+    void browser.tabs.create({ url })
   }
 
   const copyDiagnostics = () => {
@@ -100,21 +111,29 @@
 
 <div use:themeController>
   <div class="page">
+    <Backdrop />
     <main class="options">
-      <header class="mb-8">
-        <h1 class="font-black text-4xl m-0">snag</h1>
-        <p class="opacity-60 m-0">{t('options')}</p>
+      <header class="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <h1 class="blend font-black text-4xl mt-0 mb-2">
+            {t('optionsTitle')}
+          </h1>
+          <code class="pill blend">{t('version')} <b>{version}</b></code>
+        </div>
+        <SymbolButton
+          name="github"
+          title={t('sourceCode')}
+          opaque
+          onclick={() => {
+            open(REPOSITORY_URL)
+          }} />
       </header>
 
       <section>
-        <h2>{t('sectionCapture')}</h2>
-        <label class="row">
-          <span>
-            <b>{t('resolution')}</b>
-            <small>{t('resolutionHelp')}</small>
-          </span>
+        <h2 class="blend">{t('sectionCapture')}</h2>
+        <Row title={t('resolution')} help={t('resolutionHelp')}>
           <select
-            class="select select-sm select-bordered"
+            class="select select-sm select-bordered field"
             aria-label={t('resolution')}
             value={settings.density}
             onchange={({ currentTarget: { value } }) => {
@@ -127,14 +146,10 @@
             <option value="device">{t('resolutionDevice')}</option>
             <option value="css">{t('resolutionCss')}</option>
           </select>
-        </label>
-        <label class="row">
-          <span>
-            <b>{t('countdownLabel')}</b>
-            <small>{t('countdownHelp')}</small>
-          </span>
+        </Row>
+        <Row title={t('countdownLabel')} help={t('countdownHelp')}>
           <select
-            class="select select-sm select-bordered"
+            class="select select-sm select-bordered field"
             aria-label={t('countdownLabel')}
             value={String(settings.delay)}
             onchange={(event) => {
@@ -145,18 +160,16 @@
                 >{t('seconds', String(seconds))}</option>
             {/each}
           </select>
-        </label>
+        </Row>
       </section>
 
+      <Divider />
+
       <section>
-        <h2>{t('sectionDownloads')}</h2>
-        <label class="row">
-          <span>
-            <b>{t('format')}</b>
-            <small>{t('formatHelp')}</small>
-          </span>
+        <h2 class="blend">{t('sectionDownloads')}</h2>
+        <Row title={t('format')} help={t('formatHelp')}>
           <select
-            class="select select-sm select-bordered"
+            class="select select-sm select-bordered field"
             aria-label={t('format')}
             value={settings.format}
             onchange={({ currentTarget: { value } }) => {
@@ -171,13 +184,9 @@
             <option value="jpeg">JPEG</option>
             <option value="webp">WebP</option>
           </select>
-        </label>
+        </Row>
         {#if settings.format !== 'png'}
-          <label class="row">
-            <span>
-              <b>{t('quality')}</b>
-              <small>{Math.round(settings.quality * 100)}%</small>
-            </span>
+          <Row title={t('quality')} help={`${String(Math.round(settings.quality * 100))}%`}>
             <input
               type="range"
               class="range range-sm max-w-[12rem]"
@@ -189,48 +198,37 @@
               onchange={(event) => {
                 update({ quality: numberOf(event) })
               }} />
-          </label>
+          </Row>
         {/if}
-        <label class="row">
-          <span>
-            <b>{t('folder')}</b>
-            <small>{t('folderHelp')}</small>
-          </span>
+        <Row title={t('folder')} help={t('folderHelp')}>
           <input
             type="text"
-            class="input input-sm input-bordered max-w-[12rem]"
+            class="input input-sm input-bordered field max-w-[12rem]"
             aria-label={t('folder')}
             bind:value={folder}
             onchange={() => {
               updateDownloads({ folder: folder.trim() })
             }} />
-        </label>
-        <label class="row">
-          <span>
-            <b>{t('saveAs')}</b>
-            <small>{t('saveAsHelp')}</small>
-          </span>
-          <input
-            type="checkbox"
-            class="toggle"
-            aria-label={t('saveAs')}
-            bind:checked={saveAs}
-            onchange={() => {
+        </Row>
+        <Row title={t('saveAs')} help={t('saveAsHelp')}>
+          <Toggle
+            checked={saveAs}
+            title={t('saveAs')}
+            onclick={() => {
+              saveAs = !saveAs
               updateDownloads({ saveAs })
             }} />
-        </label>
+        </Row>
       </section>
 
+      <Divider />
+
       <section>
-        <h2>{t('sectionLibrary')}</h2>
-        <label class="row">
-          <span>
-            <b>{t('keep')}</b>
-            <small>{t('keepHelp')}</small>
-          </span>
+        <h2 class="blend">{t('sectionLibrary')}</h2>
+        <Row title={t('keep')} help={t('keepHelp')}>
           <input
             type="number"
-            class="input input-sm input-bordered w-24"
+            class="input input-sm input-bordered field w-24"
             aria-label={t('keep')}
             min="10"
             max="1000"
@@ -239,15 +237,16 @@
             onchange={(event) => {
               update({ limit: numberOf(event) })
             }} />
-        </label>
+        </Row>
       </section>
 
+      <Divider />
+
       <section>
-        <h2>{t('sectionAppearance')}</h2>
-        <label class="row">
-          <b>{t('theme')}</b>
+        <h2 class="blend">{t('sectionAppearance')}</h2>
+        <Row title={t('theme')}>
           <select
-            class="select select-sm select-bordered"
+            class="select select-sm select-bordered field"
             aria-label={t('theme')}
             value={settings.theme}
             onchange={({ currentTarget: { value } }) => {
@@ -262,40 +261,48 @@
             <option value="light">{t('themeLight')}</option>
             <option value="dark">{t('themeDark')}</option>
           </select>
-        </label>
+        </Row>
       </section>
 
+      <Divider />
+
       <section>
-        <h2>{t('sectionShortcuts')}</h2>
+        <h2 class="blend">{t('sectionShortcuts')}</h2>
         <ul class="shortcuts">
           {#each commands as { name, shortcut } (name)}
-            <li class="row">
-              <span>{name}</span>
-              <kbd class="kbd kbd-sm">{shortcut || t('notSet')}</kbd>
-            </li>
+            <Row as="li" title={name}>
+              <kbd class="pill blend">{shortcut || t('notSet')}</kbd>
+            </Row>
           {/each}
         </ul>
         {#if import.meta.env.FIREFOX}
-          <p class="text-sm opacity-60">{t('firefoxShortcuts')}</p>
+          <p class="blend text-sm">{t('firefoxShortcuts')}</p>
         {:else}
-          <button type="button" class="chip mt-2" onclick={openShortcuts}
-            >{t('changeShortcuts')}</button>
+          <div class="flex mt-2">
+            <Button
+              small
+              opaque
+              onclick={() => {
+                open('chrome://extensions/shortcuts')
+              }}>{t('changeShortcuts')}</Button>
+          </div>
         {/if}
       </section>
 
+      <Divider />
+
       <section>
-        <h2>{t('sectionHelp')}</h2>
-        <div class="row">
-          <span>
-            <b>{t('diagnostics')}</b>
-            <small>{t('diagnosticsHelp')}</small>
-          </span>
-          <button type="button" class="chip" onclick={copyDiagnostics}
-            >{t('copyDiagnostics')}</button>
-        </div>
+        <h2 class="blend">{t('sectionHelp')}</h2>
+        <Row as="div" title={t('diagnostics')} help={t('diagnosticsHelp')}>
+          <Button small opaque icon="docOnDoc" onclick={copyDiagnostics}
+            >{t('copyDiagnostics')}</Button>
+        </Row>
       </section>
+
+      <Footer />
     </main>
   </div>
+  <Filters />
   <Toaster />
 </div>
 
@@ -305,39 +312,16 @@
   }
   .page {
     min-height: 100vh;
-    background: oklch(var(--b1));
-    color: oklch(var(--bc));
   }
   .options {
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 24px;
   }
-  section {
-    margin-bottom: 32px;
-  }
   h2 {
     margin: 0 0 8px;
-    font-size: 12px;
+    font-size: 1.5em;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    opacity: 0.5;
-  }
-  .row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 12px 0;
-    border-bottom: 1px solid #8883;
-    > span {
-      display: flex;
-      flex-direction: column;
-    }
-    small {
-      opacity: 0.6;
-    }
   }
   .shortcuts {
     margin: 0;

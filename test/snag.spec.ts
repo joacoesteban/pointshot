@@ -1110,7 +1110,7 @@ test('turns Save As back off when downloads are refused', async ({
   await options.evaluate(() => {
     Object.assign(chrome.permissions, { request: () => Promise.resolve(false) })
   })
-  const saveAs = options.getByRole('checkbox', { name: 'Ask where to save' })
+  const saveAs = options.getByRole('switch', { name: 'Ask where to save' })
   await saveAs.click()
   await expect(
     options.getByText('Snag needs permission to manage downloads for this'),
@@ -1119,6 +1119,23 @@ test('turns Save As back off when downloads are refused', async ({
   expect(
     await background.evaluate(() => chrome.storage.local.get('settings')),
   ).not.toMatchObject({ settings: { saveAs: true } })
+})
+
+test('turns Save As on and off with its switch', async ({
+  context,
+  background,
+}) => {
+  const options = await context.newPage()
+  await options.goto(optionsUrl(background))
+  const saveAs = options.getByRole('switch', { name: 'Ask where to save' })
+  await expect(saveAs).not.toBeChecked()
+  await saveAs.click()
+  await expect(saveAs).toBeChecked()
+  await expect
+    .poll(() => background.evaluate(() => chrome.storage.local.get('settings')))
+    .toMatchObject({ settings: { saveAs: true } })
+  await saveAs.click()
+  await expect(saveAs).not.toBeChecked()
 })
 
 test('keeps failed copies for the diagnostics', async ({

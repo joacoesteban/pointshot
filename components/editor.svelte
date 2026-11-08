@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import type { ResultAsync } from 'neverthrow'
   import { filter, fromEvent } from 'rxjs'
@@ -306,7 +307,7 @@
             size="36px"
             padding="26%"
             glassy
-            pressed={tool === option}
+            highlight={tool === option}
             onclick={() => {
               finishTyping()
               tool = option
@@ -341,10 +342,13 @@
           history = history.slice(0, -1)
         }} />
       <div class="flex-1"></div>
-      <button type="button" class="chip" onclick={onclose}
-        >{t('cancel')}</button>
-      <Button testId="snag-save-edit" disabled={bitmap === null} onclick={save}
-        >{t('saveEdit')}</Button>
+      <Button colorSeed={COLOR_SEEDS.cancel} onclick={onclose}
+        >{t('cancel')}</Button>
+      <Button
+        testId="snag-save-edit"
+        colorSeed={COLOR_SEEDS.accept}
+        disabled={bitmap === null}
+        onclick={save}>{t('saveEdit')}</Button>
     </header>
 
     <div class="stage">

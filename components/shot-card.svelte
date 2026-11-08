@@ -24,7 +24,7 @@
   const host = $derived(siteOf(url))
 </script>
 
-<article class="card bg-blur bg-blur:soft" data-testid="snag-shot" {title}>
+<article class="card bg-theme:soft" data-testid="snag-shot" {title}>
   <div class="thumbnail">
     <canvas use:paint={{ dataUrl: thumbnail, maxWidth: THUMBNAIL_WIDTH }}
     ></canvas>
@@ -86,8 +86,8 @@
 <style lang="scss">
   .card {
     overflow: hidden;
-    border-radius: 16px !important;
-    filter: none !important;
+    border: 1px solid #ccc5;
+    border-radius: 16px;
   }
   .thumbnail {
     position: relative;

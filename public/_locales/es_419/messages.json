@@ -346,5 +346,17 @@
   },
   "settingNotSaved": {
     "message": "No se pudo guardar la opción"
+  },
+  "version": {
+    "message": "versión"
+  },
+  "sourceCode": {
+    "message": "Código fuente"
+  },
+  "reportBug": {
+    "message": "Reportar un error"
+  },
+  "madeBy": {
+    "message": "Con 🧠 + 🩷 por"
   }
 }
