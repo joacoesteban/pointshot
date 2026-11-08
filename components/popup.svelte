@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '~/lib/i18n'
   import { flip } from 'svelte/animate'
   import { match } from 'ts-pattern'
   import { draggable, type Placement } from '~/lib/draggable'
@@ -46,9 +47,9 @@
   }: Props = $props()
 
   const modes = [
-    { name: 'region', title: 'Snag an area', mode: 'selection' },
-    { name: 'window', title: 'Snag what the window shows', mode: 'visible' },
-    { name: 'page', title: 'Snag the whole page', mode: 'page' },
+    { name: 'region', title: t('snagArea'), mode: 'selection' },
+    { name: 'window', title: t('snagVisible'), mode: 'visible' },
+    { name: 'page', title: t('snagPage'), mode: 'page' },
   ] as const
 
   let query = $state('')
@@ -64,10 +65,10 @@
     event.stopPropagation()
   }
 
-  const snags = (count: number) =>
+  const deleted = (count: number) =>
     match(count)
-      .with(1, () => '1 snag')
-      .otherwise((count) => `${String(count)} snags`)
+      .with(1, () => t('deletedOne'))
+      .otherwise((count) => t('deletedMany', String(count)))
 </script>
 
 <div
@@ -83,7 +84,7 @@
       <div class="flex items-center gap-2">
         <SymbolButton
           name="gear"
-          title="Options"
+          title={t('options')}
           size="40px"
           padding="28%"
           glassy
@@ -91,7 +92,7 @@
           onclick={onoptions} />
         <SymbolButton
           name="xMark"
-          title="Close"
+          title={t('close')}
           opaque
           size="40px"
           padding="30%"
@@ -105,8 +106,8 @@
         <input
           type="search"
           class="input input-sm input-bordered flex-1 min-w-0"
-          placeholder="Search snags"
-          aria-label="Search snags"
+          placeholder={t('searchSnags')}
+          aria-label={t('searchSnags')}
           onkeydown={contain}
           onkeyup={contain}
           onkeypress={contain}
@@ -114,12 +115,12 @@
         {#if sites.length > 1}
           <select
             class="select select-sm select-bordered max-w-[9rem]"
-            aria-label="Site"
+            aria-label={t('site')}
             onkeydown={contain}
             onkeyup={contain}
             onkeypress={contain}
             bind:value={site}>
-            <option value={null}>All sites</option>
+            <option value={null}>{t('allSites')}</option>
             {#each sites as site (site)}
               <option value={site}>{site}</option>
             {/each}
@@ -133,8 +134,8 @@
             onremove(shown)
           }}>
           {match(shown.length)
-            .with(shots.length, () => 'Delete all')
-            .otherwise((count) => `Delete ${String(count)}`)}
+            .with(shots.length, () => t('deleteAll'))
+            .otherwise((count) => t('deleteShown', String(count)))}
         </button>
       </div>
     {/if}
@@ -161,15 +162,13 @@
         </div>
       {:else if shots.length}
         <div class="text-center py-8">
-          <h3 class="font-bold text-xl mb-1">No snags match</h3>
-          <p class="opacity-60 text-sm">Try another search or site.</p>
+          <h3 class="font-bold text-xl mb-1">{t('noMatchTitle')}</h3>
+          <p class="opacity-60 text-sm">{t('noMatchBody')}</p>
         </div>
       {:else}
         <div class="text-center py-8">
-          <h3 class="font-bold text-xl mb-1">No snags yet</h3>
-          <p class="opacity-60 text-sm">
-            Pick an element and it lands in your clipboard.
-          </p>
+          <h3 class="font-bold text-xl mb-1">{t('emptyTitle')}</h3>
+          <p class="opacity-60 text-sm">{t('emptyBody')}</p>
         </div>
       {/if}
     </main>
@@ -181,13 +180,14 @@
           data-testid="snag-undo"
           in:transitionIn
           out:transitionOut>
-          <span>Deleted {snags(removed.length)}</span>
-          <button type="button" class="chip" onclick={onundo}>Undo</button>
+          <span>{deleted(removed.length)}</span>
+          <button type="button" class="chip" onclick={onundo}
+            >{t('undo')}</button>
         </div>
       {/if}
       <div class="flex items-center gap-2">
         <Button testId="snag-pick" disabled={ghost} onclick={onpick}
-          >Snag</Button>
+          >{t('snag')}</Button>
         {#each modes as { name, title, mode } (mode)}
           <SymbolButton
             {name}
@@ -202,7 +202,7 @@
         {/each}
         <SymbolButton
           name="timer"
-          title="Snag after a countdown"
+          title={t('snagLater')}
           size="40px"
           padding="26%"
           glassy
@@ -210,7 +210,7 @@
           onclick={onpicklater} />
       </div>
       <p class="text-xs opacity-50 mt-2">
-        ↑ ↓ ← → walk the page · Shift adds a margin · Esc cancels
+        {t('keysHint')}
       </p>
     </footer>
   </div>

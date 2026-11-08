@@ -10,7 +10,9 @@ export default defineConfig({
     sizes: [128, 64, 48, 32, 16],
   },
   manifest: ({ mode }) => ({
-    name: 'Snag: Screenshot Any Element',
+    name: '__MSG_name__',
+    description: '__MSG_description__',
+    default_locale: 'en',
     permissions: [
       'storage',
       'unlimitedStorage',
@@ -32,22 +34,22 @@ export default defineConfig({
         suggested_key: {
           default: 'Alt+S',
         },
-        description: 'Toggle the Snag popup on the current page.',
+        description: '__MSG_commandToggle__',
       },
       'pick-element': {
         suggested_key: {
           default: 'Alt+Shift+S',
         },
-        description: 'Pick an element to screenshot.',
+        description: '__MSG_commandPick__',
       },
       'snag-selection': {
-        description: 'Drag over an area to screenshot.',
+        description: '__MSG_commandSelection__',
       },
       'snag-visible': {
-        description: 'Screenshot what the window shows.',
+        description: '__MSG_commandVisible__',
       },
       'snag-page': {
-        description: 'Screenshot the whole page.',
+        description: '__MSG_commandPage__',
       },
     },
     browser_specific_settings: {

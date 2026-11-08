@@ -1113,3 +1113,21 @@ test('opens the options from the popup', async ({
   ])
   await expect(options).toHaveURL(optionsUrl(background))
 })
+
+test.describe('in Spanish', () => {
+  test.use({ lang: 'es-419' })
+
+  test('speaks Argentinian Spanish', async ({ page, togglePopup }) => {
+    await togglePopup()
+    const popup = page.getByTestId('snag-popup')
+    await expect(popup).toContainText('Todavía no hay capturas')
+    await expect(popup).toContainText('Elegí un elemento')
+    await page.getByRole('button', { name: 'Capturar', exact: true }).click()
+    await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
+    await hover(page, '#target')
+    await page.mouse.down()
+    await page.mouse.up()
+    await expect(page.getByText('Copiado al portapapeles')).toBeVisible()
+    await expect(page.getByTestId('snag-shot')).toContainText('este minuto')
+  })
+})

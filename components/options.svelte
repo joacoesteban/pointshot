@@ -4,6 +4,7 @@
   import { match, P } from 'ts-pattern'
   import { browser } from 'wxt/browser'
   import { Diagnostics } from '~/lib/diagnostics'
+  import { t } from '~/lib/i18n'
   import { ClipboardError, toError } from '~/lib/errors'
   import {
     DEFAULT_SETTINGS,
@@ -36,7 +37,7 @@
 
   const update = (patch: Partial<Settings>) => {
     void SettingsStore.update(patch).mapErr(() =>
-      toast.error('Could not save the setting'),
+      toast.error(t('settingNotSaved')),
     )
   }
 
@@ -58,9 +59,7 @@
               })
               .with(false, () => {
                 folder = settings.folder
-                toast.error(
-                  'Snag needs permission to manage downloads for this',
-                )
+                toast.error(t('downloadsPermission'))
               })
               .exhaustive()
           })
@@ -80,8 +79,8 @@
         ),
       )
       .match(
-        () => toast.success('Copied diagnostics'),
-        () => toast.error('Could not copy the diagnostics'),
+        () => toast.success(t('copiedDiagnostics')),
+        () => toast.error(t('couldNotCopyDiagnostics')),
       )
   }
 
@@ -100,19 +99,19 @@
     <main class="options">
       <header class="mb-8">
         <h1 class="font-black text-4xl m-0">snag</h1>
-        <p class="opacity-60 m-0">Options</p>
+        <p class="opacity-60 m-0">{t('options')}</p>
       </header>
 
       <section>
-        <h2>Capture</h2>
+        <h2>{t('sectionCapture')}</h2>
         <label class="row">
           <span>
-            <b>Resolution</b>
-            <small>Screen keeps sharp detail on high-density displays.</small>
+            <b>{t('resolution')}</b>
+            <small>{t('resolutionHelp')}</small>
           </span>
           <select
             class="select select-sm select-bordered"
-            aria-label="Resolution"
+            aria-label={t('resolution')}
             value={settings.density}
             onchange={({ currentTarget: { value } }) => {
               update({
@@ -121,39 +120,40 @@
                   .otherwise(() => 'device' as const),
               })
             }}>
-            <option value="device">Screen pixels</option>
-            <option value="css">One pixel per CSS pixel</option>
+            <option value="device">{t('resolutionDevice')}</option>
+            <option value="css">{t('resolutionCss')}</option>
           </select>
         </label>
         <label class="row">
           <span>
-            <b>Countdown</b>
-            <small>How long the timer waits before it snags.</small>
+            <b>{t('countdownLabel')}</b>
+            <small>{t('countdownHelp')}</small>
           </span>
           <select
             class="select select-sm select-bordered"
-            aria-label="Countdown"
+            aria-label={t('countdownLabel')}
             value={String(settings.delay)}
             onchange={(event) => {
               update({ delay: numberOf(event) })
             }}>
             {#each [1, 2, 3, 5, 10] as seconds (seconds)}
-              <option value={String(seconds)}>{seconds} s</option>
+              <option value={String(seconds)}
+                >{t('seconds', String(seconds))}</option>
             {/each}
           </select>
         </label>
       </section>
 
       <section>
-        <h2>Downloads</h2>
+        <h2>{t('sectionDownloads')}</h2>
         <label class="row">
           <span>
-            <b>Format</b>
-            <small>Copies stay PNG, the only format the clipboard takes.</small>
+            <b>{t('format')}</b>
+            <small>{t('formatHelp')}</small>
           </span>
           <select
             class="select select-sm select-bordered"
-            aria-label="Format"
+            aria-label={t('format')}
             value={settings.format}
             onchange={({ currentTarget: { value } }) => {
               update({
@@ -171,13 +171,13 @@
         {#if settings.format !== 'png'}
           <label class="row">
             <span>
-              <b>Quality</b>
+              <b>{t('quality')}</b>
               <small>{Math.round(settings.quality * 100)}%</small>
             </span>
             <input
               type="range"
               class="range range-sm max-w-[12rem]"
-              aria-label="Quality"
+              aria-label={t('quality')}
               min="0.5"
               max="1"
               step="0.05"
@@ -189,14 +189,13 @@
         {/if}
         <label class="row">
           <span>
-            <b>Folder</b>
-            <small
-              >Inside your downloads folder. Leave empty to save there.</small>
+            <b>{t('folder')}</b>
+            <small>{t('folderHelp')}</small>
           </span>
           <input
             type="text"
             class="input input-sm input-bordered max-w-[12rem]"
-            aria-label="Folder"
+            aria-label={t('folder')}
             bind:value={folder}
             onchange={() => {
               updateDownloads({ folder: folder.trim() })
@@ -204,13 +203,13 @@
         </label>
         <label class="row">
           <span>
-            <b>Ask where to save</b>
-            <small>Show the Save As dialog for every download.</small>
+            <b>{t('saveAs')}</b>
+            <small>{t('saveAsHelp')}</small>
           </span>
           <input
             type="checkbox"
             class="toggle"
-            aria-label="Ask where to save"
+            aria-label={t('saveAs')}
             checked={settings.saveAs}
             onchange={({ currentTarget: { checked } }) => {
               updateDownloads({ saveAs: checked })
@@ -219,16 +218,16 @@
       </section>
 
       <section>
-        <h2>Library</h2>
+        <h2>{t('sectionLibrary')}</h2>
         <label class="row">
           <span>
-            <b>Snags to keep</b>
-            <small>The oldest go once there are more.</small>
+            <b>{t('keep')}</b>
+            <small>{t('keepHelp')}</small>
           </span>
           <input
             type="number"
             class="input input-sm input-bordered w-24"
-            aria-label="Snags to keep"
+            aria-label={t('keep')}
             min="10"
             max="1000"
             step="10"
@@ -240,12 +239,12 @@
       </section>
 
       <section>
-        <h2>Appearance</h2>
+        <h2>{t('sectionAppearance')}</h2>
         <label class="row">
-          <b>Theme</b>
+          <b>{t('theme')}</b>
           <select
             class="select select-sm select-bordered"
-            aria-label="Theme"
+            aria-label={t('theme')}
             value={settings.theme}
             onchange={({ currentTarget: { value } }) => {
               update({
@@ -255,45 +254,40 @@
                   .otherwise(() => 'system' as const),
               })
             }}>
-            <option value="system">Same as the system</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
+            <option value="system">{t('themeSystem')}</option>
+            <option value="light">{t('themeLight')}</option>
+            <option value="dark">{t('themeDark')}</option>
           </select>
         </label>
       </section>
 
       <section>
-        <h2>Keyboard shortcuts</h2>
+        <h2>{t('sectionShortcuts')}</h2>
         <ul class="shortcuts">
           {#each commands as { name, shortcut } (name)}
             <li class="row">
               <span>{name}</span>
-              <kbd class="kbd kbd-sm">{shortcut || 'Not set'}</kbd>
+              <kbd class="kbd kbd-sm">{shortcut || t('notSet')}</kbd>
             </li>
           {/each}
         </ul>
         {#if import.meta.env.FIREFOX}
-          <p class="text-sm opacity-60">
-            Change them in Add-ons and themes, under the gear, in Manage
-            extension shortcuts.
-          </p>
+          <p class="text-sm opacity-60">{t('firefoxShortcuts')}</p>
         {:else}
           <button type="button" class="chip mt-2" onclick={openShortcuts}
-            >Change shortcuts</button>
+            >{t('changeShortcuts')}</button>
         {/if}
       </section>
 
       <section>
-        <h2>Help</h2>
+        <h2>{t('sectionHelp')}</h2>
         <div class="row">
           <span>
-            <b>Diagnostics</b>
-            <small
-              >Version, browser, settings and recent errors, to paste in a bug
-              report. No page addresses.</small>
+            <b>{t('diagnostics')}</b>
+            <small>{t('diagnosticsHelp')}</small>
           </span>
           <button type="button" class="chip" onclick={copyDiagnostics}
-            >Copy diagnostics</button>
+            >{t('copyDiagnostics')}</button>
         </div>
       </section>
     </main>

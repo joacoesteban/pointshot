@@ -6,6 +6,7 @@ import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
 import { Throttle } from '~/background/throttle'
 import { CaptureError, DownloadError, toError } from '~/lib/errors'
+import { t } from '~/lib/i18n'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import {
@@ -72,7 +73,7 @@ const sendToActiveTab = (send: Send) =>
             flag(tabId, '', browser.runtime.getManifest().name)
           })
           .orTee(() => {
-            flag(tabId, '!', 'Snag cannot run on this page')
+            flag(tabId, '!', t('blockedPage'))
           }),
       )
       .otherwise(() => okAsync(undefined)),

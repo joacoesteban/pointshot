@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '~/lib/i18n'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
   import { siteOf, type Shot } from '~/lib/shot'
@@ -30,7 +31,7 @@
     <div class="actions">
       <SymbolButton
         name="expand"
-        title="Open"
+        title={t('open')}
         size="38px"
         padding="28%"
         glassy
@@ -41,7 +42,7 @@
         }} />
       <SymbolButton
         name="docOnDoc"
-        title="Copy"
+        title={t('copy')}
         size="38px"
         padding="28%"
         glassy
@@ -52,7 +53,7 @@
         }} />
       <SymbolButton
         name="squareAndArrowDown"
-        title="Download"
+        title={t('download')}
         size="38px"
         padding="28%"
         glassy
@@ -63,7 +64,7 @@
         }} />
       <SymbolButton
         name="trashFill"
-        title="Delete"
+        title={t('delete')}
         size="38px"
         padding="28%"
         glassy

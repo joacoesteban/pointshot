@@ -13,6 +13,7 @@
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
   import { Diagnostics } from '~/lib/diagnostics'
+  import { t } from '~/lib/i18n'
   import { DisposeBag } from '~/lib/dispose-bag'
   import { Download, fileName, pathOf } from '~/lib/download'
   import {
@@ -87,20 +88,11 @@
 
   const explain = (error: Error) =>
     match(error)
-      .with(
-        P.instanceOf(ClipboardError),
-        () => 'Saved, but the page blocked the clipboard',
-      )
-      .with(P.instanceOf(EmptyAreaError), () => 'Nothing visible to snag')
-      .with(
-        P.instanceOf(QuotaError),
-        () => 'Copied, but storage is full. Delete some snags to keep more',
-      )
-      .with(
-        P.instanceOf(StorageError),
-        () => 'Copied, but it could not be saved',
-      )
-      .otherwise(({ message }) => `Could not snag that: ${message}`)
+      .with(P.instanceOf(ClipboardError), () => t('savedClipboardBlocked'))
+      .with(P.instanceOf(EmptyAreaError), () => t('nothingVisible'))
+      .with(P.instanceOf(QuotaError), () => t('storageFull'))
+      .with(P.instanceOf(StorageError), () => t('notSaved'))
+      .otherwise(({ message }) => t('couldNotSnag', message))
 
   const busy = $derived(picking || selecting)
 
@@ -121,8 +113,8 @@
       (downscaled) =>
         toast.success(
           match(downscaled)
-            .with(true, () => 'Copied to clipboard, scaled down to fit')
-            .with(false, () => 'Copied to clipboard')
+            .with(true, () => t('copiedScaled'))
+            .with(false, () => t('copied'))
             .exhaustive(),
         ),
       fail,
@@ -142,7 +134,7 @@
       .with({ busy: true }, () => undefined)
       .with({ mode: 'selection' }, () => {
         selecting = true
-        selectionHint = toast('Drag over the area to snag. Esc cancels.', {
+        selectionHint = toast(t('selectionHint'), {
           duration: Infinity,
         })
       })
@@ -165,8 +157,7 @@
     snag({ kind: 'selection', rect })
   }
 
-  const countdown = (seconds: number) =>
-    `Snagging what is under the pointer in ${String(seconds)}… Esc cancels.`
+  const countdown = (seconds: number) => t('countdown', String(seconds))
 
   function startPicking(delay: number) {
     const { target$: aimed$, picked$ } = picker.pick(delay)
@@ -175,11 +166,7 @@
     target$ = aimed$
     const hint = toast(
       match(delay)
-        .with(
-          0,
-          () =>
-            'Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels.',
-        )
+        .with(0, () => t('pickHint'))
         .otherwise(countdown),
       { duration: Infinity },
     )
@@ -214,14 +201,11 @@
     void Clipboard.writePng(
       library.imageUrl(shot).map((url) => Img.dataUrlToBlob(url)),
     ).match(
-      () => toast.success('Copied to clipboard'),
+      () => toast.success(t('copied')),
       (error) =>
         toast.error(
           match(error)
-            .with(
-              P.instanceOf(ClipboardError),
-              () => 'The page blocked the clipboard',
-            )
+            .with(P.instanceOf(ClipboardError), () => t('clipboardBlocked'))
             .otherwise(explain),
         ),
     )
@@ -303,18 +287,18 @@
     editing = null
     void snagger
       .keep(png, okAsync({ ...source, ...size }))
-      .match(() => toast.success('Saved and copied to clipboard'), fail)
+      .match(() => toast.success(t('savedAndCopied')), fail)
   }
 
   function copyText(text: string, label: string) {
     void Clipboard.writeText(text).match(
-      () => toast.success(`Copied ${label}`),
-      () => toast.error('The page blocked the clipboard'),
+      () => toast.success(t('copiedText', label)),
+      () => toast.error(t('clipboardBlocked')),
     )
   }
 
   library.failures$.subscribe(() => {
-    toast.error('Could not delete those snags')
+    toast.error(t('couldNotDelete'))
   })
   // Removals wait for an undo, so a page that goes away deletes them first.
   fromEvent(window, 'pagehide').subscribe(() => {

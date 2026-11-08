@@ -1,0 +1,350 @@
+{
+  "locale": {
+    "message": "en"
+  },
+  "name": {
+    "message": "Snag: Screenshot Any Element"
+  },
+  "description": {
+    "message": "Screenshot any element on the page. Pick it with the mouse, get it in your clipboard."
+  },
+  "commandToggle": {
+    "message": "Toggle the Snag popup on the current page."
+  },
+  "commandPick": {
+    "message": "Pick an element to screenshot."
+  },
+  "commandSelection": {
+    "message": "Drag over an area to screenshot."
+  },
+  "commandVisible": {
+    "message": "Screenshot what the window shows."
+  },
+  "commandPage": {
+    "message": "Screenshot the whole page."
+  },
+  "blockedPage": {
+    "message": "Snag cannot run on this page"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "options": {
+    "message": "Options"
+  },
+  "searchSnags": {
+    "message": "Search snags"
+  },
+  "site": {
+    "message": "Site"
+  },
+  "allSites": {
+    "message": "All sites"
+  },
+  "deleteAll": {
+    "message": "Delete all"
+  },
+  "deleteShown": {
+    "message": "Delete $COUNT$",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchTitle": {
+    "message": "No snags match"
+  },
+  "noMatchBody": {
+    "message": "Try another search or site."
+  },
+  "emptyTitle": {
+    "message": "No snags yet"
+  },
+  "emptyBody": {
+    "message": "Pick an element and it lands in your clipboard."
+  },
+  "deletedOne": {
+    "message": "Deleted 1 snag"
+  },
+  "deletedMany": {
+    "message": "Deleted $COUNT$ snags",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "undo": {
+    "message": "Undo"
+  },
+  "snag": {
+    "message": "Snag"
+  },
+  "snagArea": {
+    "message": "Snag an area"
+  },
+  "snagVisible": {
+    "message": "Snag what the window shows"
+  },
+  "snagPage": {
+    "message": "Snag the whole page"
+  },
+  "snagLater": {
+    "message": "Snag after a countdown"
+  },
+  "keysHint": {
+    "message": "↑ ↓ ← → walk the page · Shift adds a margin · Esc cancels"
+  },
+  "open": {
+    "message": "Open"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "download": {
+    "message": "Download"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "edit": {
+    "message": "Edit"
+  },
+  "copyAs": {
+    "message": "Copy as"
+  },
+  "markdown": {
+    "message": "Markdown"
+  },
+  "dataUrl": {
+    "message": "Data URL"
+  },
+  "pageLink": {
+    "message": "Page link"
+  },
+  "copiedText": {
+    "message": "Copied $WHAT$",
+    "placeholders": {
+      "what": {
+        "content": "$1"
+      }
+    }
+  },
+  "editSnag": {
+    "message": "Edit snag"
+  },
+  "tools": {
+    "message": "Tools"
+  },
+  "toolArrow": {
+    "message": "Arrow"
+  },
+  "toolRectangle": {
+    "message": "Rectangle"
+  },
+  "toolText": {
+    "message": "Text"
+  },
+  "toolBlur": {
+    "message": "Blur"
+  },
+  "toolCrop": {
+    "message": "Crop"
+  },
+  "color": {
+    "message": "Color"
+  },
+  "colorRed": {
+    "message": "Red"
+  },
+  "colorYellow": {
+    "message": "Yellow"
+  },
+  "colorGreen": {
+    "message": "Green"
+  },
+  "colorBlue": {
+    "message": "Blue"
+  },
+  "colorBlack": {
+    "message": "Black"
+  },
+  "colorWhite": {
+    "message": "White"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "saveEdit": {
+    "message": "Save as new snag"
+  },
+  "typeThenEnter": {
+    "message": "Type, then Enter"
+  },
+  "pickHint": {
+    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels."
+  },
+  "countdown": {
+    "message": "Snagging what is under the pointer in $SECONDS$… Esc cancels.",
+    "placeholders": {
+      "seconds": {
+        "content": "$1"
+      }
+    }
+  },
+  "selectionHint": {
+    "message": "Drag over the area to snag. Esc cancels."
+  },
+  "copied": {
+    "message": "Copied to clipboard"
+  },
+  "copiedScaled": {
+    "message": "Copied to clipboard, scaled down to fit"
+  },
+  "savedAndCopied": {
+    "message": "Saved and copied to clipboard"
+  },
+  "savedClipboardBlocked": {
+    "message": "Saved, but the page blocked the clipboard"
+  },
+  "nothingVisible": {
+    "message": "Nothing visible to snag"
+  },
+  "storageFull": {
+    "message": "Copied, but storage is full. Delete some snags to keep more"
+  },
+  "notSaved": {
+    "message": "Copied, but it could not be saved"
+  },
+  "couldNotSnag": {
+    "message": "Could not snag that: $REASON$",
+    "placeholders": {
+      "reason": {
+        "content": "$1"
+      }
+    }
+  },
+  "clipboardBlocked": {
+    "message": "The page blocked the clipboard"
+  },
+  "couldNotDelete": {
+    "message": "Could not delete those snags"
+  },
+  "optionsTitle": {
+    "message": "Snag options"
+  },
+  "sectionCapture": {
+    "message": "Capture"
+  },
+  "resolution": {
+    "message": "Resolution"
+  },
+  "resolutionHelp": {
+    "message": "Screen keeps sharp detail on high-density displays."
+  },
+  "resolutionDevice": {
+    "message": "Screen pixels"
+  },
+  "resolutionCss": {
+    "message": "One pixel per CSS pixel"
+  },
+  "countdownLabel": {
+    "message": "Countdown"
+  },
+  "countdownHelp": {
+    "message": "How long the timer waits before it snags."
+  },
+  "seconds": {
+    "message": "$SECONDS$ s",
+    "placeholders": {
+      "seconds": {
+        "content": "$1"
+      }
+    }
+  },
+  "sectionDownloads": {
+    "message": "Downloads"
+  },
+  "format": {
+    "message": "Format"
+  },
+  "formatHelp": {
+    "message": "Copies stay PNG, the only format the clipboard takes."
+  },
+  "quality": {
+    "message": "Quality"
+  },
+  "folder": {
+    "message": "Folder"
+  },
+  "folderHelp": {
+    "message": "Inside your downloads folder. Leave empty to save there."
+  },
+  "saveAs": {
+    "message": "Ask where to save"
+  },
+  "saveAsHelp": {
+    "message": "Show the Save As dialog for every download."
+  },
+  "downloadsPermission": {
+    "message": "Snag needs permission to manage downloads for this"
+  },
+  "sectionLibrary": {
+    "message": "Library"
+  },
+  "keep": {
+    "message": "Snags to keep"
+  },
+  "keepHelp": {
+    "message": "The oldest go once there are more."
+  },
+  "sectionAppearance": {
+    "message": "Appearance"
+  },
+  "theme": {
+    "message": "Theme"
+  },
+  "themeSystem": {
+    "message": "Same as the system"
+  },
+  "themeLight": {
+    "message": "Light"
+  },
+  "themeDark": {
+    "message": "Dark"
+  },
+  "sectionShortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "notSet": {
+    "message": "Not set"
+  },
+  "changeShortcuts": {
+    "message": "Change shortcuts"
+  },
+  "firefoxShortcuts": {
+    "message": "Change them in Add-ons and themes, under the gear, in Manage extension shortcuts."
+  },
+  "sectionHelp": {
+    "message": "Help"
+  },
+  "diagnostics": {
+    "message": "Diagnostics"
+  },
+  "diagnosticsHelp": {
+    "message": "Version, browser, settings and recent errors, to paste in a bug report. No page addresses."
+  },
+  "copyDiagnostics": {
+    "message": "Copy diagnostics"
+  },
+  "copiedDiagnostics": {
+    "message": "Copied diagnostics"
+  },
+  "couldNotCopyDiagnostics": {
+    "message": "Could not copy the diagnostics"
+  },
+  "settingNotSaved": {
+    "message": "Could not save the setting"
+  }
+}
