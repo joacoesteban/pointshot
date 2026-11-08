@@ -7,24 +7,29 @@ Firefox MV2), Svelte 5, Tailwind 3 with daisyUI, and SCSS.
 ## Commands
 
 ```sh
-pnpm install      # also runs `wxt prepare`, which generates .wxt/tsconfig.json
-pnpm dev          # Chrome with hot reload
-pnpm check        # typecheck (svelte-check, warnings fail) + lint
-pnpm build        # production build in build/chrome-mv3
-pnpm test:unit    # Vitest over lib/ and background/, with happy-dom and fake-indexeddb
-pnpm test         # builds build/chrome-mv3-e2e, then runs Playwright on it
-pnpm bundle:all   # zips for Chrome and Firefox in build/
+bun install        # also runs `wxt prepare`, which generates .wxt/tsconfig.json
+bun run dev        # Chrome with hot reload
+bun run check      # typecheck (svelte-check, warnings fail) + lint
+bun run build      # production build in build/chrome-mv3
+bun run test:unit  # Vitest over lib/ and background/, with happy-dom and fake-indexeddb
+bun run test       # builds build/chrome-mv3-e2e, then runs Playwright on it
+bun run bundle:all # zips for Chrome and Firefox in build/
 ```
+
+Bun installs packages and runs scripts, while the tools themselves run on Node:
+Vitest breaks on Bun's runtime, where `z` imports from zod as undefined. Always
+spell out `bun run build` and `bun run test`, because bare `bun build` and
+`bun test` start Bun's own bundler and test runner.
 
 The e2e build (`--mode e2e`) differs from production only in asking for
 `<all_urls>` and `downloads` up front: tests open the popup by dispatching
 `action.onClicked`, which does not grant `activeTab`, and Playwright cannot
 grant the optional `downloads` permission. The first run needs
-`pnpm exec playwright install chromium`.
+`bunx playwright install chromium`.
 
 CI (`.github/workflows/ci.yml`) runs typecheck, lint, `bundle:all` and the
 tests on every PR to `main`. Once they pass on `main`, it runs
-`npm version patch` and pushes the commit and tag, unless that commit is
+`bun pm version patch` and pushes the commit and tag, unless that commit is
 already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 
 ## Layout
@@ -78,7 +83,7 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 
 ## Conventions
 
-The compiler and linter enforce most of these; `pnpm check` must pass.
+The compiler and linter enforce most of these; `bun run check` must pass.
 
 - TypeScript is `strict` plus `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, `noImplicitOverride` and
@@ -102,5 +107,5 @@ The compiler and linter enforce most of these; `pnpm check` must pass.
   Argentinian Spanish (`es_419`, voseo), and is read through `t()` in
   `lib/i18n.ts`, typed by the English keys. Each file names its locale in a
   `locale` message, which dates follow. After adding a key, run
-  `pnpm exec wxt prepare` so `t()` accepts it. E2E tests pick the language with
+  `bunx wxt prepare` so `t()` accepts it. E2E tests pick the language with
   `test.use({ lang })`.

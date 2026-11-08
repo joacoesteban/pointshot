@@ -15,18 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run typecheck
-      - run: pnpm run lint
-      - run: pnpm run test:unit
-      - run: pnpm run bundle:all
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test:unit
+      - run: bun run bundle:all
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run test
       - uses: actions/upload-artifact@v4
         with:
           name: snag
@@ -49,6 +50,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
       - name: Bump the patch version
         run: |
           if git tag --points-at HEAD | grep -q '^v'; then
@@ -57,7 +61,7 @@ jobs:
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          tag=$(npm version patch)
+          tag=$(bun pm version patch --message '%s')
           git push --atomic origin HEAD:main "$tag"
           # Tags pushed with GITHUB_TOKEN start no workflows, but
           # workflow_dispatch events do, so run the release on the tag by hand.

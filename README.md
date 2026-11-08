@@ -72,13 +72,13 @@ page addresses.
 ## Develop
 
 ```sh
-pnpm install
-pnpm dev          # Chrome with hot reload
-pnpm check        # typecheck + lint
-pnpm build        # production build in build/chrome-mv3
-pnpm test:unit    # unit tests
-pnpm test         # end-to-end tests against an e2e build in build/chrome-mv3-e2e
-pnpm bundle:all   # zips for Chrome and Firefox
+bun install
+bun run dev        # Chrome with hot reload
+bun run check      # typecheck + lint
+bun run build      # production build in build/chrome-mv3
+bun run test:unit  # unit tests
+bun run test       # end-to-end tests against an e2e build in build/chrome-mv3-e2e
+bun run bundle:all # zips for Chrome and Firefox
 
 mise run firefox:lint       # lint the Firefox build with web-ext
 mise run firefox:run        # try the Firefox build in a temporary profile
