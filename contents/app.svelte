@@ -202,12 +202,14 @@
       library.imageUrl(shot).map((url) => Img.dataUrlToBlob(url)),
     ).match(
       () => toast.success(t('copied')),
-      (error) =>
+      (error) => {
+        void Diagnostics.record(error)
         toast.error(
           match(error)
             .with(P.instanceOf(ClipboardError), () => t('clipboardBlocked'))
             .otherwise(explain),
-        ),
+        )
+      },
     )
   }
 
@@ -293,11 +295,15 @@
   function copyText(text: string, label: string) {
     void Clipboard.writeText(text).match(
       () => toast.success(t('copiedText', label)),
-      () => toast.error(t('clipboardBlocked')),
+      (error) => {
+        void Diagnostics.record(error)
+        toast.error(t('clipboardBlocked'))
+      },
     )
   }
 
-  library.failures$.subscribe(() => {
+  library.failures$.subscribe((error) => {
+    void Diagnostics.record(error)
     toast.error(t('couldNotDelete'))
   })
   // Removals wait for an undo, so a page that goes away deletes them first.

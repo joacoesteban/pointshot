@@ -18,11 +18,14 @@
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
   let commands = $state<readonly Command[]>([])
+  // The folder field and the Save As toggle hold what was typed or clicked until the permission it needs is granted or refused.
   let folder = $state('')
+  let saveAs = $state(false)
 
   SettingsStore.changes().subscribe((next) => {
     settings = next
     folder = next.folder
+    saveAs = next.saveAs
   })
 
   void browser.commands.getAll().then((all) => {
@@ -59,6 +62,7 @@
               })
               .with(false, () => {
                 folder = settings.folder
+                saveAs = settings.saveAs
                 toast.error(t('downloadsPermission'))
               })
               .exhaustive()
@@ -210,9 +214,9 @@
             type="checkbox"
             class="toggle"
             aria-label={t('saveAs')}
-            checked={settings.saveAs}
-            onchange={({ currentTarget: { checked } }) => {
-              updateDownloads({ saveAs: checked })
+            bind:checked={saveAs}
+            onchange={() => {
+              updateDownloads({ saveAs })
             }} />
         </label>
       </section>

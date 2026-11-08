@@ -1100,6 +1100,55 @@ test('changes settings on the options page', async ({
   )
 })
 
+test('turns Save As back off when downloads are refused', async ({
+  context,
+  background,
+}) => {
+  const options = await context.newPage()
+  await options.goto(optionsUrl(background))
+  // The end-to-end build holds the permission already, so refusal is simulated.
+  await options.evaluate(() => {
+    Object.assign(chrome.permissions, { request: () => Promise.resolve(false) })
+  })
+  const saveAs = options.getByRole('checkbox', { name: 'Ask where to save' })
+  await saveAs.click()
+  await expect(
+    options.getByText('Snag needs permission to manage downloads for this'),
+  ).toBeVisible()
+  await expect(saveAs).not.toBeChecked()
+  expect(
+    await background.evaluate(() => chrome.storage.local.get('settings')),
+  ).not.toMatchObject({ settings: { saveAs: true } })
+})
+
+test('keeps failed copies for the diagnostics', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await page.goto(INSECURE_FIXTURE_URL)
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shot = page.getByTestId('snag-shot')
+  await expect(shot).toHaveCount(1)
+  const errors = () =>
+    background.evaluate(async () => {
+      const { 'recent-errors': recent } =
+        await chrome.storage.local.get('recent-errors')
+      return ([] as unknown[]).concat(recent ?? []).length
+    })
+  await expect.poll(errors).toBe(1)
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Copy' }).click()
+  await expect(
+    page.getByText('The page blocked the clipboard', { exact: true }),
+  ).toBeVisible()
+  await expect.poll(errors).toBe(2)
+})
+
 test('opens the options from the popup', async ({
   page,
   context,
