@@ -252,7 +252,15 @@ export class ElementPicker {
         ).pipe(filter(isPick)),
       )
       .otherwise((delay) =>
-        aimed(timer(delay * 1000).pipe(map(() => ({ shiftKey: false })))).pipe(
+        // Resolved when the time is up, since clicking open a menu changes what is under a still pointer.
+        timer(delay * 1000).pipe(
+          withLatestFrom(pointer$.pipe(startWith(null))),
+          map(([, point]) => ({
+            element: match(point)
+              .with(P.nonNullable, (point) => this.elementAt(point))
+              .otherwise(() => null),
+            framing: 'element' as const,
+          })),
           take(1),
           filter(isPick),
         ),

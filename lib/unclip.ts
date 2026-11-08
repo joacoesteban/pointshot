@@ -38,8 +38,10 @@ const layoutOf = (element: Element) =>
     .otherwise(() => ({ display: 'block', flexDirection: 'row' }))
 
 // Lets the element grow to its content: an absolute box stretched between insets, a column flex item and a grid item would otherwise keep the size their container gives them.
+// Longhands only: a shorthand would read back empty over inline longhands, and restoring it would wipe them.
 const grown = (element: Element): Record<string, string> => ({
-  overflow: 'visible',
+  'overflow-x': 'visible',
+  'overflow-y': 'visible',
   height: 'auto',
   'max-height': 'none',
   ...match(element.scrollWidth > element.clientWidth)
@@ -54,7 +56,7 @@ const grown = (element: Element): Record<string, string> => ({
         display: P.union('flex', 'inline-flex'),
         flexDirection: P.string.startsWith('column'),
       },
-      () => ({ flex: 'none' }),
+      () => ({ 'flex-grow': '0', 'flex-shrink': '0', 'flex-basis': 'auto' }),
     )
     .with({ display: P.union('grid', 'inline-grid') }, () => ({
       'align-self': 'start',

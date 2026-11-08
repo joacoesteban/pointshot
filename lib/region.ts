@@ -102,7 +102,8 @@ export const radius = (
   return { x: length(x, width), y: length(y, height) }
 }
 
-const observedRect = (element: Element) =>
+// Relative to the root document's viewport, cut by the element's clipping ancestors.
+const observedRect = (element: Element, root: Document | null = null) =>
   new Promise<Area>((resolve) => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -111,20 +112,20 @@ const observedRect = (element: Element) =>
           resolve(intersectionRect)
         })
       },
-      { rootMargin: UNBOUNDED },
+      { root, rootMargin: UNBOUNDED },
     )
     observer.observe(element)
   })
 
-// An element in a frame is cut to what each enclosing frame shows, which an observer in this document cannot see.
+// An element in a frame is observed in its own document, then cut to what each enclosing frame shows.
 const visibleRect = (element: Element) =>
   match(Dom.documents(element.ownerDocument))
     .with([P._], () => observedRect(element))
     .otherwise((documents) =>
-      Promise.resolve(
+      observedRect(element, element.ownerDocument).then((rect) =>
         documents
           .map((document) => Dom.viewport(document))
-          .reduce(intersect, Dom.rect(element)),
+          .reduce(intersect, shift(rect, Dom.offset(element.ownerDocument))),
       ),
     )
 

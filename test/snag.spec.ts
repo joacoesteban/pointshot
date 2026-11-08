@@ -474,6 +474,89 @@ test('picks inside a same-origin frame', async ({ page, togglePopup }) => {
   expect(page.url()).toBe(FIXTURE_URL)
 })
 
+test('restores inline overflow longhands after opening a container', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    window.scrollTo(0, 1100)
+    const scroller = document.querySelector<HTMLElement>('#scroller')
+    scroller?.style.removeProperty('overflow')
+    scroller?.style.setProperty('overflow-y', 'auto')
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#scroller')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible({
+    timeout: 10_000,
+  })
+  expect(await clipboardImage(page)).toMatchObject({ width: 180, height: 600 })
+  expect(
+    await page.evaluate(
+      () => document.querySelector<HTMLElement>('#scroller')?.style.overflowY,
+    ),
+  ).toBe('auto')
+})
+
+test('a countdown snags what is under the pointer when it ends', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { delay: 2 } }),
+  )
+  // A menu that opens over its button, under a pointer that does not move.
+  await page.evaluate(() => {
+    const opener = document.querySelector<HTMLElement>('#target')
+    opener?.addEventListener('click', () => {
+      const menu = document.createElement('div')
+      menu.id = 'menu'
+      menu.style.cssText =
+        'position: absolute; top: 160px; left: 150px; width: 260px; height: 220px; background: #222222'
+      document.body.append(menu)
+    })
+  })
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag after a countdown' }).click()
+  await hover(page, '#target')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.locator('#menu')).toBeVisible()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(1, {
+    timeout: 5_000,
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('260 × 220')
+})
+
+test('cuts a framed element to its clipping ancestors', async ({
+  page,
+  togglePopup,
+}) => {
+  await page
+    .frameLocator('#frame')
+    .locator('body')
+    .evaluate((body) => {
+      const framed = body.querySelector('#framed')
+      const clipper = document.createElement('div')
+      clipper.style.cssText = 'width: 120px; overflow: hidden'
+      framed?.replaceWith(clipper)
+      clipper.append(framed ?? '')
+    })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  // 60, 80 into the frame, past its 2 px border at 320, 440.
+  await page.mouse.move(382, 522, { steps: 4 })
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#framed')
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  // The 200 px #framed starts 20 px into its 120 px clipper.
+  expect(await clipboardImage(page)).toMatchObject({ width: 100, height: 150 })
+})
+
 test('snags what is under the pointer when the countdown ends', async ({
   page,
   background,
