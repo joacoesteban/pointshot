@@ -198,12 +198,16 @@
   }
 
   function download(shot: Shot) {
-    void library.imageUrl(shot).match(
-      (imageUrl) => {
-        Download.shot(shot, imageUrl, host)
-      },
-      (error) => toast.error(explain(error)),
-    )
+    const { format, quality } = settings
+    void library
+      .imageUrl(shot)
+      .andThen((imageUrl) => Img.encode(imageUrl, format, quality))
+      .match(
+        (imageUrl) => {
+          Download.shot(shot, imageUrl, format, host)
+        },
+        (error) => toast.error(explain(error)),
+      )
   }
 
   function remove(shot: Shot) {

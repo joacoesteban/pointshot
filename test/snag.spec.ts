@@ -686,3 +686,29 @@ test('scales a snag past the size limit down and says so', async ({
     height: 3464,
   })
 })
+
+test('downloads in the format from the settings', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { format: 'jpeg', quality: 0.8 } }),
+  )
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#pill')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shot = page.getByTestId('snag-shot')
+  await expect(shot).toHaveCount(1)
+  await shot.hover()
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    shot.getByRole('button', { name: 'Download' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.jpg$/)
+  const { readFile } = await import('node:fs/promises')
+  const bytes = await readFile(await download.path())
+  expect([...bytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff])
+})
