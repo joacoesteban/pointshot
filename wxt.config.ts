@@ -55,6 +55,9 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: 'snag@joacoesteban.com',
+        // ClipboardItem, which copying needs, arrived in Firefox 127.
+        strict_min_version: '127.0',
+        data_collection_permissions: { required: ['none'] },
       },
     },
   }),
