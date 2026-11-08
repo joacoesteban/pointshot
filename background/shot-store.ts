@@ -81,9 +81,9 @@ export class ShotStore {
     )
   }
 
-  remove(id: string): ResultAsync<undefined, StorageError> {
+  remove(ids: readonly string[]): ResultAsync<undefined, StorageError> {
     return ResultAsync.fromPromise(
-      this.db.shots.delete(id),
+      this.db.shots.bulkDelete([...ids]),
       toError(StorageError),
     ).map(() => undefined)
   }

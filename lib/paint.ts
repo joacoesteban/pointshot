@@ -1,12 +1,15 @@
 import { Img } from './image'
 
-// Thumbnails are drawn on a canvas instead of an <img>, because the page's CSP governs img-src inside the shadow root.
-const THUMBNAIL_WIDTH = 480
+// Images are drawn on a canvas instead of an <img>, because the page's CSP governs img-src inside the shadow root.
+export type Painting = {
+  readonly dataUrl: string
+  readonly maxWidth: number
+}
 
-export function paint(canvas: HTMLCanvasElement, dataUrl: string) {
-  const draw = (dataUrl: string) =>
+export function paint(canvas: HTMLCanvasElement, painting: Painting) {
+  const draw = ({ dataUrl, maxWidth }: Painting) =>
     Img.bitmap(Img.dataUrlToBlob(dataUrl)).map((bitmap) => {
-      const scale = Math.min(1, THUMBNAIL_WIDTH / bitmap.width)
+      const scale = Math.min(1, maxWidth / bitmap.width)
       canvas.width = Math.round(bitmap.width * scale)
       canvas.height = Math.round(bitmap.height * scale)
       canvas
@@ -14,9 +17,9 @@ export function paint(canvas: HTMLCanvasElement, dataUrl: string) {
         ?.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
       bitmap.close()
     })
-  void draw(dataUrl)
+  void draw(painting)
   return {
-    update: (next: string) => {
+    update: (next: Painting) => {
       void draw(next)
     },
   }

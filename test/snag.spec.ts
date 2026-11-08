@@ -736,3 +736,131 @@ test('downloads in the format from the settings', async ({
   const bytes = await readFile(await download.path())
   expect([...bytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff])
 })
+
+const snagTarget = async (page: Page, selector: string) => {
+  await page.getByTestId('snag-pick').click()
+  await hover(page, selector)
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByText('Copied to clipboard').first()).toBeVisible()
+}
+
+test('undoes a deletion, and keeps one that was not undone', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await snagTarget(page, '#target')
+  const shot = page.getByTestId('snag-shot')
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Delete' }).click()
+  await expect(shot).toHaveCount(0)
+  await expect(page.getByTestId('snag-undo')).toContainText('Deleted 1 snag')
+  await page.getByRole('button', { name: 'Undo' }).click()
+  await expect(shot).toHaveCount(1)
+  await expect(page.getByTestId('snag-undo')).toBeHidden()
+
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Delete' }).click()
+  await expect(shot).toHaveCount(0)
+  await page.reload()
+  await togglePopup()
+  await expect(page.getByTestId('snag-popup')).toContainText('No snags yet')
+})
+
+test('searches snags and deletes the ones shown', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await snagTarget(page, '#target')
+  await snagTarget(page, '#pill')
+  const shots = page.getByTestId('snag-shot')
+  await expect(shots).toHaveCount(2)
+  const search = page.getByRole('searchbox', { name: 'Search snags' })
+  await search.fill('nothing like it')
+  await expect(page.getByText('No snags match')).toBeVisible()
+  await search.fill('FIXTURE')
+  await expect(shots).toHaveCount(2)
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  await expect(shots).toHaveCount(0)
+  await expect(page.getByTestId('snag-undo')).toContainText('Deleted 2 snags')
+})
+
+test('keeps keys typed in the search away from the page', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    document.addEventListener('keydown', ({ key }) => {
+      document.title = `pressed ${key}`
+    })
+  })
+  await togglePopup()
+  await snagTarget(page, '#target')
+  await page.getByRole('searchbox', { name: 'Search snags' }).fill('')
+  await page.getByRole('searchbox', { name: 'Search snags' }).press('s')
+  expect(await page.title()).toBe('Snag fixture')
+})
+
+test('opens a snag full size and copies it as text', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await snagTarget(page, '#target')
+  const shot = page.getByTestId('snag-shot')
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Open' }).click()
+  const preview = page.getByTestId('snag-preview')
+  await expect(preview).toBeVisible()
+  await expect(preview).toContainText('200 × 120')
+  await expect
+    .poll(() =>
+      preview
+        .locator('canvas')
+        .evaluate((canvas: HTMLCanvasElement) => [canvas.width, canvas.height]),
+    )
+    .toEqual([200, 120])
+
+  await preview.getByRole('button', { name: 'Page link' }).click()
+  await expect(page.getByText('Copied Page link')).toBeVisible()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    FIXTURE_URL,
+  )
+  await preview.getByRole('button', { name: 'Markdown' }).click()
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
+    /^!\[Snag fixture\]\(data:image\/png;base64,/,
+  )
+
+  await page.keyboard.press('Escape')
+  await expect(preview).toBeHidden()
+})
+
+test('remembers where the popup was left', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await togglePopup()
+  const popup = page.getByTestId('snag-popup')
+  await expect(popup).toHaveClass(/visible/)
+  const title = popup.getByRole('heading', { name: 'snag', exact: true })
+  const before = await title.boundingBox()
+  if (!before) throw new Error('The popup title is not visible')
+  await page.mouse.move(before.x + 5, before.y + 5)
+  await page.mouse.down()
+  await page.mouse.move(before.x - 200, before.y + 150, { steps: 10 })
+  await page.mouse.up()
+  await expect
+    .poll(() =>
+      background.evaluate(() => chrome.storage.local.get('popup-position')),
+    )
+    .toHaveProperty('popup-position')
+  const moved = await title.boundingBox()
+
+  await page.reload()
+  await togglePopup()
+  await expect(popup).toHaveClass(/visible/)
+  await expect.poll(() => title.boundingBox()).toEqual(moved)
+})

@@ -7,12 +7,17 @@
   type Props = {
     shot: Shot
     disabled: boolean
+    onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
   }
 
-  const { shot, disabled, oncopy, ondownload, onremove }: Props = $props()
+  const { shot, disabled, onopen, oncopy, ondownload, onremove }: Props =
+    $props()
+
+  // Twice the card's width keeps the thumbnail sharp on high-density screens.
+  const THUMBNAIL_WIDTH = 480
 
   const { url, width, height, createdAt, thumbnail, title } = $derived(shot)
   const host = $derived(siteOf(url))
@@ -20,8 +25,20 @@
 
 <article class="card bg-blur bg-blur:soft" data-testid="snag-shot" {title}>
   <div class="thumbnail">
-    <canvas use:paint={thumbnail}></canvas>
+    <canvas use:paint={{ dataUrl: thumbnail, maxWidth: THUMBNAIL_WIDTH }}
+    ></canvas>
     <div class="actions">
+      <SymbolButton
+        name="expand"
+        title="Open"
+        size="38px"
+        padding="28%"
+        glassy
+        opaque
+        {disabled}
+        onclick={() => {
+          onopen(shot)
+        }} />
       <SymbolButton
         name="docOnDoc"
         title="Copy"
@@ -93,7 +110,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
     opacity: 0;
     transform: scale(0.9);
     transition-property: opacity, transform;

@@ -55,3 +55,21 @@
   }
   opacity: 0.1 !important;
 }
+
+.chip {
+  padding: 0.3em 0.9em;
+  border-radius: 100em;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #8882;
+  border: 1px solid #8884;
+  transition: background 0.15s;
+  &:hover:not(:disabled) {
+    background: #8884;
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}

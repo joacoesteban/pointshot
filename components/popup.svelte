@@ -1,7 +1,8 @@
 <script lang="ts">
   import { flip } from 'svelte/animate'
-  import { draggable } from '~/lib/draggable'
-  import type { Shot } from '~/lib/shot'
+  import { match } from 'ts-pattern'
+  import { draggable, type Placement } from '~/lib/draggable'
+  import { filterShots, sitesOf, type Shot } from '~/lib/shot'
   import type { Mode } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
@@ -12,26 +13,34 @@
     visible: boolean
     ghost: boolean
     shots: Shot[]
+    removed: readonly Shot[]
+    placement: Placement
     onclose: () => void
     onpick: () => void
     onpicklater: () => void
     oncapture: (mode: Mode) => void
+    onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
     ondownload: (shot: Shot) => void
-    onremove: (shot: Shot) => void
+    onremove: (shots: readonly Shot[]) => void
+    onundo: () => void
   }
 
   const {
     visible,
     ghost,
     shots,
+    removed,
+    placement,
     onclose,
     onpick,
     onpicklater,
     oncapture,
+    onopen,
     oncopy,
     ondownload,
     onremove,
+    onundo,
   }: Props = $props()
 
   const modes = [
@@ -39,6 +48,17 @@
     { name: 'window', title: 'Snag what the window shows', mode: 'visible' },
     { name: 'page', title: 'Snag the whole page', mode: 'page' },
   ] as const
+
+  let query = $state('')
+  let site = $state<string | null>(null)
+
+  const sites = $derived(sitesOf(shots))
+  const shown = $derived(filterShots(shots, { query, site }))
+
+  const snags = (count: number) =>
+    match(count)
+      .with(1, () => '1 snag')
+      .otherwise((count) => `${String(count)} snags`)
 </script>
 
 <div
@@ -47,7 +67,7 @@
   inert={!visible}
   class:visible
   class:shrink={ghost}
-  use:draggable>
+  use:draggable={placement}>
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
     <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
       <h2 class="font-black text-2xl m-0 opacity-25">snag</h2>
@@ -61,10 +81,55 @@
         onclick={onclose} />
     </header>
 
+    {#if shots.length}
+      <!-- Keys typed here stop at the popup, so the page's shortcuts do not see them. -->
+      <div
+        class="toolbar flex items-center gap-2 mb-3 px-1"
+        role="search"
+        onkeydown={(event) => {
+          event.stopPropagation()
+        }}
+        onkeyup={(event) => {
+          event.stopPropagation()
+        }}
+        onkeypress={(event) => {
+          event.stopPropagation()
+        }}>
+        <input
+          type="search"
+          class="input input-sm input-bordered flex-1 min-w-0"
+          placeholder="Search snags"
+          aria-label="Search snags"
+          bind:value={query} />
+        {#if sites.length > 1}
+          <select
+            class="select select-sm select-bordered max-w-[9rem]"
+            aria-label="Site"
+            bind:value={site}>
+            <option value={null}>All sites</option>
+            {#each sites as site (site)}
+              <option value={site}>{site}</option>
+            {/each}
+          </select>
+        {/if}
+        <button
+          type="button"
+          class="chip"
+          disabled={ghost || shown.length === 0}
+          onclick={() => {
+            onremove(shown)
+          }}>
+          {match(shown.length)
+            .with(shots.length, () => 'Delete all')
+            .otherwise((count) => `Delete ${String(count)}`)}
+        </button>
+      </div>
+    {/if}
+
     <main class="px-1">
-      {#if shots.length}
+      {#if shown.length}
         <div class="grid grid-cols-2 gap-3">
-          {#each shots as shot (shot.id)}
+          {#each shown as shot (shot.id)}
             <div
               animate:flip={{ duration: 300 }}
               in:transitionIn
@@ -72,11 +137,19 @@
               <ShotCard
                 {shot}
                 disabled={ghost}
+                {onopen}
                 {oncopy}
                 {ondownload}
-                {onremove} />
+                onremove={(shot) => {
+                  onremove([shot])
+                }} />
             </div>
           {/each}
+        </div>
+      {:else if shots.length}
+        <div class="text-center py-8">
+          <h3 class="font-bold text-xl mb-1">No snags match</h3>
+          <p class="opacity-60 text-sm">Try another search or site.</p>
         </div>
       {:else}
         <div class="text-center py-8">
@@ -89,6 +162,16 @@
     </main>
 
     <footer class="flex flex-col items-center sticky bottom-0 pt-4">
+      {#if removed.length}
+        <div
+          class="undo flex items-center gap-3 mb-3 text-sm"
+          data-testid="snag-undo"
+          in:transitionIn
+          out:transitionOut>
+          <span>Deleted {snags(removed.length)}</span>
+          <button type="button" class="chip" onclick={onundo}>Undo</button>
+        </div>
+      {/if}
       <div class="flex items-center gap-2">
         <Button testId="snag-pick" disabled={ghost} onclick={onpick}
           >Snag</Button>

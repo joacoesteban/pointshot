@@ -8,7 +8,7 @@
 
   const { name, size = '100%' }: Props = $props()
 
-  const { path, geometry } = $derived(symbols[name])
+  const { path, fillRule, geometry } = $derived(symbols[name])
 
   const scaled = (ratio: number) => `calc(${size} * ${String(ratio)})`
 </script>
@@ -21,5 +21,9 @@
   width={scaled(geometry.wRatio)}
   style:max-width={size}
   style:min-width={size}>
-  <path fill="currentColor" d={path} fill-rule="evenodd" clip-rule="evenodd" />
+  <path
+    fill="currentColor"
+    d={path}
+    fill-rule={fillRule}
+    clip-rule={fillRule} />
 </svg>

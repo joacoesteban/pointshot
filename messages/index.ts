@@ -26,10 +26,10 @@ export const [saveShot, saveShotStream] = getMessage<NewShot, Reply<Saved>>(
   { async: true },
 )
 
-export const [removeShot, removeShotStream] = getMessage<
-  string,
+export const [removeShots, removeShotsStream] = getMessage<
+  readonly string[],
   Reply<undefined>
->('remove-shot', { async: true })
+>('remove-shots', { async: true })
 
 export const [shotImageUrl, shotImageUrlStream] = getMessage<
   string,

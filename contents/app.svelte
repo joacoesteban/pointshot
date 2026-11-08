@@ -2,10 +2,11 @@
   import '~/lib/fonts-importer'
   import { match, P } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { of, take, timer, type Observable } from 'rxjs'
+  import { fromEvent, of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
+  import Preview from '~/components/preview.svelte'
   import Selection from '~/components/selection.svelte'
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
@@ -19,6 +20,7 @@
   } from '~/lib/errors'
   import { Img } from '~/lib/image'
   import { ElementPicker } from '~/lib/picker'
+  import { PopupPosition, type Position } from '~/lib/popup-position'
   import type { Shot } from '~/lib/shot'
   import { ShotLibrary } from '~/lib/shot-library'
   import { Snagger, type Target } from '~/lib/snagger'
@@ -47,6 +49,7 @@
   // svelte-ignore state_referenced_locally
   const snagger = new Snagger(new Stitcher(new Stage(container)), library, host)
   const shots$ = library.shots$
+  const removed$ = library.removed$
 
   const idle$: Observable<Element | null> = of(null)
 
@@ -56,6 +59,19 @@
   let selectionHint = $state<string | undefined>()
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
+  let previewing = $state<{ shot: Shot; image: string | null } | null>(null)
+  let position = $state<Position | null>(null)
+
+  const placement = $derived({
+    position,
+    onrest: (position: Position) => {
+      void PopupPosition.save(position)
+    },
+  })
+
+  void PopupPosition.load().map((saved) => {
+    position = saved
+  })
 
   SettingsStore.changes().subscribe((next) => {
     settings = next
@@ -210,9 +226,47 @@
       )
   }
 
-  function remove(shot: Shot) {
-    void library.remove(shot).mapErr((error) => toast.error(explain(error)))
+  function remove(shots: readonly Shot[]) {
+    const ids = shots.map(({ id }) => id)
+    library.remove(shots)
+    match(previewing)
+      .with({ shot: { id: P.when((id) => ids.includes(id)) } }, () => {
+        previewing = null
+      })
+      .otherwise(() => undefined)
   }
+
+  function open(shot: Shot) {
+    previewing = { shot, image: null }
+    void library.imageUrl(shot).match(
+      (image) => {
+        match(previewing)
+          .with({ shot: { id: shot.id } }, () => {
+            previewing = { shot, image }
+          })
+          .otherwise(() => undefined)
+      },
+      (error) => {
+        previewing = null
+        toast.error(explain(error))
+      },
+    )
+  }
+
+  function copyText(text: string, label: string) {
+    void Clipboard.writeText(text).match(
+      () => toast.success(`Copied ${label}`),
+      () => toast.error('The page blocked the clipboard'),
+    )
+  }
+
+  library.failures$.subscribe(() => {
+    toast.error('Could not delete those snags')
+  })
+  // Removals wait for an undo, so a page that goes away deletes them first.
+  fromEvent(window, 'pagehide').subscribe(() => {
+    library.flush()
+  })
 
   togglePopupStream.subscribe(toggle)
   pickElementStream.subscribe(() => {
@@ -228,6 +282,8 @@
     {visible}
     ghost={busy}
     shots={$shots$}
+    removed={$removed$}
+    {placement}
     onclose={() => {
       visible = false
     }}
@@ -238,9 +294,27 @@
       pick(settings.delay)
     }}
     oncapture={capture}
+    onopen={open}
     oncopy={copy}
     ondownload={download}
-    onremove={remove} />
+    onremove={remove}
+    onundo={() => {
+      library.undo()
+    }} />
+  {#if previewing}
+    <Preview
+      shot={previewing.shot}
+      image={previewing.image}
+      onclose={() => {
+        previewing = null
+      }}
+      oncopy={copy}
+      oncopytext={copyText}
+      ondownload={download}
+      onremove={(shot) => {
+        remove([shot])
+      }} />
+  {/if}
   <Highlight {target$} />
   {#if selecting}
     <Selection onpick={select} oncancel={endSelection} />

@@ -13,7 +13,7 @@ import {
   captureVisibleTabStream,
   listShotsStream,
   pickElement,
-  removeShotStream,
+  removeShotsStream,
   saveShotStream,
   shotImageUrlStream,
   togglePopup,
@@ -106,8 +106,8 @@ export default defineBackground(() => {
       SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
     ).then(respond)
   })
-  removeShotStream.subscribe(([id, , respond]) => {
-    void ReplyCodec.encode(store.remove(id)).then(respond)
+  removeShotsStream.subscribe(([ids, , respond]) => {
+    void ReplyCodec.encode(store.remove(ids)).then(respond)
   })
   shotImageUrlStream.subscribe(([id, , respond]) => {
     void ReplyCodec.encode(store.imageUrl(id)).then(respond)

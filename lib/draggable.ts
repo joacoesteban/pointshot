@@ -9,19 +9,27 @@ import {
   takeUntil,
   tap,
 } from 'rxjs'
+import { match, P } from 'ts-pattern'
 import { DisposeBag } from './dispose-bag'
 
 type Vec = Readonly<Record<'x' | 'y', number>>
 
+export type Placement = {
+  // Where the node was left last time, or null for the top right corner.
+  readonly position: Vec | null
+  readonly onrest: (position: Vec) => void
+}
+
 const FRICTION = 0.85
 const MARGIN = 24
-const INTERACTIVE = 'button, a, input, textarea, [role="button"]'
+const INTERACTIVE = 'button, a, input, select, textarea, [role="button"]'
 
 const pointOf = ({ clientX: x, clientY: y }: PointerEvent): Vec => ({ x, y })
 
-export function draggable(node: HTMLElement) {
+export function draggable(node: HTMLElement, placement: Placement) {
   const { sink, dispose } = new DisposeBag()
-  let position: Vec = {
+  let { onrest } = placement
+  let position: Vec = placement.position ?? {
     x: window.innerWidth - node.offsetWidth - MARGIN,
     y: MARGIN,
   }
@@ -39,11 +47,16 @@ export function draggable(node: HTMLElement) {
   }
 
   const glide = ({ x, y }: Vec) => {
-    if (Math.hypot(x, y) < 0.1) return
-    place({ x: position.x + x, y: position.y + y })
-    frame = requestAnimationFrame(() => {
-      glide({ x: x * FRICTION, y: y * FRICTION })
-    })
+    match(Math.hypot(x, y))
+      .with(P.number.lt(0.1), () => {
+        onrest(position)
+      })
+      .otherwise(() => {
+        place({ x: position.x + x, y: position.y + y })
+        frame = requestAnimationFrame(() => {
+          glide({ x: x * FRICTION, y: y * FRICTION })
+        })
+      })
   }
 
   fromEvent<PointerEvent>(node, 'pointerdown')
@@ -93,6 +106,14 @@ export function draggable(node: HTMLElement) {
     })
 
   return {
+    update: (next: Placement) => {
+      onrest = next.onrest
+      match(next.position)
+        .with(P.nonNullable, (next) => {
+          place(next)
+        })
+        .otherwise(() => undefined)
+    },
     destroy: () => {
       cancelAnimationFrame(frame)
       dispose()
