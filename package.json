@@ -1,6 +1,6 @@
 {
   "name": "snag",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Screenshot any element on the page. Pick it with the mouse, get it in your clipboard.",
   "author": "dev@joacoesteban.com",
   "license": "MIT",
