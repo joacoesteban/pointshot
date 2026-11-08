@@ -12,13 +12,13 @@
     "build:firefox": "wxt build -b firefox",
     "bundle": "wxt zip",
     "bundle:firefox": "wxt zip -b firefox",
-    "bundle:all": "pnpm run bundle && pnpm run bundle:firefox",
+    "bundle:all": "bun run bundle && bun run bundle:firefox",
     "test:unit": "vitest run",
     "typecheck": "svelte-check --tsconfig tsconfig.json --fail-on-warnings",
     "lint": "eslint .",
     "build:e2e": "wxt build --mode e2e",
-    "test": "pnpm run build:e2e && playwright test",
-    "check": "pnpm run typecheck && pnpm run lint",
+    "test": "bun run build:e2e && playwright test",
+    "check": "bun run typecheck && bun run lint",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -62,12 +62,10 @@
     "vitest": "^4.1.12",
     "wxt": "^0.21.5"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "sharp",
-      "spawn-sync"
-    ]
-  },
-  "packageManager": "pnpm@10.14.0"
+  "trustedDependencies": [
+    "esbuild",
+    "sharp",
+    "spawn-sync"
+  ],
+  "packageManager": "bun@1.4.2"
 }
