@@ -197,7 +197,7 @@
           onclick={onpicklater} />
       </div>
       <p class="text-xs opacity-50 mt-2">
-        ↑ ↓ ← → walk the page · ⇧ adds a margin · Esc cancels
+        ↑ ↓ ← → walk the page · Shift adds a margin · Esc cancels
       </p>
     </footer>
   </div>
