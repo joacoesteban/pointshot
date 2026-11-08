@@ -14,6 +14,16 @@ export const fileName = ({ url, createdAt }: Shot, format: Format) =>
     .toISOString()
     .replace(/[:.]/g, '-')}.${extensionOf(format)}`
 
+// A folder inside the browser's download folder: no empty, relative or reserved parts.
+export const pathOf = (folder: string, name: string) =>
+  [
+    ...folder
+      .split(/[\\/]+/)
+      .map((part) => part.trim().replace(/[<>:"|?*]/g, '_'))
+      .filter((part) => !['', '.', '..'].includes(part)),
+    name,
+  ].join('/')
+
 export class Download {
   static shot(shot: Shot, imageUrl: string, format: Format, root: Node) {
     const anchor = document.createElement('a')

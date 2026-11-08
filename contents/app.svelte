@@ -2,6 +2,7 @@
   import '~/lib/fonts-importer'
   import { match, P } from 'ts-pattern'
   import toast from 'svelte-french-toast'
+  import { okAsync } from 'neverthrow'
   import { fromEvent, of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
@@ -11,9 +12,10 @@
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
   import { DisposeBag } from '~/lib/dispose-bag'
-  import { Download } from '~/lib/download'
+  import { Download, fileName, pathOf } from '~/lib/download'
   import {
     ClipboardError,
+    DownloadError,
     EmptyAreaError,
     QuotaError,
     StorageError,
@@ -29,7 +31,9 @@
   import { themeController } from '~/lib/theme-controller'
   import { DEFAULT_SETTINGS, SettingsStore } from '~/lib/settings'
   import type { Area } from '~/lib/region'
+  import { ReplyCodec } from '~/lib/reply'
   import {
+    downloadFile,
     captureModeStream,
     pickElementStream,
     togglePopupStream,
@@ -213,17 +217,38 @@
     )
   }
 
+  // Save as and folders go through the downloads API, which falls back to a plain download when its permission was not granted.
   function download(shot: Shot) {
-    const { format, quality } = settings
+    const { format, quality, saveAs, folder } = settings
+    const viaAnchor = (url: string) => {
+      Download.shot(shot, url, format, host)
+    }
     void library
       .imageUrl(shot)
       .andThen((imageUrl) => Img.encode(imageUrl, format, quality))
-      .match(
-        (imageUrl) => {
-          Download.shot(shot, imageUrl, format, host)
-        },
-        (error) => toast.error(explain(error)),
+      .andThen((url) =>
+        match({ saveAs, folder })
+          .with({ saveAs: false, folder: '' }, () => {
+            viaAnchor(url)
+            return okAsync(undefined)
+          })
+          .otherwise(() =>
+            ReplyCodec.decode(
+              downloadFile({
+                url,
+                filename: pathOf(folder, fileName(shot, format)),
+                saveAs,
+              }),
+              DownloadError,
+            )
+              .map(() => undefined)
+              .orElse(() => {
+                viaAnchor(url)
+                return okAsync(undefined)
+              }),
+          ),
       )
+      .mapErr((error) => toast.error(explain(error)))
   }
 
   function remove(shots: readonly Shot[]) {

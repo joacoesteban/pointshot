@@ -23,6 +23,9 @@ const Shape = z.object({
   // Downloads only: the clipboard takes PNG alone.
   format: z.enum(['png', 'jpeg', 'webp']).catch('png'),
   quality: z.number().min(0.5).max(1).catch(0.9),
+  // Both need the optional downloads permission, which the options page asks for.
+  saveAs: z.boolean().catch(false),
+  folder: z.string().max(120).catch(''),
 })
 
 export const DEFAULT_SETTINGS = Shape.parse({})

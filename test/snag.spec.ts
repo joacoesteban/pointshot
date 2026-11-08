@@ -864,3 +864,33 @@ test('remembers where the popup was left', async ({
   await expect(popup).toHaveClass(/visible/)
   await expect.poll(() => title.boundingBox()).toEqual(moved)
 })
+
+test('downloads into a folder through the downloads API', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  // Playwright saves downloads under random names, so the request itself is checked.
+  await background.evaluate(() => {
+    const download = chrome.downloads.download.bind(chrome.downloads)
+    Object.assign(chrome.downloads, {
+      download: (options: chrome.downloads.DownloadOptions) => {
+        void chrome.storage.local.set({ requested: options.filename })
+        return download(options)
+      },
+    })
+    return chrome.storage.local.set({ settings: { folder: 'Snag shots' } })
+  })
+  await togglePopup()
+  await snagTarget(page, '#target')
+  const shot = page.getByTestId('snag-shot')
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Download' }).click()
+  await expect
+    .poll(() =>
+      background.evaluate(() => chrome.storage.local.get('requested')),
+    )
+    .toMatchObject({
+      requested: expect.stringMatching(/^Snag shots\/snag-snag\.test-.*\.png$/),
+    })
+})
