@@ -6,15 +6,16 @@ download, or delete it later.
 
 ## Use
 
-| Action                             | How                                                 |
-| ---------------------------------- | --------------------------------------------------- |
-| Open the popup                     | Click the toolbar icon, or press `Alt+S`            |
-| Pick an element                    | Press **Snag** in the popup, or press `Alt+Shift+S` |
-| Select the parent / child          | `↑` / `↓` while picking                             |
-| Select the previous / next sibling | `←` / `→` while picking                             |
-| Snag the selected element          | Click, or press `Enter`                             |
-| Snag it with a margin of page      | Hold `Shift` while snagging                         |
-| Cancel                             | `Esc`                                               |
+| Action                             | How                                                              |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| Open the popup                     | Click the toolbar icon, or press `Alt+S`                         |
+| Pick an element                    | Press **Snag** in the popup, or press `Alt+Shift+S`              |
+| Select the parent / child          | `↑` / `↓` while picking                                          |
+| Select the previous / next sibling | `←` / `→` while picking                                          |
+| Snag the selected element          | Click, or press `Enter`                                          |
+| Snag it with a margin of page      | Hold `Shift` while snagging                                      |
+| Snag after a countdown             | Press the timer in the popup, then hover or open what to capture |
+| Cancel                             | `Esc`                                                            |
 
 Elements taller or wider than the window are captured whole: Snag scrolls the
 page, captures it piece by piece and stitches the pieces together. Fixed and

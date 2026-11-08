@@ -473,3 +473,28 @@ test('picks inside a same-origin frame', async ({ page, togglePopup }) => {
   await expect(page.getByTestId('snag-shot')).toContainText('200 × 150')
   expect(page.url()).toBe(FIXTURE_URL)
 })
+
+test('snags what is under the pointer when the countdown ends', async ({
+  page,
+  background,
+  togglePopup,
+}) => {
+  await background.evaluate(() =>
+    chrome.storage.local.set({ settings: { delay: 2 } }),
+  )
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag after a countdown' }).click()
+  await expect(
+    page.getByText('Snagging what is under the pointer'),
+  ).toBeVisible()
+  await page.locator('#link').click()
+  expect(page.url()).toBe(`${FIXTURE_URL}#clicked`)
+  await hover(page, '#target')
+  await expect(page.getByTestId('snag-shot')).toHaveCount(1, {
+    timeout: 5_000,
+  })
+  await expect(page.getByTestId('snag-shot')).toContainText('200 × 120')
+  await expect(page.getByTestId('snag-highlight')).toBeHidden()
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({ width: 200, height: 120 })
+})

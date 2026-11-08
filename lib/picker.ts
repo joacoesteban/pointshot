@@ -1,4 +1,5 @@
 import {
+  EMPTY,
   type Observable,
   Subject,
   distinctUntilChanged,
@@ -15,6 +16,7 @@ import {
   take,
   takeUntil,
   tap,
+  timer,
   withLatestFrom,
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
@@ -54,8 +56,13 @@ const ARROWS = {
 type Arrow = keyof typeof ARROWS
 
 const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
+// A timed pick leaves the page usable, to open the menu or hover state to snag, so it only takes Escape.
+const TIMED_KEYS = ['Escape']
 
 const isArrow = (key: string): key is Arrow => key in ARROWS
+
+const isPick = (pick: { element: Element | null }): pick is Pick =>
+  pick.element !== null
 
 const framingOf = (shiftKey: boolean): Framing =>
   match(shiftKey)
@@ -145,15 +152,19 @@ export class ElementPicker {
     )
   }
 
-  pick() {
+  // With a delay in seconds, the element under the pointer when it runs out is snagged, and the page keeps its clicks meanwhile.
+  pick(delay = 0) {
     const ended$ = new Subject<void>()
+    const keys = match(delay)
+      .with(0, () => KEYS)
+      .otherwise(() => TIMED_KEYS)
 
     // Events inside same-origin frames stay in their window, so the picker listens there too.
     const frames = Dom.frames()
     const views = [window, ...frames.map(({ view }) => view)]
 
     const keys$ = listen<KeyboardEvent>(views, 'keydown', capture).pipe(
-      filter(({ key }) => KEYS.includes(key)),
+      filter(({ key }) => keys.includes(key)),
       tap<KeyboardEvent>(swallow),
       share(),
     )
@@ -199,31 +210,53 @@ export class ElementPicker {
       shareReplay({ bufferSize: 1, refCount: true }),
     )
 
-    const pressed$ = merge(
-      ...['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'auxclick'].map(
-        (type) => listen<MouseEvent>(views, type, capture),
-      ),
-    ).pipe(
-      filter(({ target }) => !this.isOwn(target)),
-      tap<MouseEvent>(swallow),
-      ignoreElements(),
-    )
+    const aimed = (trigger$: Observable<{ readonly shiftKey: boolean }>) =>
+      trigger$.pipe(
+        withLatestFrom(target$),
+        map(([{ shiftKey }, element]) => ({
+          element,
+          framing: framingOf(shiftKey),
+        })),
+      )
+
+    const pressed$ = match(delay)
+      .with(0, () =>
+        merge(
+          ...[
+            'pointerdown',
+            'pointerup',
+            'mousedown',
+            'mouseup',
+            'auxclick',
+          ].map((type) => listen<MouseEvent>(views, type, capture)),
+        ).pipe(
+          filter(({ target }) => !this.isOwn(target)),
+          tap<MouseEvent>(swallow),
+          ignoreElements(),
+        ),
+      )
+      .otherwise(() => EMPTY)
 
     // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
-    const chosen$ = merge(
-      listen<MouseEvent>(views, 'click', capture).pipe(
-        filter(({ target }) => !this.isOwn(target)),
-        tap<MouseEvent>(swallow),
-      ),
-      keys$.pipe(filter(({ key }) => key === 'Enter')),
-    ).pipe(
-      withLatestFrom(target$),
-      map(([{ shiftKey }, element]) => ({
-        element,
-        framing: framingOf(shiftKey),
-      })),
-      filter((pick): pick is Pick => pick.element !== null),
-    )
+    // A timer has no such activation, so a timed snag may only be saved.
+    const chosen$ = match(delay)
+      .with(0, () =>
+        aimed(
+          merge(
+            listen<MouseEvent>(views, 'click', capture).pipe(
+              filter(({ target }) => !this.isOwn(target)),
+              tap<MouseEvent>(swallow),
+            ),
+            keys$.pipe(filter(({ key }) => key === 'Enter')),
+          ),
+        ).pipe(filter(isPick)),
+      )
+      .otherwise((delay) =>
+        aimed(timer(delay * 1000).pipe(map(() => ({ shiftKey: false })))).pipe(
+          take(1),
+          filter(isPick),
+        ),
+      )
 
     const picked$ = merge(pressed$, chosen$).pipe(
       take(1),

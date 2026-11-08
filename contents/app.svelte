@@ -2,12 +2,13 @@
   import '~/lib/fonts-importer'
   import { match, P } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { of, type Observable } from 'rxjs'
+  import { of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
+  import { DisposeBag } from '~/lib/dispose-bag'
   import { Download } from '~/lib/download'
   import {
     ClipboardError,
@@ -23,6 +24,7 @@
   import { Stage } from '~/lib/stage'
   import { Stitcher } from '~/lib/stitcher'
   import { themeController } from '~/lib/theme-controller'
+  import { DEFAULT_SETTINGS, SettingsStore } from '~/lib/settings'
   import { pickElementStream, togglePopupStream } from '~/messages'
 
   type Props = {
@@ -36,11 +38,7 @@
   // svelte-ignore state_referenced_locally
   const picker = new ElementPicker(host)
   // svelte-ignore state_referenced_locally
-  const snagger = new Snagger(
-    new Stitcher(new Stage(container)),
-    library,
-    host,
-  )
+  const snagger = new Snagger(new Stitcher(new Stage(container)), library, host)
   const shots$ = library.shots$
 
   const idle$: Observable<Element | null> = of(null)
@@ -48,6 +46,11 @@
   let visible = $state(false)
   let picking = $state(false)
   let target$ = $state(idle$)
+  let settings = $state(DEFAULT_SETTINGS)
+
+  SettingsStore.changes().subscribe((next) => {
+    settings = next
+  })
 
   const explain = (error: Error) =>
     match(error)
@@ -66,20 +69,37 @@
       )
       .otherwise(({ message }) => `Could not snag that: ${message}`)
 
-  function pick() {
+  function pick(delay = 0) {
     match(picking)
-      .with(false, startPicking)
+      .with(false, () => {
+        startPicking(delay)
+      })
       .otherwise(() => undefined)
   }
 
-  function startPicking() {
-    const { target$: aimed$, picked$ } = picker.pick()
+  const countdown = (seconds: number) =>
+    `Snagging what is under the pointer in ${String(seconds)}… Esc cancels.`
+
+  function startPicking(delay: number) {
+    const { target$: aimed$, picked$ } = picker.pick(delay)
+    const { sink, dispose } = new DisposeBag()
     picking = true
     target$ = aimed$
     const hint = toast(
-      'Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels.',
+      match(delay)
+        .with(
+          0,
+          () =>
+            'Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels.',
+        )
+        .otherwise(countdown),
       { duration: Infinity },
     )
+    timer(1000, 1000)
+      .pipe(take(Math.max(delay - 1, 0)), sink())
+      .subscribe((tick) => {
+        toast(countdown(delay - tick - 1), { id: hint, duration: Infinity })
+      })
     picked$.subscribe({
       next: ({ element, framing }) => {
         void snagger.snag(element, framing).match(
@@ -88,6 +108,7 @@
         )
       },
       complete: () => {
+        dispose()
         toast.dismiss(hint)
         picking = false
         target$ = idle$
@@ -135,7 +156,9 @@
   }
 
   togglePopupStream.subscribe(toggle)
-  pickElementStream.subscribe(pick)
+  pickElementStream.subscribe(() => {
+    pick()
+  })
 </script>
 
 <div use:themeController>
@@ -146,7 +169,12 @@
     onclose={() => {
       visible = false
     }}
-    onpick={pick}
+    onpick={() => {
+      pick()
+    }}
+    onpicklater={() => {
+      pick(settings.delay)
+    }}
     oncopy={copy}
     ondownload={download}
     onremove={remove} />
