@@ -9,6 +9,7 @@ import { CaptureError, DownloadError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import {
+  openOptionsStream,
   downloadFileStream,
   type FileDownload,
   captureMode,
@@ -128,6 +129,9 @@ export default defineBackground(() => {
   })
   removeShotsStream.subscribe(([ids, , respond]) => {
     void ReplyCodec.encode(store.remove(ids)).then(respond)
+  })
+  openOptionsStream.subscribe(() => {
+    void browser.runtime.openOptionsPage()
   })
   downloadFileStream.subscribe(([file, , respond]) => {
     void ReplyCodec.encode(download(file)).then(respond)

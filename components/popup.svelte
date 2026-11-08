@@ -24,6 +24,7 @@
     ondownload: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
     onundo: () => void
+    onoptions: () => void
   }
 
   const {
@@ -41,6 +42,7 @@
     ondownload,
     onremove,
     onundo,
+    onoptions,
   }: Props = $props()
 
   const modes = [
@@ -78,14 +80,24 @@
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
     <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
       <h2 class="font-black text-2xl m-0 opacity-25">snag</h2>
-      <SymbolButton
-        name="xMark"
-        title="Close"
-        opaque
-        size="40px"
-        padding="30%"
-        disabled={ghost}
-        onclick={onclose} />
+      <div class="flex items-center gap-2">
+        <SymbolButton
+          name="gear"
+          title="Options"
+          size="40px"
+          padding="28%"
+          glassy
+          disabled={ghost}
+          onclick={onoptions} />
+        <SymbolButton
+          name="xMark"
+          title="Close"
+          opaque
+          size="40px"
+          padding="30%"
+          disabled={ghost}
+          onclick={onclose} />
+      </div>
     </header>
 
     {#if shots.length}

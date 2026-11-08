@@ -1064,3 +1064,52 @@ test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
   expect(image?.at).not.toEqual([[51, 102, 255, 255]])
   expect(image?.at).not.toEqual([[255, 51, 102, 255]])
 })
+
+const optionsUrl = (background: { url: () => string }) =>
+  new URL('/options.html', background.url()).href
+
+test('changes settings on the options page', async ({
+  context,
+  background,
+}) => {
+  const options = await context.newPage()
+  await options.goto(optionsUrl(background))
+  await expect(options.getByRole('heading', { name: 'snag' })).toBeVisible()
+  await expect(
+    options.getByText('Toggle the Snag popup on the current page.'),
+  ).toBeVisible()
+
+  const keep = options.getByRole('spinbutton', { name: 'Snags to keep' })
+  await keep.fill('20')
+  await keep.press('Enter')
+  await options.getByRole('combobox', { name: 'Theme' }).selectOption('dark')
+  await options.getByRole('combobox', { name: 'Format' }).selectOption('webp')
+  await expect(options.getByRole('slider', { name: 'Quality' })).toBeVisible()
+  await expect
+    .poll(() => background.evaluate(() => chrome.storage.local.get('settings')))
+    .toMatchObject({ settings: { limit: 20, theme: 'dark', format: 'webp' } })
+  await expect(options.locator('[data-snag-theme-root]')).toHaveAttribute(
+    'data-theme',
+    'dark',
+  )
+
+  await options.getByRole('button', { name: 'Copy diagnostics' }).click()
+  await expect(options.getByText('Copied diagnostics')).toBeVisible()
+  expect(await options.evaluate(() => navigator.clipboard.readText())).toMatch(
+    /^Snag \d+\.\d+\.\d+\n.*\nSettings: \{"limit":20/,
+  )
+})
+
+test('opens the options from the popup', async ({
+  page,
+  context,
+  background,
+  togglePopup,
+}) => {
+  await togglePopup()
+  const [options] = await Promise.all([
+    context.waitForEvent('page'),
+    page.getByRole('button', { name: 'Options' }).click(),
+  ])
+  await expect(options).toHaveURL(optionsUrl(background))
+})

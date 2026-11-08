@@ -12,6 +12,7 @@
   import Selection from '~/components/selection.svelte'
   import Toaster from '~/components/toaster.svelte'
   import { Clipboard } from '~/lib/clipboard'
+  import { Diagnostics } from '~/lib/diagnostics'
   import { DisposeBag } from '~/lib/dispose-bag'
   import { Download, fileName, pathOf } from '~/lib/download'
   import {
@@ -35,6 +36,7 @@
   import { ReplyCodec } from '~/lib/reply'
   import {
     downloadFile,
+    openOptions,
     captureModeStream,
     pickElementStream,
     togglePopupStream,
@@ -108,6 +110,12 @@
       .with('css', () => 1)
       .exhaustive()
 
+  // Every failure is kept for the diagnostics the options page copies.
+  const fail = (error: Error) => {
+    void Diagnostics.record(error)
+    toast.error(explain(error))
+  }
+
   function snag(target: Target) {
     void snagger.snag(target, density()).match(
       (downscaled) =>
@@ -117,7 +125,7 @@
             .with(false, () => 'Copied to clipboard')
             .exhaustive(),
         ),
-      (error) => toast.error(explain(error)),
+      fail,
     )
   }
 
@@ -197,7 +205,7 @@
     visible = !visible
     match(visible)
       .with(true, () => {
-        void library.refresh().mapErr((error) => toast.error(explain(error)))
+        void library.refresh().mapErr(fail)
       })
       .otherwise(() => undefined)
   }
@@ -250,7 +258,7 @@
               }),
           ),
       )
-      .mapErr((error) => toast.error(explain(error)))
+      .mapErr(fail)
   }
 
   function remove(shots: readonly Shot[]) {
@@ -275,7 +283,7 @@
       },
       (error) => {
         previewing = null
-        toast.error(explain(error))
+        fail(error)
       },
     )
   }
@@ -293,10 +301,9 @@
       .with(P.nonNullable, ({ shot: { url, title } }) => ({ url, title }))
       .otherwise(() => ({ url: location.href, title: document.title }))
     editing = null
-    void snagger.keep(png, okAsync({ ...source, ...size })).match(
-      () => toast.success('Saved and copied to clipboard'),
-      (error) => toast.error(explain(error)),
-    )
+    void snagger
+      .keep(png, okAsync({ ...source, ...size }))
+      .match(() => toast.success('Saved and copied to clipboard'), fail)
   }
 
   function copyText(text: string, label: string) {
@@ -346,6 +353,9 @@
     onremove={remove}
     onundo={() => {
       library.undo()
+    }}
+    onoptions={() => {
+      void openOptions(undefined)
     }} />
   {#if previewing}
     <Preview
