@@ -55,6 +55,11 @@
   const sites = $derived(sitesOf(shots))
   const shown = $derived(filterShots(shots, { query, site }))
 
+  // Keys typed in the popup stop there, so the page's shortcuts do not see them.
+  const contain = (event: KeyboardEvent) => {
+    event.stopPropagation()
+  }
+
   const snags = (count: number) =>
     match(count)
       .with(1, () => '1 snag')
@@ -82,29 +87,23 @@
     </header>
 
     {#if shots.length}
-      <!-- Keys typed here stop at the popup, so the page's shortcuts do not see them. -->
-      <div
-        class="toolbar flex items-center gap-2 mb-3 px-1"
-        role="search"
-        onkeydown={(event) => {
-          event.stopPropagation()
-        }}
-        onkeyup={(event) => {
-          event.stopPropagation()
-        }}
-        onkeypress={(event) => {
-          event.stopPropagation()
-        }}>
+      <div class="toolbar flex items-center gap-2 mb-3 px-1" role="search">
         <input
           type="search"
           class="input input-sm input-bordered flex-1 min-w-0"
           placeholder="Search snags"
           aria-label="Search snags"
+          onkeydown={contain}
+          onkeyup={contain}
+          onkeypress={contain}
           bind:value={query} />
         {#if sites.length > 1}
           <select
             class="select select-sm select-bordered max-w-[9rem]"
             aria-label="Site"
+            onkeydown={contain}
+            onkeyup={contain}
+            onkeypress={contain}
             bind:value={site}>
             <option value={null}>All sites</option>
             {#each sites as site (site)}
