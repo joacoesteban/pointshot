@@ -376,5 +376,31 @@
   },
   "madeBy": {
     "message": "With 🧠 + 🩷 by"
+  },
+  "browseLibrary": {
+    "message": "Browse all snags"
+  },
+  "settingsTitle": {
+    "message": "Settings"
+  },
+  "libraryTitle": {
+    "message": "Library"
+  },
+  "snagCount": {
+    "message": "$COUNT$ snags",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "snagCountOne": {
+    "message": "1 snag"
+  },
+  "libraryEmptyBody": {
+    "message": "Snags you take on any page show up here."
+  },
+  "couldNotOpen": {
+    "message": "Could not open that snag"
   }
 }

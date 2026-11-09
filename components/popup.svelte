@@ -7,7 +7,7 @@
   import { draggable, type Placement } from '~/lib/draggable'
   import { filterShots, sitesOf, type Shot } from '~/lib/shot'
   import type { SymbolName } from '~/lib/symbols'
-  import type { Mode } from '~/messages'
+  import type { Mode, OptionsView } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
   import ShotCard from './shot-card.svelte'
@@ -27,7 +27,7 @@
     oncopy: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
     onundo: () => void
-    onoptions: () => void
+    onoptions: (view: OptionsView) => void
   }
 
   const {
@@ -147,7 +147,9 @@
           size="sm"
           opaque
           disabled={ghost}
-          onclick={onoptions} />
+          onclick={() => {
+            onoptions('settings')
+          }} />
         <SymbolButton
           name="xMark"
           title={t('close')}
@@ -199,6 +201,15 @@
             {/each}
           </select>
         {/if}
+        <SymbolButton
+          name="expand"
+          title={t('browseLibrary')}
+          size="sm"
+          opaque
+          disabled={ghost}
+          onclick={() => {
+            onoptions('library')
+          }} />
         <SymbolButton
           name="trashFill"
           title={deleteLabel}

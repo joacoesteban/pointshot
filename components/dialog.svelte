@@ -16,8 +16,15 @@
     children: Snippet
   }
 
-  const { title, testId, onclose, onescape, subtitle, footer, children }: Props =
-    $props()
+  const {
+    title,
+    testId,
+    onclose,
+    onescape,
+    subtitle,
+    footer,
+    children,
+  }: Props = $props()
 
   $effect(() => {
     const subscription = fromEvent<KeyboardEvent>(window, 'keydown', {
@@ -75,6 +82,8 @@
   .backdrop {
     position: fixed;
     inset: 0;
+    // Above the options page's blended text, which forms its own stacking context and would paint through the panel.
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;

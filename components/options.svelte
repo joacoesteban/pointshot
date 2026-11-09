@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ResultAsync } from 'neverthrow'
+  import { fromEvent, map, startWith } from 'rxjs'
   import toast from 'svelte-french-toast'
   import { match, P } from 'ts-pattern'
   import { browser } from 'wxt/browser'
@@ -13,10 +14,14 @@
   } from '~/lib/settings'
   import logo from '~/assets/icon.png'
   import { REPOSITORY_URL } from '~/lib/links'
+  import { ShotActions } from '~/lib/shot-actions'
+  import { ShotLibrary } from '~/lib/shot-library'
   import { themeController } from '~/lib/theme-controller'
+  import type { OptionsView } from '~/messages'
   import Button from './button.svelte'
   import Divider from './divider.svelte'
   import Filters from './filters.svelte'
+  import Library from './library.svelte'
   import Backdrop from './options/backdrop.svelte'
   import Footer from './options/footer.svelte'
   import Row from './options/row.svelte'
@@ -33,6 +38,31 @@
   let saveAs = $state(false)
 
   const { version } = browser.runtime.getManifest()
+
+  const library = new ShotLibrary()
+  const actions = new ShotActions(library, document.body)
+
+  // The view lives in the URL hash, so the popup can open the library directly and reloads keep it.
+  const viewOf = (hash: string): OptionsView =>
+    match(hash)
+      .with('#library', () => 'library' as const)
+      .otherwise(() => 'settings' as const)
+
+  let view = $state<OptionsView>(viewOf(location.hash))
+
+  fromEvent(window, 'hashchange')
+    .pipe(
+      startWith(null),
+      map(() => viewOf(location.hash)),
+    )
+    .subscribe((next) => {
+      view = next
+    })
+
+  const views: readonly { view: OptionsView; label: string }[] = [
+    { view: 'settings', label: t('settingsTitle') },
+    { view: 'library', label: t('libraryTitle') },
+  ]
 
   SettingsStore.changes().subscribe((next) => {
     settings = next
@@ -113,14 +143,12 @@
 <div use:themeController>
   <div class="page">
     <Backdrop />
-    <main class="options">
+    <main class="options" class:wide={view === 'library'}>
       <header class="flex items-start justify-between gap-4 mb-6">
         <div class="flex items-center gap-4">
           <img src={logo} alt="" class="w-14 h-14" />
           <div>
-            <h1 class="blend font-black text-4xl mt-0 mb-2">
-              {t('optionsTitle')}
-            </h1>
+            <h1 class="blend font-black text-4xl mt-0 mb-2">{t('snag')}</h1>
             <span class="pill blend">{t('version')} <b>{version}</b></span>
           </div>
         </div>
@@ -134,6 +162,22 @@
           }} />
       </header>
 
+      <nav class="flex gap-2 mb-8" aria-label={t('optionsTitle')}>
+        {#each views as { view: option, label } (option)}
+          <Button
+            size="sm"
+            opaque
+            colorSeed={option}
+            highlight={view === option}
+            onclick={() => {
+              location.hash = option
+            }}>{label}</Button>
+        {/each}
+      </nav>
+
+      {#if view === 'library'}
+        <Library {library} {actions} {settings} />
+      {:else}
       <section>
         <h2 class="blend">{t('sectionCapture')}</h2>
         <Row title={t('resolution')} help={t('resolutionHelp')}>
@@ -308,6 +352,8 @@
         </Row>
       </section>
 
+      {/if}
+
       <Footer />
     </main>
   </div>
@@ -326,6 +372,10 @@
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 24px;
+    transition: max-width 0.3s var(--bezier-chill);
+    &.wide {
+      max-width: 1100px;
+    }
   }
   h2 {
     margin: 0 0 8px;

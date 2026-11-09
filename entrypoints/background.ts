@@ -131,8 +131,15 @@ export default defineBackground(() => {
   removeShotsStream.subscribe(([ids, , respond]) => {
     void ReplyCodec.encode(store.remove(ids)).then(respond)
   })
-  openOptionsStream.subscribe(() => {
-    void browser.runtime.openOptionsPage()
+  // The options page opens on its library through the URL hash, which openOptionsPage cannot set.
+  openOptionsStream.subscribe(([view]) => {
+    void match(view)
+      .with('library', () =>
+        browser.tabs.create({
+          url: browser.runtime.getURL('/options.html#library'),
+        }),
+      )
+      .otherwise(() => browser.runtime.openOptionsPage())
   })
   downloadFileStream.subscribe(([file, , respond]) => {
     void ReplyCodec.encode(download(file)).then(respond)

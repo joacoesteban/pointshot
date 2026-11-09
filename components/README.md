@@ -255,6 +255,16 @@ in the footer.
 - Stroke widths and blur cells scale by `density`, so marks keep their look at
   any capture resolution.
 
+### `ShotDialogs` (`shot-dialogs.svelte`, `lib/shot-viewer.ts`)
+
+Mounts `Preview` and `Editor` from a `ShotViewer`, the class that holds
+which shot is previewed or edited and performs copy, download, copy as text,
+delete and save through `ShotActions` and `ShotLibrary`. The popup and the
+options library each build one viewer, so the dialogs behave the same in
+both; the grid only calls `viewer.open` and `viewer.copy`. The state is a
+class with rxjs subjects rather than component state because a component
+instance bound with `bind:this` is `any` to ESLint.
+
 ### `Highlight` (`highlight.svelte`)
 
 Outlines the picker's target. It recomputes on scroll (captured, so nested
@@ -278,11 +288,26 @@ Hidden SVG holding `#aberration`. Required wherever `bg-blur` renders.
 
 ### `options.svelte`
 
+Two views picked by the URL hash: `#library` and anything else for the
+settings. The popup opens the library through `openOptions('library')`,
+which the background turns into a tab on `options.html#library`, since
+`openOptionsPage` cannot set a hash. The page widens to 1100px for the
+library and stays at 640px for the settings.
+
 - `folder` and `saveAs` are held apart from `settings`. They keep what the
   user entered until the `downloads` permission is granted or refused, and
   snap back on refusal.
 - `permissions.request` needs the user gesture, so it must stay inside the
   click or change handler.
+
+### `Library` (`library.svelte`)
+
+The full-width shot browser: a search field, the count, a `cancel` coloured
+trash button for the shown snags, one chip per site coloured by hashing the
+site name so a domain keeps its colour across visits, a responsive card grid
+and an undo bar stuck to the bottom. Every shot action goes through its own
+`ShotViewer`. It refreshes from the background on mount; a removal pending
+in a popup elsewhere is still listed until that popup's undo window closes.
 
 ### `options/backdrop.svelte`
 

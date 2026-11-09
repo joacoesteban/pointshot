@@ -376,5 +376,31 @@
   },
   "madeBy": {
     "message": "Con 🧠 + 🩷 por"
+  },
+  "browseLibrary": {
+    "message": "Ver todas las capturas"
+  },
+  "settingsTitle": {
+    "message": "Ajustes"
+  },
+  "libraryTitle": {
+    "message": "Biblioteca"
+  },
+  "snagCount": {
+    "message": "$COUNT$ capturas",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "snagCountOne": {
+    "message": "1 captura"
+  },
+  "libraryEmptyBody": {
+    "message": "Las capturas que hagas en cualquier página aparecen acá."
+  },
+  "couldNotOpen": {
+    "message": "No se pudo abrir esa captura"
   }
 }

@@ -1103,6 +1103,54 @@ test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
 const optionsUrl = (background: { url: () => string }) =>
   new URL('/options.html', background.url()).href
 
+test('browses, filters and deletes snags in the options library', async ({
+  page,
+  context,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await snagTarget(page, '#target')
+  await snagTarget(page, '#pill')
+  await expect(page.getByTestId('snag-shot')).toHaveCount(2)
+
+  const [options] = await Promise.all([
+    context.waitForEvent('page'),
+    page.getByRole('button', { name: 'Browse all snags' }).click(),
+  ])
+  await options.waitForLoadState()
+  expect(options.url()).toMatch(/options\.html#library$/)
+  const shots = options.getByTestId('snag-shot')
+  await expect(shots).toHaveCount(2)
+  await expect(options.getByText('2 snags')).toBeVisible()
+  await expect(
+    options.getByRole('button', { name: 'snag.test · 2' }),
+  ).toHaveAttribute('aria-pressed', 'false')
+
+  await options.getByRole('button', { name: 'snag.test · 2' }).click()
+  await expect(shots).toHaveCount(2)
+  await options.getByRole('searchbox', { name: 'Search snags' }).fill('nope')
+  await expect(shots).toHaveCount(0)
+  await expect(options.getByText('No snags match')).toBeVisible()
+  await options.getByRole('searchbox', { name: 'Search snags' }).fill('fixture')
+  await expect(shots).toHaveCount(2)
+
+  await shots.first().hover()
+  await shots.first().getByRole('button', { name: 'Open' }).click()
+  await expect(options.getByTestId('snag-preview')).toBeVisible()
+  await options
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Delete' })
+    .click()
+  await expect(options.getByTestId('snag-preview')).toBeHidden()
+  await expect(shots).toHaveCount(1)
+  await options.getByRole('button', { name: 'Undo' }).click()
+  await expect(shots).toHaveCount(2)
+
+  await options.getByRole('button', { name: 'Settings' }).click()
+  await expect(options.getByRole('combobox', { name: 'Theme' })).toBeVisible()
+  await expect(shots).toHaveCount(0)
+})
+
 test('changes settings on the options page', async ({
   context,
   background,
