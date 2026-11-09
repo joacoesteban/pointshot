@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { ResultAsync } from 'neverthrow'
   import toast from 'svelte-french-toast'
   import { match, P } from 'ts-pattern'
   import { browser } from 'wxt/browser'
+  import { Clipboard } from '~/lib/clipboard'
   import { Diagnostics } from '~/lib/diagnostics'
   import { t } from '~/lib/i18n'
-  import { ClipboardError, toError } from '~/lib/errors'
   import type { Command } from '~/lib/command'
   import { SettingsStore, type Settings } from '~/lib/settings'
   import Button from '../button.svelte'
@@ -67,12 +66,7 @@
 
   const copyDiagnostics = () => {
     void Diagnostics.report()
-      .andThen((report) =>
-        ResultAsync.fromPromise(
-          navigator.clipboard.writeText(report),
-          toError(ClipboardError),
-        ),
-      )
+      .andThen((report) => Clipboard.writeText(report))
       .match(
         () => toast.success(t('copiedDiagnostics')),
         () => toast.error(t('couldNotCopyDiagnostics')),
@@ -116,8 +110,7 @@
         update({ delay: numberOf(event) })
       }}>
       {#each [1, 2, 3, 5, 10] as seconds (seconds)}
-        <option value={String(seconds)}
-          >{t('seconds', String(seconds))}</option>
+        <option value={String(seconds)}>{t('seconds', String(seconds))}</option>
       {/each}
     </select>
   </Row>
@@ -146,7 +139,9 @@
     </select>
   </Row>
   {#if settings.format !== 'png'}
-    <Row title={t('quality')} help={`${String(Math.round(settings.quality * 100))}%`}>
+    <Row
+      title={t('quality')}
+      help={`${String(Math.round(settings.quality * 100))}%`}>
       <input
         type="range"
         class="range range-sm"
@@ -263,7 +258,6 @@
       >{t('copyDiagnostics')}</Button>
   </Row>
 </section>
-
 
 <style lang="scss">
   h2 {

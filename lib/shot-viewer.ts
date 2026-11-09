@@ -60,7 +60,11 @@ export class ShotViewer {
           .otherwise(() => undefined)
       },
       (error) => {
-        this.previewing$$.next(null)
+        match(this.previewing$$.value)
+          .with({ shot: { id: shot.id } }, () => {
+            this.previewing$$.next(null)
+          })
+          .otherwise(() => undefined)
         Failure.report(error, t('couldNotOpen'))
       },
     )
