@@ -20,7 +20,7 @@
     role?: 'switch' | undefined
     checked?: boolean | undefined
     title?: string
-    testId?: string
+    testId?: string | undefined
   }
 
   const randomSeed = Id.random()

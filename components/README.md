@@ -204,6 +204,13 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 ### `Popup` (`popup.svelte`, `popup.scss`)
 
+- The capture strip comes first: five round buttons with a caption under
+  each, the element pick at `lg` and the rest at `md`, bottom-aligned. The
+  `title` is the full sentence tests and screen readers use, the caption one
+  word. Modes live in the `actions` list; a new one is an entry there.
+- The library follows, with the search, the site select and a `cancel`
+  coloured trash button whose title is "Delete all" or "Delete N" for a
+  filtered view. The undo bar is a footer that appears only after a removal.
 - `draggable` moves it, except from `INTERACTIVE` elements in `lib/draggable.ts`.
   A control that is not a button, link or field needs adding there.
 - `ghost` hides it for a capture. `inert` keeps it out of the tab order while
@@ -301,7 +308,8 @@ element:
 
 ### `options/footer.svelte`
 
-Icon, bug report link and credit. Links open in a new tab.
+Bug report link and credit. Links open in a new tab. The icon sits in the
+page header next to the title.
 
 ## Left out of the port
 

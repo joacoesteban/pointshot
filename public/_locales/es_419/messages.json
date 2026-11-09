@@ -81,6 +81,27 @@
   "snag": {
     "message": "Capturar"
   },
+  "snagElement": {
+    "message": "Capturar un elemento"
+  },
+  "captureElement": {
+    "message": "Elemento"
+  },
+  "captureArea": {
+    "message": "Área"
+  },
+  "captureVisible": {
+    "message": "Visible"
+  },
+  "capturePage": {
+    "message": "Página"
+  },
+  "captureLater": {
+    "message": "Demora"
+  },
+  "capture": {
+    "message": "Capturar"
+  },
   "snagArea": {
     "message": "Capturar un área"
   },

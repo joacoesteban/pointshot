@@ -13,6 +13,7 @@
     disabled?: boolean
     highlight?: boolean | undefined
     colorSeed?: string
+    testId?: string | undefined
   }
 
   const {
@@ -24,6 +25,7 @@
     disabled = false,
     highlight,
     colorSeed,
+    testId,
   }: Props = $props()
 </script>
 
@@ -33,6 +35,7 @@
   {disabled}
   {highlight}
   {colorSeed}
+  {testId}
   {title}
   {onclick}
   round>

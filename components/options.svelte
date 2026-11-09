@@ -11,6 +11,7 @@
     SettingsStore,
     type Settings,
   } from '~/lib/settings'
+  import logo from '~/assets/icon.png'
   import { REPOSITORY_URL } from '~/lib/links'
   import { themeController } from '~/lib/theme-controller'
   import Button from './button.svelte'
@@ -114,11 +115,14 @@
     <Backdrop />
     <main class="options">
       <header class="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <h1 class="blend font-black text-4xl mt-0 mb-2">
-            {t('optionsTitle')}
-          </h1>
-          <span class="pill blend">{t('version')} <b>{version}</b></span>
+        <div class="flex items-center gap-4">
+          <img src={logo} alt="" class="w-14 h-14" />
+          <div>
+            <h1 class="blend font-black text-4xl mt-0 mb-2">
+              {t('optionsTitle')}
+            </h1>
+            <span class="pill blend">{t('version')} <b>{version}</b></span>
+          </div>
         </div>
         <SymbolButton
           name="github"

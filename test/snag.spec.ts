@@ -1223,7 +1223,7 @@ test.describe('in Spanish', () => {
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')
     await expect(popup).toContainText('Elegí un elemento')
-    await page.getByRole('button', { name: 'Capturar', exact: true }).click()
+    await page.getByRole('button', { name: 'Capturar un elemento' }).click()
     await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
     await hover(page, '#target')
     await page.mouse.down()
