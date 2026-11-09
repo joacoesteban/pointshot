@@ -180,7 +180,7 @@
     "message": "Escribí y presioná Enter"
   },
   "pickHint": {
-    "message": "Hacé clic o presioná Enter para capturar, con Shift para sumar un margen. Las flechas cambian el elemento, Esc cancela."
+    "message": "Hacé clic o presioná Enter para capturar, con Shift para sumar un margen. Las flechas cambian el elemento, Esc o clic derecho cancela."
   },
   "countdown": {
     "message": "Capturando lo que esté bajo el puntero en $SECONDS$… Esc cancela.",
@@ -191,7 +191,7 @@
     }
   },
   "selectionHint": {
-    "message": "Arrastrá sobre el área que querés capturar. Esc cancela."
+    "message": "Arrastrá sobre el área que querés capturar. Esc o clic derecho cancela."
   },
   "copied": {
     "message": "Copiado al portapapeles"

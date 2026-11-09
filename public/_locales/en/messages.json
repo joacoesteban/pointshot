@@ -180,7 +180,7 @@
     "message": "Type, then Enter"
   },
   "pickHint": {
-    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels."
+    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc or right click cancels."
   },
   "countdown": {
     "message": "Snagging what is under the pointer in $SECONDS$… Esc cancels.",
@@ -191,7 +191,7 @@
     }
   },
   "selectionHint": {
-    "message": "Drag over the area to snag. Esc cancels."
+    "message": "Drag over the area to snag. Esc or right click cancels."
   },
   "copied": {
     "message": "Copied to clipboard"

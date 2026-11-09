@@ -85,7 +85,11 @@
   role="presentation"
   onpointerdown={down}
   onpointermove={move}
-  onpointerup={up}>
+  onpointerup={up}
+  oncontextmenu={(event) => {
+    event.preventDefault()
+    oncancel()
+  }}>
   {#if rect}
     <div
       class="marquee"

@@ -160,6 +160,23 @@ test('escape cancels picking without capturing', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
 })
 
+test('right click cancels picking without capturing', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await expect(page.getByTestId('snag-highlight')).toBeVisible()
+  await page.mouse.down({ button: 'right' })
+  await page.mouse.up({ button: 'right' })
+  await expect(page.getByTestId('snag-highlight')).toBeHidden()
+  await expect(page.getByText('Click or press Enter to snag')).toBeHidden()
+  await page.mouse.down()
+  await page.mouse.up()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+})
+
 test('deletes a stored shot', async ({ page, togglePopup }) => {
   await togglePopup()
   await page.getByTestId('snag-pick').click()
@@ -690,6 +707,16 @@ test('escape cancels an area selection', async ({ page, togglePopup }) => {
   await page.getByRole('button', { name: 'Snag an area' }).click()
   await expect(page.getByTestId('snag-selection')).toBeVisible()
   await page.keyboard.press('Escape')
+  await expect(page.getByTestId('snag-selection')).toBeHidden()
+  await expect(page.getByText('Drag over the area to snag')).toBeHidden()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+})
+
+test('right click cancels an area selection', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await expect(page.getByTestId('snag-selection')).toBeVisible()
+  await page.mouse.click(300, 300, { button: 'right' })
   await expect(page.getByTestId('snag-selection')).toBeHidden()
   await expect(page.getByText('Drag over the area to snag')).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
