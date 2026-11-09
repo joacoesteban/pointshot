@@ -51,12 +51,3 @@ export const filterShots = (
 
 export const sitesOf = (shots: readonly Shot[]) =>
   [...new Set(shots.map(({ url }) => siteOf(url)))].sort()
-
-export type ShotText = 'markdown' | 'dataUrl' | 'link'
-
-export const textOf = (text: ShotText, { url, title }: Shot, image: string) =>
-  match(text)
-    .with('markdown', () => `![${title.replace(/[[\]]/g, '')}](${image})`)
-    .with('dataUrl', () => image)
-    .with('link', () => url)
-    .exhaustive()

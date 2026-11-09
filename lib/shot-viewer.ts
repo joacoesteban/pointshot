@@ -91,15 +91,6 @@ export class ShotViewer {
     void this.actions.download(shot, this.settings()).mapErr(Failure.report)
   }
 
-  copyText(text: string, label: string) {
-    void this.actions.copyText(text).match(
-      () => toast.success(t('copiedText', label)),
-      (error) => {
-        Failure.report(error, t('clipboardBlocked'))
-      },
-    )
-  }
-
   // Called inside the click on Save, so the image still reaches the clipboard.
   saveEdit(png: ResultAsync<Blob, Error>, size: Size) {
     const source = match(this.editing$$.value)

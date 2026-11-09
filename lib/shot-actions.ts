@@ -2,7 +2,7 @@ import { okAsync, type ResultAsync } from 'neverthrow'
 import { match } from 'ts-pattern'
 import { Clipboard } from './clipboard'
 import { Download, fileName, pathOf } from './download'
-import { ClipboardError, DownloadError } from './errors'
+import { DownloadError } from './errors'
 import { Img } from './image'
 import { ReplyCodec } from './reply'
 import type { Settings } from './settings'
@@ -21,10 +21,6 @@ export class ShotActions {
     return Clipboard.writePng(
       this.library.imageUrl(shot).map((url) => Img.dataUrlToBlob(url)),
     )
-  }
-
-  copyText(text: string): ResultAsync<void, ClipboardError> {
-    return Clipboard.writeText(text)
   }
 
   // Save as and folders go through the downloads API, which falls back to a plain download when its permission was not granted.

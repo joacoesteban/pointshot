@@ -25,9 +25,6 @@
     oncopy={(shot: Shot) => {
       viewer.copy(shot)
     }}
-    oncopytext={(text: string, label: string) => {
-      viewer.copyText(text, label)
-    }}
     ondownload={(shot: Shot) => {
       viewer.download(shot)
     }}

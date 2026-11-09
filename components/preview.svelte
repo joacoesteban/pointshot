@@ -4,7 +4,7 @@
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
-  import { siteOf, textOf, type Shot, type ShotText } from '~/lib/shot'
+  import { siteOf, type Shot } from '~/lib/shot'
   import Dialog from './dialog.svelte'
   import SymbolButton from './symbol-button.svelte'
 
@@ -13,7 +13,6 @@
     image: string | null
     onclose: () => void
     oncopy: (shot: Shot) => void
-    oncopytext: (text: string, label: string) => void
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
     onedit: (shot: Shot, image: string) => void
@@ -24,7 +23,6 @@
     image,
     onclose,
     oncopy,
-    oncopytext,
     ondownload,
     onremove,
     onedit,
@@ -32,11 +30,6 @@
 
   const { url, title, width, height, createdAt } = $derived(shot)
 
-  const texts: readonly { text: ShotText; label: string }[] = [
-    { text: 'markdown', label: t('markdown') },
-    { text: 'dataUrl', label: t('dataUrl') },
-    { text: 'link', label: t('pageLink') },
-  ]
 </script>
 
 <Dialog title={title || siteOf(url)} testId="snag-preview" {onclose}>
@@ -80,18 +73,6 @@
             .otherwise(() => undefined)
         }} />
     </div>
-    <p class="copy-as">
-      <span>{t('copyAs')}</span>
-      {#each texts as { text, label } (text)}
-        <button
-          type="button"
-          class="text-link"
-          disabled={image === null}
-          onclick={() => {
-            oncopytext(textOf(text, shot, image ?? ''), label)
-          }}>{label}</button>
-      {/each}
-    </p>
     <SymbolButton
       name="trashFill"
       title={t('delete')}
@@ -104,32 +85,6 @@
 </Dialog>
 
 <style lang="scss">
-  .copy-as {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-    font-size: 12px;
-    opacity: 0.7;
-  }
-  .text-link {
-    padding: 0;
-    border: 0;
-    background: none;
-    font: inherit;
-    font-weight: 600;
-    color: inherit;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    cursor: pointer;
-    &:hover {
-      opacity: 0.7;
-    }
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-  }
   .image {
     display: flex;
     align-items: center;

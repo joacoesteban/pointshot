@@ -883,16 +883,6 @@ test('opens a snag full size and copies it as text', async ({
     )
     .toEqual([200, 120])
 
-  await preview.getByRole('button', { name: 'Page link' }).click()
-  await expect(page.getByText('Copied Page link')).toBeVisible()
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-    FIXTURE_URL,
-  )
-  await preview.getByRole('button', { name: 'Markdown' }).click()
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
-    /^!\[Snag fixture\]\(data:image\/png;base64,/,
-  )
-
   await page.keyboard.press('Escape')
   await expect(preview).toBeHidden()
 })

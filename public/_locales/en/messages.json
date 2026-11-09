@@ -129,26 +129,6 @@
   "edit": {
     "message": "Edit"
   },
-  "copyAs": {
-    "message": "Copy as"
-  },
-  "markdown": {
-    "message": "Markdown"
-  },
-  "dataUrl": {
-    "message": "Data URL"
-  },
-  "pageLink": {
-    "message": "Page link"
-  },
-  "copiedText": {
-    "message": "Copied $WHAT$",
-    "placeholders": {
-      "what": {
-        "content": "$1"
-      }
-    }
-  },
   "editSnag": {
     "message": "Edit snag"
   },
