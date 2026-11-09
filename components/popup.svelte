@@ -202,7 +202,7 @@
           </select>
         {/if}
         <SymbolButton
-          name="expand"
+          name="booksVerticalFill"
           title={t('browseLibrary')}
           size="sm"
           opaque

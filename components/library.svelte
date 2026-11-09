@@ -103,6 +103,7 @@
       <Button
         size="sm"
         opaque
+        icon="globe"
         colorSeed="all"
         highlight={site === null}
         onclick={() => {

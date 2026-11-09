@@ -10,6 +10,7 @@
   import ShotDialogs from '~/components/shot-dialogs.svelte'
   import Toaster from '~/components/toaster.svelte'
   import { Failure } from '~/lib/failure'
+  import { toastIcon } from '~/lib/toast-icon'
   import { t } from '~/lib/i18n'
   import { DisposeBag } from '~/lib/dispose-bag'
   import { ElementPicker } from '~/lib/picker'
@@ -115,6 +116,7 @@
         selecting = true
         selectionHint = toast(t('selectionHint'), {
           duration: Infinity,
+          icon: toastIcon('rectangleDashed'),
         })
       })
       .with({ mode: 'visible' }, () => {
@@ -147,12 +149,23 @@
       match(delay)
         .with(0, () => t('pickHint'))
         .otherwise(countdown),
-      { duration: Infinity },
+      {
+        duration: Infinity,
+        icon: toastIcon(
+          match(delay)
+            .with(0, () => 'cursorArrowRays' as const)
+            .otherwise(() => 'timer' as const),
+        ),
+      },
     )
     timer(1000, 1000)
       .pipe(take(Math.max(delay - 1, 0)), sink())
       .subscribe((tick) => {
-        toast(countdown(delay - tick - 1), { id: hint, duration: Infinity })
+        toast(countdown(delay - tick - 1), {
+          id: hint,
+          duration: Infinity,
+          icon: toastIcon('timer'),
+        })
       })
     picked$.subscribe({
       next: ({ element, framing }) => {

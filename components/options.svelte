@@ -16,6 +16,7 @@
   import { REPOSITORY_URL } from '~/lib/links'
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
+  import type { SymbolName } from '~/lib/symbols'
   import { themeController } from '~/lib/theme-controller'
   import type { OptionsView } from '~/messages'
   import Button from './button.svelte'
@@ -59,9 +60,13 @@
       view = next
     })
 
-  const views: readonly { view: OptionsView; label: string }[] = [
-    { view: 'settings', label: t('settingsTitle') },
-    { view: 'library', label: t('libraryTitle') },
+  const views: readonly {
+    view: OptionsView
+    label: string
+    icon: SymbolName
+  }[] = [
+    { view: 'settings', label: t('settingsTitle'), icon: 'sliderHorizontal3' },
+    { view: 'library', label: t('libraryTitle'), icon: 'booksVerticalFill' },
   ]
 
   SettingsStore.changes().subscribe((next) => {
@@ -163,10 +168,11 @@
       </header>
 
       <nav class="flex gap-2 mb-8" aria-label={t('optionsTitle')}>
-        {#each views as { view: option, label } (option)}
+        {#each views as { view: option, label, icon } (option)}
           <Button
             size="sm"
             opaque
+            {icon}
             colorSeed={option}
             highlight={view === option}
             onclick={() => {
@@ -335,6 +341,7 @@
             <Button
               size="sm"
               opaque
+              icon="keyboard"
               onclick={() => {
                 open('chrome://extensions/shortcuts')
               }}>{t('changeShortcuts')}</Button>

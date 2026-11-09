@@ -366,10 +366,11 @@
   {#snippet footer()}
     <div class="flex-1"></div>
     <div class="flex items-center gap-2">
-      <Button colorSeed={COLOR_SEEDS.cancel} onclick={onclose}
+      <Button icon="xMark" colorSeed={COLOR_SEEDS.cancel} onclick={onclose}
         >{t('cancel')}</Button>
       <Button
         testId="snag-save-edit"
+        icon="checkmark"
         colorSeed={COLOR_SEEDS.accept}
         disabled={bitmap === null}
         onclick={save}>{t('saveEdit')}</Button>
