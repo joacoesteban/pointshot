@@ -16,7 +16,8 @@ type Change = {
 export class ShotRevision {
   static bump(): ResultAsync<void, StorageError> {
     return ResultAsync.fromPromise(
-      browser.storage.local.set({ [KEY]: Date.now() }),
+      // A random token rather than a timestamp: two bumps in one millisecond would write the same value and the second would fire no change.
+      browser.storage.local.set({ [KEY]: crypto.randomUUID() }),
       toError(StorageError),
     ).map(() => undefined)
   }
