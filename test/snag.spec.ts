@@ -217,6 +217,7 @@ test('copies and downloads a stored shot at full size', async ({
     (await downloadButton(page, shot)).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.png$/)
+  await download.path()
 })
 
 test('saves the shot on http pages, where the clipboard is unavailable', async ({
