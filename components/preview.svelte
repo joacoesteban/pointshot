@@ -5,7 +5,6 @@
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
   import { siteOf, textOf, type Shot, type ShotText } from '~/lib/shot'
-  import Button from './button.svelte'
   import Dialog from './dialog.svelte'
   import SymbolButton from './symbol-button.svelte'
 
@@ -80,31 +79,57 @@
             })
             .otherwise(() => undefined)
         }} />
-      <SymbolButton
-        name="trashFill"
-        title={t('delete')}
-        opaque
-        colorSeed={COLOR_SEEDS.cancel}
-        onclick={() => {
-          onremove(shot)
-        }} />
     </div>
-    <div class="flex items-center gap-1 text-xs">
-      <span class="opacity-60 mr-1">{t('copyAs')}</span>
+    <p class="copy-as">
+      <span>{t('copyAs')}</span>
       {#each texts as { text, label } (text)}
-        <Button
-          size="sm"
-          opaque
+        <button
+          type="button"
+          class="text-link"
           disabled={image === null}
           onclick={() => {
             oncopytext(textOf(text, shot, image ?? ''), label)
-          }}>{label}</Button>
+          }}>{label}</button>
       {/each}
-    </div>
+    </p>
+    <SymbolButton
+      name="trashFill"
+      title={t('delete')}
+      opaque
+      colorSeed={COLOR_SEEDS.cancel}
+      onclick={() => {
+        onremove(shot)
+      }} />
   {/snippet}
 </Dialog>
 
 <style lang="scss">
+  .copy-as {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 12px;
+    opacity: 0.7;
+  }
+  .text-link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    &:hover {
+      opacity: 0.7;
+    }
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
   .image {
     display: flex;
     align-items: center;

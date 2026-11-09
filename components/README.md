@@ -241,6 +241,9 @@ Renders through `Dialog`.
 
 - `image` is `null` until the full image arrives, and the actions that need it
   disable until then. `ShotCard` only ever has the thumbnail.
+- The footer has three weights: copy, download and edit as round buttons,
+  the "Copy as" formats as small underlined text buttons, and delete alone at
+  the far edge in the `cancel` colour.
 
 ### `Editor` (`editor.svelte`)
 
