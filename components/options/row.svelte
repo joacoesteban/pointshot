@@ -12,10 +12,10 @@
 </script>
 
 <svelte:element this={as} class="row">
-  <span class="text">
+  <span class="text blend">
     <b>{title}</b>
     {#if help}
-      <small class="opacity-60">{help}</small>
+      <small>{help}</small>
     {/if}
   </span>
   <span class="control">

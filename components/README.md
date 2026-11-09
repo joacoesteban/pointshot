@@ -290,9 +290,9 @@ fixed at `z-index: -1`.
 ### `options/row.svelte`
 
 A label on the left and a control on the right, in a `.control` column fixed
-at 12rem so the controls align; selects and inputs fill it. Row text uses the
-theme text colour with the help at 60% opacity, not `blend`, which shifted
-the colour of single words over the mosaic. `as` picks the element:
+at 12rem so the controls align; selects and inputs fill it. All text on the
+page is `blend`, rows included, so it reads as one tone. `as` picks the
+element:
 
 - `label` (default) for form controls, so clicking the text reaches them.
 - `div` when the control is an action button, or clicking the text would fire

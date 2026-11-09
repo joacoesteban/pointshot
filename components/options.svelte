@@ -273,15 +273,15 @@
           {#each commands as { name, shortcut } (name)}
             <Row as="li" title={name}>
               {#if shortcut}
-                <kbd class="pill">{shortcut}</kbd>
+                <kbd class="pill blend">{shortcut}</kbd>
               {:else}
-                <span class="pill opacity-60">{t('notSet')}</span>
+                <span class="pill blend">{t('notSet')}</span>
               {/if}
             </Row>
           {/each}
         </ul>
         {#if import.meta.env.FIREFOX}
-          <p class="text-sm opacity-60">{t('firefoxShortcuts')}</p>
+          <p class="blend text-sm">{t('firefoxShortcuts')}</p>
         {:else}
           <div class="flex mt-2">
             <Button
@@ -322,7 +322,6 @@
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 24px;
-    color: var(--_blur-text-color);
   }
   h2 {
     margin: 0 0 8px;
