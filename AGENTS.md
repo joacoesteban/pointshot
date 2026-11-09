@@ -44,7 +44,11 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 - `lib/`: content-side logic, one class per file (`Snagger`, `ElementPicker`,
   `ShotLibrary`, `Stage`, `Img`, `Clipboard`, ...).
 - `components/`: Svelte components. `contents/app.svelte` is the root.
-  `components/README.md` documents each one and the shared style classes.
+  The primitives, tokens and options-page layout are a port of
+  [Vind](https://github.com/JoacoEsteban/vind), the author's other extension,
+  so the two look and behave alike; Vind is the reference when styling, and
+  divergences are deliberate. `components/README.md` documents each
+  component, the shared style classes, and what was left out of the port.
 - `messages/index.ts`: every runtime message, typed through
   `@extend-chrome/messages`.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
