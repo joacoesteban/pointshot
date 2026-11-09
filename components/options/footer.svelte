@@ -3,7 +3,7 @@
   import { REPOSITORY_URL } from '~/lib/links'
 </script>
 
-<footer class="flex flex-col items-center gap-3 mt-5 text-center">
+<footer class="flex flex-col items-center gap-3 mt-auto pt-12 text-center">
   <a
     class="blend font-medium"
     href={`${REPOSITORY_URL}/issues`}

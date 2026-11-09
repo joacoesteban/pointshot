@@ -369,6 +369,9 @@
     min-height: 100vh;
   }
   .options {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 24px;
