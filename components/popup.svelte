@@ -32,6 +32,7 @@
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
+    onshown: (shots: readonly Shot[]) => void
     onundo: () => void
     onoptions: (view: OptionsView) => void
   }
@@ -49,6 +50,7 @@
     onopen,
     oncopy,
     onremove,
+    onshown,
     onundo,
     onoptions,
   }: Props = $props()
@@ -119,6 +121,10 @@
   // A site whose snags are all gone stops filtering, so its select can disappear without hiding the rest.
   const filteredSite = $derived(sites.find((each) => each === site) ?? null)
   const shown = $derived(filterShots(shots, { query, site: filteredSite }))
+
+  $effect(() => {
+    onshown(shown)
+  })
 
   const deleteLabel = $derived(
     match(shown.length)

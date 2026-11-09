@@ -1,17 +1,19 @@
+// @vitest-environment happy-dom
 import { firstValueFrom } from 'rxjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Reply, Shot } from './shot'
 import { ShotLibrary } from './shot-library'
 
-const { listShots, removeShots } = vi.hoisted(() => ({
+const { listShots, removeShots, saveShot } = vi.hoisted(() => ({
   listShots: vi.fn(),
   removeShots: vi.fn(),
+  saveShot: vi.fn(),
 }))
 
 vi.mock('~/messages', () => ({
   listShots,
   removeShots,
-  saveShot: vi.fn(),
+  saveShot,
   shotImageUrl: vi.fn(),
 }))
 
@@ -33,6 +35,22 @@ beforeEach(() => {
 })
 
 describe('ShotLibrary', () => {
+  it('lists a saved shot once when a refresh listed it before the save replied', async () => {
+    const saved: Shot = { ...shot, id: 'b', createdAt: 2 }
+    const reply =
+      Promise.withResolvers<Reply<{ shot: Shot; evicted: string[] }>>()
+    saveShot.mockReturnValue(reply.promise)
+    const library = new ShotLibrary()
+    await library.refresh()
+
+    const saving = library.save({ ...saved, image: '' })
+    listShots.mockResolvedValue({ ok: true, value: [saved, shot] })
+    await library.refresh()
+    reply.resolve({ ok: true, value: { shot: saved, evicted: [] } })
+    await saving
+    expect(await ids(library)).toEqual(['b', 'a'])
+  })
+
   it('cannot undo a removal already sent to the background', async () => {
     const reply = Promise.withResolvers<Reply<undefined>>()
     removeShots.mockReturnValue(reply.promise)

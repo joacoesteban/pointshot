@@ -3,6 +3,7 @@ import {
   BehaviorSubject,
   Subject,
   combineLatest,
+  fromEvent,
   map,
   race,
   switchMap,
@@ -56,6 +57,10 @@ export class ShotLibrary {
     ShotRevision.changes().subscribe(() => {
       void this.refresh()
     })
+    // Removals wait for an undo, so a page that goes away deletes them first.
+    fromEvent(window, 'pagehide').subscribe(() => {
+      this.flush()
+    })
   }
 
   refresh() {
@@ -65,8 +70,10 @@ export class ShotLibrary {
   }
 
   save(shot: NewShot) {
+    // A revision refresh may have listed the new shot before this reply, so it is dropped before being prepended.
     return ReplyCodec.decode(saveShot(shot), StorageError, [QuotaError]).map(
-      ({ shot, evicted }) => this.publish([shot, ...this.without(evicted)]),
+      ({ shot, evicted }) =>
+        this.publish([shot, ...this.without([shot.id, ...evicted])]),
     )
   }
 

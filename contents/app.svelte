@@ -2,7 +2,7 @@
   import '~/lib/fonts-importer'
   import { match } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { fromEvent, of, take, timer, type Observable } from 'rxjs'
+  import { of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
@@ -59,6 +59,8 @@
   let selectionHint = $state<string | undefined>()
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
+  // What the popup's grid shows after its search and site filter, so the preview's arrow keys walk the same list.
+  let shown = $state<readonly Shot[]>([])
   let position = $state<Position | null>(null)
 
   const placement = $derived({
@@ -198,18 +200,13 @@
     library,
     actions,
     () => settings,
-    () => $shots$,
+    () => shown,
     remove,
   )
 
   library.failures$.subscribe((error) => {
     Failure.report(error, t('couldNotDelete'))
   })
-  // Removals wait for an undo, so a page that goes away deletes them first.
-  fromEvent(window, 'pagehide').subscribe(() => {
-    library.flush()
-  })
-
   togglePopupStream.subscribe(toggle)
   pickElementStream.subscribe(() => {
     pick()
@@ -243,6 +240,9 @@
       viewer.copy(shot)
     }}
     onremove={remove}
+    onshown={(shots: readonly Shot[]) => {
+      shown = shots
+    }}
     onundo={() => {
       library.undo()
     }}
