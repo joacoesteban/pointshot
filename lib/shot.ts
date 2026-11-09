@@ -52,11 +52,5 @@ export const filterShots = (
 export const sitesOf = (shots: readonly Shot[]) =>
   [...new Set(shots.map(({ url }) => siteOf(url)))].sort()
 
-export type ShotText = 'markdown' | 'dataUrl' | 'link'
-
-export const textOf = (text: ShotText, { url, title }: Shot, image: string) =>
-  match(text)
-    .with('markdown', () => `![${title.replace(/[[\]]/g, '')}](${image})`)
-    .with('dataUrl', () => image)
-    .with('link', () => url)
-    .exhaustive()
+// Deleting more snags than this at once asks first; undo alone is too short a net for a whole library.
+export const CONFIRM_DELETE_ABOVE = 5

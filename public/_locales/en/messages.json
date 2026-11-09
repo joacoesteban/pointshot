@@ -81,6 +81,27 @@
   "snag": {
     "message": "Snag"
   },
+  "snagElement": {
+    "message": "Snag an element"
+  },
+  "captureElement": {
+    "message": "Element"
+  },
+  "captureArea": {
+    "message": "Area"
+  },
+  "captureVisible": {
+    "message": "Screen"
+  },
+  "capturePage": {
+    "message": "Page"
+  },
+  "captureLater": {
+    "message": "Timer"
+  },
+  "capture": {
+    "message": "Capture"
+  },
   "snagArea": {
     "message": "Snag an area"
   },
@@ -92,9 +113,6 @@
   },
   "snagLater": {
     "message": "Snag after a countdown"
-  },
-  "keysHint": {
-    "message": "↑ ↓ ← → walk the page · Shift adds a margin · Esc cancels"
   },
   "open": {
     "message": "Open"
@@ -110,26 +128,6 @@
   },
   "edit": {
     "message": "Edit"
-  },
-  "copyAs": {
-    "message": "Copy as"
-  },
-  "markdown": {
-    "message": "Markdown"
-  },
-  "dataUrl": {
-    "message": "Data URL"
-  },
-  "pageLink": {
-    "message": "Page link"
-  },
-  "copiedText": {
-    "message": "Copied $WHAT$",
-    "placeholders": {
-      "what": {
-        "content": "$1"
-      }
-    }
   },
   "editSnag": {
     "message": "Edit snag"
@@ -183,7 +181,7 @@
     "message": "Type, then Enter"
   },
   "pickHint": {
-    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc cancels."
+    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc or right click cancels."
   },
   "countdown": {
     "message": "Snagging what is under the pointer in $SECONDS$… Esc cancels.",
@@ -194,7 +192,7 @@
     }
   },
   "selectionHint": {
-    "message": "Drag over the area to snag. Esc cancels."
+    "message": "Drag over the area to snag. Esc or right click cancels."
   },
   "copied": {
     "message": "Copied to clipboard"
@@ -358,5 +356,58 @@
   },
   "madeBy": {
     "message": "With 🧠 + 🩷 by"
+  },
+  "browseLibrary": {
+    "message": "Browse all snags"
+  },
+  "settingsTitle": {
+    "message": "Settings"
+  },
+  "libraryTitle": {
+    "message": "Library"
+  },
+  "snagCount": {
+    "message": "$COUNT$ snags",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "snagCountOne": {
+    "message": "1 snag"
+  },
+  "libraryEmptyBody": {
+    "message": "Open Snag from the toolbar on any page and pick an element."
+  },
+  "couldNotOpen": {
+    "message": "Could not open that snag"
+  },
+  "libraryEmptyShortcut": {
+    "message": "Or press $SHORTCUT$ to pick one right away.",
+    "placeholders": {
+      "shortcut": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyTitle": {
+    "message": "Delete $COUNT$ snags?",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyBody": {
+    "message": "You can undo for a few seconds afterwards."
+  },
+  "moreSites": {
+    "message": "$COUNT$ more sites",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }

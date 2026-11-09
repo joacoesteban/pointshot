@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { ButtonSize } from '~/lib/button-size'
   import type { SymbolName } from '~/lib/symbols'
   import Button from './button.svelte'
   import Symbol from './symbol.svelte'
@@ -7,39 +8,36 @@
     name: SymbolName
     title: string
     onclick: (event: MouseEvent) => void
-    size?: string
-    padding?: string
+    size?: ButtonSize
     opaque?: boolean
     disabled?: boolean
     highlight?: boolean | undefined
-    glassy?: boolean
-    colorSeed?: string | undefined
+    colorSeed?: string
+    testId?: string | undefined
   }
 
   const {
     name,
     title,
     onclick,
-    size = '50px',
-    padding = '15%',
+    size = 'md',
     opaque = false,
     disabled = false,
     highlight,
-    glassy = false,
     colorSeed,
+    testId,
   }: Props = $props()
 </script>
 
 <Button
+  {size}
   {opaque}
   {disabled}
   {highlight}
-  {glassy}
   {colorSeed}
+  {testId}
   {title}
   {onclick}
-  round
-  roundSize={size}
-  roundPadding={padding}>
+  round>
   <Symbol {name} />
 </Button>

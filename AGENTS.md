@@ -42,9 +42,15 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   receiver, so the extension needs only `activeTab`, no host permissions.
 - `background/`: Dexie database and `ShotStore`. Runs only in the background.
 - `lib/`: content-side logic, one class per file (`Snagger`, `ElementPicker`,
-  `ShotLibrary`, `Stage`, `Img`, `Clipboard`, ...).
+  `ShotLibrary`, `ShotActions`, `ShotViewer`, `Stage`, `Img`, `Clipboard`,
+  ...). `ShotLibrary`, `ShotActions` and `ShotViewer` also run in the options
+  page, which hosts the full library view.
 - `components/`: Svelte components. `contents/app.svelte` is the root.
-  `components/README.md` documents each one and the shared style classes.
+  The primitives, tokens and options-page layout are a port of
+  [Vind](https://github.com/JoacoEsteban/vind), the author's other extension,
+  so the two look and behave alike; Vind is the reference when styling, and
+  divergences are deliberate. `components/README.md` documents each
+  component, the shared style classes, and what was left out of the port.
 - `messages/index.ts`: every runtime message, typed through
   `@extend-chrome/messages`.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
@@ -57,9 +63,9 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   background encodes a `ResultAsync` with `ReplyCodec.encode`, and the content
   script turns it back into one with `ReplyCodec.decode`, naming the error
   class to rebuild.
-- Errors are `Error` subclasses in `lib/errors.ts`. The UI picks its copy by
-  matching them with `P.instanceOf` in `contents/app.svelte`, so a new failure
-  mode gets a new class there.
+- Errors are `Error` subclasses in `lib/errors.ts`. `Failure.explain` in
+  `lib/failure.ts` picks the copy by matching them with `P.instanceOf`, so a
+  new failure mode gets a new class and a branch there.
 - The UI lives in a shadow root. Svelte runs with `emitCss: false` so
   component styles land inside it, and fonts ship as data URLs because content
   scripts resolve asset URLs against the host page.
@@ -74,6 +80,10 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   that picked the element is the user gesture the clipboard needs.
 - Shot IDs are minted in the background, because `crypto.randomUUID` is
   missing on insecure pages.
+- After every save or removal the background bumps `shotsRevision` in
+  `storage.local` (`ShotRevision`), and every `ShotLibrary`, in content
+  scripts and the options page alike, refreshes on that change, so open
+  surfaces stay in sync without a tab list.
 - The background stores each shot's full image as a `Blob` next to a small
   WebP thumbnail. Listings carry only thumbnails; the full image crosses the
   message channel once to be saved and again only to be copied or downloaded

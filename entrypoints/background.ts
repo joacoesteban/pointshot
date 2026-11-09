@@ -9,6 +9,7 @@ import { CaptureError, DownloadError, toError } from '~/lib/errors'
 import { t } from '~/lib/i18n'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
+import { ShotRevision } from '~/lib/shot-revision'
 import {
   openOptionsStream,
   downloadFileStream,
@@ -114,6 +115,13 @@ const download = ({ url, filename, saveAs }: FileDownload) =>
       .exhaustive(),
   )
 
+// The revision write is awaited before replying, since the worker may be suspended right after the reply.
+// A failed write only costs other pages their refresh, so it never fails the save or removal itself.
+const announced = <T>(value: T): ResultAsync<T, never> =>
+  ShotRevision.bump()
+    .orElse(() => okAsync(undefined))
+    .map(() => value)
+
 export default defineBackground(() => {
   const store = new ShotStore(new SnagDB())
 
@@ -125,14 +133,23 @@ export default defineBackground(() => {
   })
   saveShotStream.subscribe(([shot, , respond]) => {
     void ReplyCodec.encode(
-      SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
+      SettingsStore.load()
+        .andThen(({ limit }) => store.save(shot, limit))
+        .andThen(announced),
     ).then(respond)
   })
   removeShotsStream.subscribe(([ids, , respond]) => {
-    void ReplyCodec.encode(store.remove(ids)).then(respond)
+    void ReplyCodec.encode(store.remove(ids).andThen(announced)).then(respond)
   })
-  openOptionsStream.subscribe(() => {
-    void browser.runtime.openOptionsPage()
+  // The options page opens on its library through the URL hash, which openOptionsPage cannot set.
+  openOptionsStream.subscribe(([view]) => {
+    void match(view)
+      .with('library', () =>
+        browser.tabs.create({
+          url: browser.runtime.getURL('/options.html#library'),
+        }),
+      )
+      .otherwise(() => browser.runtime.openOptionsPage())
   })
   downloadFileStream.subscribe(([file, , respond]) => {
     void ReplyCodec.encode(download(file)).then(respond)

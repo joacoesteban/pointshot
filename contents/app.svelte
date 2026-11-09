@@ -1,47 +1,37 @@
 <script lang="ts">
   import '~/lib/fonts-importer'
-  import { match, P } from 'ts-pattern'
+  import { match } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { okAsync, type ResultAsync } from 'neverthrow'
-  import { fromEvent, of, take, timer, type Observable } from 'rxjs'
+  import { of, take, timer, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
-  import Editor from '~/components/editor.svelte'
   import Popup from '~/components/popup.svelte'
-  import Preview from '~/components/preview.svelte'
   import Selection from '~/components/selection.svelte'
+  import ShotDialogs from '~/components/shot-dialogs.svelte'
   import Toaster from '~/components/toaster.svelte'
-  import { Clipboard } from '~/lib/clipboard'
-  import { Diagnostics } from '~/lib/diagnostics'
+  import { Failure } from '~/lib/failure'
+  import { toastIcon } from '~/lib/toast-icon'
   import { t } from '~/lib/i18n'
   import { DisposeBag } from '~/lib/dispose-bag'
-  import { Download, fileName, pathOf } from '~/lib/download'
-  import {
-    ClipboardError,
-    DownloadError,
-    EmptyAreaError,
-    QuotaError,
-    StorageError,
-  } from '~/lib/errors'
-  import { Img } from '~/lib/image'
   import { ElementPicker } from '~/lib/picker'
   import { PopupPosition, type Position } from '~/lib/popup-position'
   import type { Shot } from '~/lib/shot'
+  import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
+  import { ShotViewer } from '~/lib/shot-viewer'
   import { Snagger, type Target } from '~/lib/snagger'
   import { Stage } from '~/lib/stage'
   import { Stitcher } from '~/lib/stitcher'
   import { themeController } from '~/lib/theme-controller'
   import { DEFAULT_SETTINGS, SettingsStore } from '~/lib/settings'
   import type { Area } from '~/lib/region'
-  import { ReplyCodec } from '~/lib/reply'
   import {
-    downloadFile,
     openOptions,
     captureModeStream,
     pickElementStream,
     togglePopupStream,
     type Mode,
+    type OptionsView,
   } from '~/messages'
 
   type Props = {
@@ -56,6 +46,8 @@
   const picker = new ElementPicker(host)
   // svelte-ignore state_referenced_locally
   const snagger = new Snagger(new Stitcher(new Stage(container)), library, host)
+  // svelte-ignore state_referenced_locally
+  const actions = new ShotActions(library, host)
   const shots$ = library.shots$
   const removed$ = library.removed$
 
@@ -67,8 +59,8 @@
   let selectionHint = $state<string | undefined>()
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
-  let previewing = $state<{ shot: Shot; image: string | null } | null>(null)
-  let editing = $state<{ shot: Shot; image: string } | null>(null)
+  // What the popup's grid shows after its search and site filter, so the preview's arrow keys walk the same list.
+  let shown = $state<readonly Shot[]>([])
   let position = $state<Position | null>(null)
 
   const placement = $derived({
@@ -86,14 +78,6 @@
     settings = next
   })
 
-  const explain = (error: Error) =>
-    match(error)
-      .with(P.instanceOf(ClipboardError), () => t('savedClipboardBlocked'))
-      .with(P.instanceOf(EmptyAreaError), () => t('nothingVisible'))
-      .with(P.instanceOf(QuotaError), () => t('storageFull'))
-      .with(P.instanceOf(StorageError), () => t('notSaved'))
-      .otherwise(({ message }) => t('couldNotSnag', message))
-
   const busy = $derived(picking || selecting)
 
   const density = () =>
@@ -102,10 +86,8 @@
       .with('css', () => 1)
       .exhaustive()
 
-  // Every failure is kept for the diagnostics the options page copies.
   const fail = (error: Error) => {
-    void Diagnostics.record(error)
-    toast.error(explain(error))
+    Failure.report(error)
   }
 
   function snag(target: Target) {
@@ -136,6 +118,7 @@
         selecting = true
         selectionHint = toast(t('selectionHint'), {
           duration: Infinity,
+          icon: toastIcon('rectangleDashed'),
         })
       })
       .with({ mode: 'visible' }, () => {
@@ -168,12 +151,23 @@
       match(delay)
         .with(0, () => t('pickHint'))
         .otherwise(countdown),
-      { duration: Infinity },
+      {
+        duration: Infinity,
+        icon: toastIcon(
+          match(delay)
+            .with(0, () => 'cursorArrowRays' as const)
+            .otherwise(() => 'timer' as const),
+        ),
+      },
     )
     timer(1000, 1000)
       .pipe(take(Math.max(delay - 1, 0)), sink())
       .subscribe((tick) => {
-        toast(countdown(delay - tick - 1), { id: hint, duration: Infinity })
+        toast(countdown(delay - tick - 1), {
+          id: hint,
+          duration: Infinity,
+          icon: toastIcon('timer'),
+        })
       })
     picked$.subscribe({
       next: ({ element, framing }) => {
@@ -197,120 +191,22 @@
       .otherwise(() => undefined)
   }
 
-  function copy(shot: Shot) {
-    void Clipboard.writePng(
-      library.imageUrl(shot).map((url) => Img.dataUrlToBlob(url)),
-    ).match(
-      () => toast.success(t('copied')),
-      (error) => {
-        void Diagnostics.record(error)
-        toast.error(
-          match(error)
-            .with(P.instanceOf(ClipboardError), () => t('clipboardBlocked'))
-            .otherwise(explain),
-        )
-      },
-    )
-  }
-
-  // Save as and folders go through the downloads API, which falls back to a plain download when its permission was not granted.
-  function download(shot: Shot) {
-    const { format, quality, saveAs, folder } = settings
-    const viaAnchor = (url: string) => {
-      Download.shot(shot, url, format, host)
-    }
-    void library
-      .imageUrl(shot)
-      .andThen((imageUrl) => Img.encode(imageUrl, format, quality))
-      .andThen((url) =>
-        match({ saveAs, folder })
-          .with({ saveAs: false, folder: '' }, () => {
-            viaAnchor(url)
-            return okAsync(undefined)
-          })
-          .otherwise(() =>
-            ReplyCodec.decode(
-              downloadFile({
-                url,
-                filename: pathOf(folder, fileName(shot, format)),
-                saveAs,
-              }),
-              DownloadError,
-            )
-              .map(() => undefined)
-              .orElse(() => {
-                viaAnchor(url)
-                return okAsync(undefined)
-              }),
-          ),
-      )
-      .mapErr(fail)
-  }
-
   function remove(shots: readonly Shot[]) {
-    const ids = shots.map(({ id }) => id)
     library.remove(shots)
-    match(previewing)
-      .with({ shot: { id: P.when((id) => ids.includes(id)) } }, () => {
-        previewing = null
-      })
-      .otherwise(() => undefined)
+    viewer.forget(shots)
   }
 
-  function open(shot: Shot) {
-    previewing = { shot, image: null }
-    void library.imageUrl(shot).match(
-      (image) => {
-        match(previewing)
-          .with({ shot: { id: shot.id } }, () => {
-            previewing = { shot, image }
-          })
-          .otherwise(() => undefined)
-      },
-      (error) => {
-        previewing = null
-        fail(error)
-      },
-    )
-  }
-
-  function edit(shot: Shot, image: string) {
-    previewing = null
-    editing = { shot, image }
-  }
-
-  function saveEdit(
-    png: ResultAsync<Blob, Error>,
-    size: { readonly width: number; readonly height: number },
-  ) {
-    const source = match(editing)
-      .with(P.nonNullable, ({ shot: { url, title } }) => ({ url, title }))
-      .otherwise(() => ({ url: location.href, title: document.title }))
-    editing = null
-    void snagger
-      .keep(png, okAsync({ ...source, ...size }))
-      .match(() => toast.success(t('savedAndCopied')), fail)
-  }
-
-  function copyText(text: string, label: string) {
-    void Clipboard.writeText(text).match(
-      () => toast.success(t('copiedText', label)),
-      (error) => {
-        void Diagnostics.record(error)
-        toast.error(t('clipboardBlocked'))
-      },
-    )
-  }
+  const viewer = new ShotViewer(
+    library,
+    actions,
+    () => settings,
+    () => shown,
+    remove,
+  )
 
   library.failures$.subscribe((error) => {
-    void Diagnostics.record(error)
-    toast.error(t('couldNotDelete'))
+    Failure.report(error, t('couldNotDelete'))
   })
-  // Removals wait for an undo, so a page that goes away deletes them first.
-  fromEvent(window, 'pagehide').subscribe(() => {
-    library.flush()
-  })
-
   togglePopupStream.subscribe(toggle)
   pickElementStream.subscribe(() => {
     pick()
@@ -337,40 +233,23 @@
       pick(settings.delay)
     }}
     oncapture={capture}
-    onopen={open}
-    oncopy={copy}
-    ondownload={download}
+    onopen={(shot: Shot) => {
+      viewer.open(shot)
+    }}
+    oncopy={(shot: Shot) => {
+      viewer.copy(shot)
+    }}
     onremove={remove}
+    onshown={(shots: readonly Shot[]) => {
+      shown = shots
+    }}
     onundo={() => {
       library.undo()
     }}
-    onoptions={() => {
-      void openOptions(undefined)
+    onoptions={(view: OptionsView) => {
+      void openOptions(view)
     }} />
-  {#if previewing}
-    <Preview
-      shot={previewing.shot}
-      image={previewing.image}
-      onclose={() => {
-        previewing = null
-      }}
-      oncopy={copy}
-      oncopytext={copyText}
-      ondownload={download}
-      onremove={(shot) => {
-        remove([shot])
-      }}
-      onedit={edit} />
-  {/if}
-  {#if editing}
-    <Editor
-      shot={editing.shot}
-      image={editing.image}
-      onclose={() => {
-        editing = null
-      }}
-      onsave={saveEdit} />
-  {/if}
+  <ShotDialogs {viewer} />
   <Highlight {target$} />
   {#if selecting}
     <Selection onpick={select} oncancel={endSelection} />

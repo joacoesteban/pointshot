@@ -85,10 +85,14 @@
   role="presentation"
   onpointerdown={down}
   onpointermove={move}
-  onpointerup={up}>
+  onpointerup={up}
+  oncontextmenu={(event) => {
+    event.preventDefault()
+    oncancel()
+  }}>
   {#if rect}
     <div
-      class="rect"
+      class="marquee"
       style:left={`${String(rect.left)}px`}
       style:top={`${String(rect.top)}px`}
       style:width={`${String(rect.width)}px`}
@@ -111,10 +115,8 @@
       background: #0003;
     }
   }
-  .rect {
-    position: absolute;
-    border: 1px dashed #fffc;
-    box-shadow: 0 0 0 100vmax #0003;
+  .marquee {
+    pointer-events: auto;
   }
   .tag {
     position: absolute;

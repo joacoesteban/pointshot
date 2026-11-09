@@ -24,14 +24,12 @@ only discover by breaking it.
 
 Defined per theme in `tailwind.config.ts`.
 
-| Token                               | Used by                        |
-| ----------------------------------- | ------------------------------ |
-| `--_blur-bg`, `--_blur-bg-soft`     | `bg-blur`, `bg-theme`          |
-| `--_blur-text-color`                | `bg-blur`, `bg-theme`, `field` |
-| `--_glassy-gradient-top`, `-bottom` | `Button glassy`                |
-| `--_glassy-inset-shadow-color`      | `Button glassy`                |
-| `--_field-glow`                     | `field`                        |
-| `--options-blended-text-color`      | `blend`                        |
+| Token                           | Used by                        |
+| ------------------------------- | ------------------------------ |
+| `--_blur-bg`, `--_blur-bg-soft` | `bg-blur`, `bg-theme`          |
+| `--_blur-text-color`            | `bg-blur`, `bg-theme`, `field` |
+| `--_field-glow`                 | `field`                        |
+| `--options-blended-text-color`  | `blend`                        |
 
 `--bezier`, `--bezier-chill`, `--bezier-round-inverted` and
 `--bezier-symmetric` are set on the theme root in `style.scss`.
@@ -42,37 +40,38 @@ Defined per theme in `tailwind.config.ts`.
 
 The pill or circle with a coloured gradient. Everything else is built on it.
 
-| Prop                                 | Effect                                            |
-| ------------------------------------ | ------------------------------------------------- |
-| `onclick`, `children`                | Required.                                         |
-| `colorSeed`                          | Input to ColorHash. Random per instance if unset. |
-| `opaque`                             | Adds `backdrop-filter: blur(6px)`.                |
-| `glassy`                             | Swaps the gradient for the theme's glass tokens.  |
-| `small`                              | daisyUI `btn-sm` and a 1em label.                 |
-| `highlight`                          | Outline, and `aria-pressed` when not `undefined`. |
-| `icon`                               | A `Symbol` before the label, at 1em.              |
-| `round`, `roundSize`, `roundPadding` | Circle of that size. See below.                   |
-| `disabled`, `title`, `testId`        | See below.                                        |
-| `role`, `checked`                    | Only for `Toggle`.                                |
+| Prop                          | Effect                                            |
+| ----------------------------- | ------------------------------------------------- |
+| `onclick`, `children`         | Required.                                         |
+| `colorSeed`                   | Input to ColorHash. Random per instance if unset. |
+| `size`                        | `sm`, `md` (default) or `lg`. See below.          |
+| `opaque`                      | Adds `backdrop-filter: blur(6px)`.                |
+| `highlight`                   | Outline, and `aria-pressed` when not `undefined`. |
+| `icon`                        | A `Symbol` before the label, at 1em.              |
+| `round`                       | Circle. Its diameter follows `size`.              |
+| `disabled`, `title`, `testId` | See below.                                        |
+| `role`, `checked`             | Only for `Toggle`.                                |
 
 - **The colour changes on every mount.** Without `colorSeed` each instance
   draws a random seed, so a remounted button comes back in another colour.
-  That is the intended look. Pass a seed when the colour carries meaning:
-  `COLOR_SEEDS.cancel` (red) and `COLOR_SEEDS.accept` (green).
+  That is the intended look, and every button has a coloured background.
+  Pass a seed only when the colour carries meaning: `COLOR_SEEDS.cancel`
+  (magenta) on destructive buttons and `COLOR_SEEDS.accept` (green) on the
+  confirming one.
+- **One size scale.** `sm` is daisyUI `btn-sm` with a 1em label and a 36px
+  circle, `md` a 1.15em label and 40px, `lg` a 1.5em label and 50px. The
+  circle's padding is fixed per size in `button.scss`; smaller circles get
+  relatively more so the icon keeps its weight. Pixel sizes are not a prop.
 - **`opaque` does not make it opaque.** The name comes from Vind. The gradient
   stays at 50% alpha, and the prop only blurs what is behind the button.
 - **The label cannot be coloured.** `.inner` is white with
-  `mix-blend-mode: overlay`, so it takes its tone from the gradient. Pale
-  gradients give low-contrast labels, which is why glassy buttons hold icons.
-- **`glassy` beats `disabled`'s grey and any `colorSeed`.** All three write the
-  `--_forced-*` variables, and `.glassy` is declared last. A glassy disabled
-  button only fades to 50%.
+  `mix-blend-mode: overlay`, so it takes its tone from the gradient.
+- **`disabled` greys the gradient** through the `--_forced-*` variables, over
+  any `colorSeed`.
 - **The focus ring is `:focus`, not `:focus-visible`.** It stays after a mouse
   click until focus moves. This matches Vind.
 - **`highlight` is for the selected item of a group** (the editor's tools).
   Leave it `undefined` on plain buttons: `false` announces a toggle button.
-- **`round` falls back to 70px** without `roundSize`. `roundPadding` is
-  usually a percentage and sets how much of the circle the icon fills.
 - **`title` replaces the accessible name.** It sets both the tooltip and
   `aria-label`. Text buttons leave it empty so the label names them.
 - **Layout goes on a parent.** The root is a block-level flex
@@ -82,17 +81,19 @@ The pill or circle with a coloured gradient. Everything else is built on it.
 ### `SymbolButton` (`symbol-button.svelte`)
 
 A round `Button` holding one `Symbol`. `title` is required, because the icon
-has no text to name it. Defaults to 50px with 15% padding. The popup uses
-40px with 26% to 30%, and shot cards 38px with 28%: smaller circles need
-relatively more padding to keep the icon's weight.
+has no text to name it. Takes the same `size` as `Button`, `md` by default;
+cards and dialog toolbars use `sm`, the options page's GitHub link `lg`.
 
 ### `Symbol` (`symbol.svelte`, `lib/symbols.ts`)
 
 SVG icon in `currentColor`. `size` is the length of the longer side and
 defaults to `100%`, so it fills its parent.
 
-To add one, drop the JSON in `assets/symbols/`, then import it and list it in
-`raw` in `lib/symbols.ts`. Each file is parsed with `zod` at module load, so a
+To add one, copy the JSON from Vind's `assets/symbols/` catalogue (SF Symbols
+as paths), then import it and list it in `raw` in `lib/symbols.ts`.
+`toastIcon(name)` in `lib/toast-icon.ts` turns one into the `icon` a toast
+takes: the toast library mounts icons without props, so the name is bound
+into a component first. The picking, countdown and selection hints use it. Each file is parsed with `zod` at module load, so a
 malformed file breaks every entrypoint that imports symbols. `fillRule`
 defaults to `evenodd`; set `nonzero` if the shape fills in wrong.
 
@@ -114,6 +115,26 @@ The switch. A `Button` with `role="switch"` and a sliding knob.
   text flips the switch.
 - **`title` is required** and becomes the accessible name. In Playwright use
   `getByRole('switch', { name })`; `toBeChecked` reads `aria-checked`.
+
+### `Dialog` (`dialog.svelte`)
+
+The shell `Preview` and `Editor` share: a fixed backdrop with a click-to-close
+scrim, a `bg-blur` panel with `role="dialog"`, a header with the `title`, an
+optional `subtitle` snippet and a small close button, the children, and an
+optional `footer` snippet laid out `justify-between`.
+
+- **Escape is caught on `window` in the capture phase** and stopped, so the
+  host page never sees it. It calls `onescape` when given, else `onclose`;
+  the editor uses it to drop an open text entry before closing.
+- `testId` goes on the backdrop, which is what tests wait for.
+- Children size themselves. The panel is a flex column capped at the
+  viewport, so a scrolling body needs its own `overflow`.
+
+### `Confirm` (`confirm.svelte`)
+
+A `Dialog` with a body line and two footer buttons, cancel and a `cancel`
+coloured action. The popup and the library open it before deleting more than
+`CONFIRM_DELETE_ABOVE` snags at once; smaller deletions rely on undo alone.
 
 ### `Divider` (`divider.svelte`)
 
@@ -167,13 +188,21 @@ Options-page text: `mix-blend-mode: color-dodge` over the `Backdrop`.
 ### `pill`
 
 Small tinted capsule for read-only values: the version, shortcuts, the credit.
-Pair it with `blend` on the options page.
+It inherits the page font; only `kbd.pill` is monospace, so a real shortcut
+reads as keys and "Not set" does not.
+
+### `marquee`
+
+The dashed rectangle with a dimmed surround that `Selection` draws while
+dragging and `Editor` draws for the crop. It is `position: absolute` and
+ignores pointer events; `Selection` turns them back on so the drag continues
+over it.
 
 ### `ghost`, `force-ghost`
 
-`ghost` fades to 10% on hover and drops pointer events on its children, so a
-toast can be seen through. The element itself still takes clicks. `force-ghost` applies both all the
-time, and `Popup` uses it while a capture is running.
+`ghost` fades to 10% on hover and drops pointer events on its children. The
+element itself still takes clicks. `force-ghost` applies both all the time,
+and `Popup` uses it while a capture is running.
 
 ## Content UI
 
@@ -184,10 +213,20 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 ### `Popup` (`popup.svelte`, `popup.scss`)
 
+- The capture strip comes first: five round buttons with a caption under
+  each, the element pick at `lg` and the rest at `md`, bottom-aligned. The
+  `title` is the full sentence tests and screen readers use, the caption one
+  word. Modes live in the `actions` list; a new one is an entry there.
+- The library follows, with the search, the site select and a `cancel`
+  coloured trash button whose title is "Delete all" or "Delete N" for a
+  filtered view. The undo bar is a footer that appears only after a removal.
 - `draggable` moves it, except from `INTERACTIVE` elements in `lib/draggable.ts`.
   A control that is not a button, link or field needs adding there.
 - `ghost` hides it for a capture. `inert` keeps it out of the tab order while
   closed.
+- The container is a flex column capped at 85vh. Only `main` scrolls, so the
+  header and footer stay put without `sticky`, which had no background to
+  cover the cards scrolling under it.
 - **Fields must contain their keys.** Search and the site select stop
   `keydown`, `keyup` and `keypress`, or the host page's shortcuts fire while
   typing. A new field needs all three.
@@ -200,24 +239,48 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 - Draws on a `<canvas>` through `paint`, because the page's CSP governs
   `img-src` inside the shadow root. The same goes for `Preview` and `Editor`.
+- The first line is the page title, falling back to the host; the second is
+  host, size and age.
 - Actions show on hover and on `:focus-within`, so they stay keyboard
-  reachable.
+  reachable. The card holds open, copy and delete; download sits in
+  `Preview`, where the format settings are visible.
 - It sits inside the popup's `bg-blur`, so it uses `bg-theme:soft`.
 
 ### `Preview` (`preview.svelte`)
 
+Renders through `Dialog`.
+
 - `image` is `null` until the full image arrives, and the actions that need it
   disable until then. `ShotCard` only ever has the thumbnail.
-- Escape is caught on `window` in the capture phase and stopped, so the host
-  page never sees it.
+- The footer holds copy, download and edit as round buttons, and delete
+  alone at the far edge in the `cancel` colour. Copy puts the image on the
+  clipboard; there are no text formats.
+- Left and right arrows call `onstep`, and Delete or Backspace `onremove`,
+  caught on `window` in the capture phase like Escape. `ShotViewer.step`
+  walks the list the grid shows and stays put at either end.
 
 ### `Editor` (`editor.svelte`)
 
+Renders through `Dialog`, with the tools above the canvas and cancel and save
+in the footer.
+
 - `history` is a list of sketches, and undo drops the last. The first entry is
   always the empty sketch, so undo disables at length 1.
-- The selected tool uses `highlight`. Colours are buttons with `role="radio"`.
+- The selected tool uses `highlight`. Colours are buttons with `role="radio"`
+  and the selected one gets a 3px outline in the text colour, the same weight
+  as the button outline.
 - Stroke widths and blur cells scale by `density`, so marks keep their look at
   any capture resolution.
+
+### `ShotDialogs` (`shot-dialogs.svelte`, `lib/shot-viewer.ts`)
+
+Mounts `Preview` and `Editor` from a `ShotViewer`, the class that holds
+which shot is previewed or edited and performs copy, download, copy as text,
+delete and save through `ShotActions` and `ShotLibrary`. The popup and the
+options library each build one viewer, so the dialogs behave the same in
+both; the grid only calls `viewer.open` and `viewer.copy`. The state is a
+class with rxjs subjects rather than component state because a component
+instance bound with `bind:this` is `any` to ESLint.
 
 ### `Highlight` (`highlight.svelte`)
 
@@ -236,17 +299,38 @@ Hidden SVG holding `#aberration`. Required wherever `bg-blur` renders.
 
 ### `Toaster` (`toaster.svelte`)
 
-`svelte-french-toast` with `bg-blur ghost`.
+`svelte-french-toast` with `bg-blur`, at the bottom centre so toasts stay
+clear of the popup and of the element being picked.
 
 ## Options page
 
 ### `options.svelte`
+
+Two views picked by the URL hash: `#library` and anything else for the
+settings, which live in `options/settings.svelte` with their handlers. The
+page holds the settings store, the commands list, the header, the nav and
+the footer. The popup opens the library through `openOptions('library')`,
+which the background turns into a tab on `options.html#library`, since
+`openOptionsPage` cannot set a hash. The page widens to 1100px for the
+library and stays at 640px for the settings.
 
 - `folder` and `saveAs` are held apart from `settings`. They keep what the
   user entered until the `downloads` permission is granted or refused, and
   snap back on refusal.
 - `permissions.request` needs the user gesture, so it must stay inside the
   click or change handler.
+
+### `Library` (`library.svelte`)
+
+The full-width shot browser: a search field, the count, a `cancel` coloured
+trash button for the shown snags, one chip per site coloured by hashing the
+site name so a domain keeps its colour across visits, a responsive card grid
+and an undo bar stuck to the bottom. Sites past the first `MAX_CHIPS` by
+count move into a select. Every shot action goes through its own
+`ShotViewer`, whose arrow keys follow the filtered list. The empty state
+names the toolbar gesture and, when set, the `shortcut` prop with the
+element pick's key. A removal pending in a popup elsewhere is still listed
+until that popup's undo window closes.
 
 ### `options/backdrop.svelte`
 
@@ -260,7 +344,10 @@ fixed at `z-index: -1`.
 
 ### `options/row.svelte`
 
-A label on the left and a control on the right. `as` picks the element:
+A label on the left and a control on the right, in a `.control` column fixed
+at 12rem so the controls align; selects and inputs fill it. All text on the
+page is `blend`, rows included, so it reads as one tone. `as` picks the
+element:
 
 - `label` (default) for form controls, so clicking the text reaches them.
 - `div` when the control is an action button, or clicking the text would fire
@@ -269,13 +356,14 @@ A label on the left and a control on the right. `as` picks the element:
 
 ### `options/footer.svelte`
 
-Icon, bug report link and credit. Links open in a new tab.
+Bug report link, version pill and credit. Links open in a new tab. The icon
+sits in the page header next to the title.
 
 ## Left out of the port
 
 | From Vind                                        | Why                                                                 |
 | ------------------------------------------------ | ------------------------------------------------------------------- |
-| `Dialog`                                         | Nothing prompts. Undo covers deleting.                              |
+| Vind's `Dialog`                                  | Nothing prompts. Snag's `Dialog` is a panel shell, not a prompt.    |
 | `WithTooltip`                                    | Card actions are inline. Needs floating-ui.                         |
 | `DisplayUrl`, `BindingButton`                    | Specific to Vind's path bindings.                                   |
 | `Button` `as`, `ping`, `iconPosition`, `pressed` | No caller in Snag.                                                  |

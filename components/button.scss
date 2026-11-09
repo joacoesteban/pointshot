@@ -61,7 +61,19 @@
       filter: brightness(1);
     }
     &.round {
-      @include round(var(--_button-size_, 70px));
+      @include round(var(--_button-size_));
+    }
+    &.size-sm {
+      --_button-size_: 36px;
+      --_round-padding_: 28%;
+    }
+    &.size-md {
+      --_button-size_: 40px;
+      --_round-padding_: 28%;
+    }
+    &.size-lg {
+      --_button-size_: 50px;
+      --_round-padding_: 20%;
     }
     border-radius: 100em;
     background: linear-gradient(
@@ -83,20 +95,18 @@
       cursor: not-allowed;
       @include desaturate;
     }
-    &.glassy {
-      --_forced-gradient-top: var(--_glassy-gradient-top);
-      --_forced-gradient-bottom: var(--_glassy-gradient-bottom);
-      --_forced-inset-shadow-color: var(--_glassy-inset-shadow-color);
-    }
   }
   .inner {
     mix-blend-mode: overlay;
     color: white;
-    font-size: 1.5em;
+    font-size: 1.15em;
     font-weight: bold;
   }
-  .small .inner {
+  .size-sm .inner {
     font-size: 1em;
+  }
+  .size-lg .inner {
+    font-size: 1.5em;
   }
   .btn {
     color: unset;

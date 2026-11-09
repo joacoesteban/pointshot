@@ -237,6 +237,16 @@ export class ElementPicker {
       )
       .otherwise(() => EMPTY)
 
+    // A right click cancels like Escape. A timed pick keeps it, so a page's own context menu can be snagged.
+    const dismissed$ = match(delay)
+      .with(0, () =>
+        listen<MouseEvent>(views, 'contextmenu', capture).pipe(
+          filter(({ target }) => !this.isOwn(target)),
+          tap<MouseEvent>(swallow),
+        ),
+      )
+      .otherwise(() => EMPTY)
+
     // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
     // A timer has no such activation, so a timed snag may only be saved.
     const chosen$ = match(delay)
@@ -268,7 +278,9 @@ export class ElementPicker {
 
     const picked$ = merge(pressed$, chosen$).pipe(
       take(1),
-      takeUntil(keys$.pipe(filter(({ key }) => key === 'Escape'))),
+      takeUntil(
+        merge(keys$.pipe(filter(({ key }) => key === 'Escape')), dismissed$),
+      ),
       finalize(() => {
         ended$.next()
         ended$.complete()

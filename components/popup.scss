@@ -36,9 +36,14 @@
   transition-duration: 0.3s;
   transition-timing-function: var(--bezier-chill);
   transform-origin: top right;
+  display: flex;
+  flex-direction: column;
   max-height: 85vh;
-  overflow: auto;
-  overflow-x: hidden;
+  main {
+    min-height: 0;
+    overflow: auto;
+    overflow-x: hidden;
+  }
 
   $width: 420px;
   width: $width;

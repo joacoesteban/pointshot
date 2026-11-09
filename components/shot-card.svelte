@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
@@ -10,12 +11,10 @@
     disabled: boolean
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
-    ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
   }
 
-  const { shot, disabled, onopen, oncopy, ondownload, onremove }: Props =
-    $props()
+  const { shot, disabled, onopen, oncopy, onremove }: Props = $props()
 
   // Twice the card's width keeps the thumbnail sharp on high-density screens.
   const THUMBNAIL_WIDTH = 480
@@ -32,9 +31,7 @@
       <SymbolButton
         name="expand"
         title={t('open')}
-        size="38px"
-        padding="28%"
-        glassy
+        size="sm"
         opaque
         {disabled}
         onclick={() => {
@@ -43,32 +40,18 @@
       <SymbolButton
         name="docOnDoc"
         title={t('copy')}
-        size="38px"
-        padding="28%"
-        glassy
+        size="sm"
         opaque
         {disabled}
         onclick={() => {
           oncopy(shot)
         }} />
       <SymbolButton
-        name="squareAndArrowDown"
-        title={t('download')}
-        size="38px"
-        padding="28%"
-        glassy
-        opaque
-        {disabled}
-        onclick={() => {
-          ondownload(shot)
-        }} />
-      <SymbolButton
         name="trashFill"
         title={t('delete')}
-        size="38px"
-        padding="28%"
-        glassy
+        size="sm"
         opaque
+        colorSeed={COLOR_SEEDS.cancel}
         {disabled}
         onclick={() => {
           onremove(shot)
@@ -76,9 +59,9 @@
     </div>
   </div>
   <footer class="flex flex-col px-3 py-2 text-xs leading-tight">
-    <span class="font-bold truncate">{host}</span>
-    <span class="opacity-50 truncate">
-      {width} × {height} · {age(createdAt)}
+    <span class="font-bold truncate">{title || host}</span>
+    <span class="opacity-60 truncate">
+      {host} · {width} × {height} · {age(createdAt)}
     </span>
   </footer>
 </article>
@@ -111,13 +94,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
     opacity: 0;
     transform: scale(0.9);
     transition-property: opacity, transform;
     transition-duration: 0.15s;
     transition-timing-function: var(--bezier-round-inverted);
-    backdrop-filter: blur(3px);
+    background: var(--_blur-bg-soft);
+    backdrop-filter: blur(4px);
   }
   .card:hover .actions,
   .card:focus-within .actions {

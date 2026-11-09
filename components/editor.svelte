@@ -2,7 +2,6 @@
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import type { ResultAsync } from 'neverthrow'
-  import { filter, fromEvent } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { Img } from '~/lib/image'
   import type { Point } from '~/lib/region'
@@ -16,8 +15,8 @@
     type Tool,
   } from '~/lib/sketch'
   import type { SymbolName } from '~/lib/symbols'
-  import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
+  import Dialog from './dialog.svelte'
   import SymbolButton from './symbol-button.svelte'
 
   type Size = { readonly width: number; readonly height: number }
@@ -159,24 +158,13 @@
       .otherwise(() => undefined)
   })
 
-  $effect(() => {
-    const subscription = fromEvent<KeyboardEvent>(window, 'keydown', {
-      capture: true,
-    })
-      .pipe(filter(({ key }) => key === 'Escape'))
-      .subscribe((event) => {
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        match(typing)
-          .with(P.nonNullable, () => {
-            typing = null
-          })
-          .otherwise(onclose)
+  const escape = () => {
+    match(typing)
+      .with(P.nonNullable, () => {
+        typing = null
       })
-    return () => {
-      subscription.unsubscribe()
-    }
-  })
+      .otherwise(onclose)
+  }
 
   const commit = (next: Sketch) => {
     history = [...history, next]
@@ -293,119 +281,104 @@
   }
 </script>
 
-<div class="editor" data-testid="snag-editor" in:transitionIn out:transitionOut>
-  <div class="panel bg-blur" role="dialog" aria-label={t('editSnag')}>
-    <header class="flex flex-wrap items-center gap-2 mb-3">
-      <div
-        class="flex items-center gap-1"
-        role="toolbar"
-        aria-label={t('tools')}>
-        {#each TOOLS as { tool: option, name, title } (option)}
-          <SymbolButton
-            {name}
-            {title}
-            size="36px"
-            padding="26%"
-            glassy
-            highlight={tool === option}
-            onclick={() => {
-              finishTyping()
-              tool = option
-            }} />
-        {/each}
-      </div>
-      <div
-        class="flex items-center gap-1 mx-2"
-        role="radiogroup"
-        aria-label={t('color')}>
-        {#each COLORS as { color: option, label } (option)}
-          <button
-            type="button"
-            class="swatch"
-            role="radio"
-            aria-checked={color === option}
-            aria-label={label}
-            style:background={option}
-            onclick={() => {
-              color = option
-            }}></button>
-        {/each}
-      </div>
-      <SymbolButton
-        name="undo"
-        title={t('undo')}
-        size="36px"
-        padding="26%"
-        glassy
-        disabled={history.length === 1}
-        onclick={() => {
-          history = history.slice(0, -1)
-        }} />
-      <div class="flex-1"></div>
-      <Button colorSeed={COLOR_SEEDS.cancel} onclick={onclose}
+<Dialog
+  title={t('editSnag')}
+  testId="snag-editor"
+  {onclose}
+  onescape={escape}>
+  <div class="flex flex-wrap items-center gap-2 mb-3">
+    <div class="flex items-center gap-1" role="toolbar" aria-label={t('tools')}>
+      {#each TOOLS as { tool: option, name, title } (option)}
+        <SymbolButton
+          {name}
+          {title}
+          size="sm"
+          highlight={tool === option}
+          onclick={() => {
+            finishTyping()
+            tool = option
+          }} />
+      {/each}
+    </div>
+    <div
+      class="flex items-center gap-2 mx-2"
+      role="radiogroup"
+      aria-label={t('color')}>
+      {#each COLORS as { color: option, label } (option)}
+        <button
+          type="button"
+          class="swatch"
+          role="radio"
+          aria-checked={color === option}
+          aria-label={label}
+          style:background={option}
+          onclick={() => {
+            color = option
+          }}></button>
+      {/each}
+    </div>
+    <SymbolButton
+      name="undo"
+      title={t('undo')}
+      size="sm"
+      disabled={history.length === 1}
+      onclick={() => {
+        history = history.slice(0, -1)
+      }} />
+  </div>
+
+  <div class="stage">
+    <div class="frame">
+      <canvas
+        bind:this={canvas}
+        class:crosshair={tool !== 'text'}
+        class:texting={tool === 'text'}
+        onpointerdown={down}
+        onpointermove={move}
+        onpointerup={up}></canvas>
+      {#if crop}
+        <div
+          class="marquee"
+          data-testid="snag-crop"
+          style:left={percent(crop.left, size.width)}
+          style:top={percent(crop.top, size.height)}
+          style:width={percent(crop.width, size.width)}
+          style:height={percent(crop.height, size.height)}>
+        </div>
+      {/if}
+      {#if typing}
+        <input
+          class="text-entry"
+          aria-label={t('toolText')}
+          placeholder={t('typeThenEnter')}
+          style:left={percent(typing.at.x, size.width)}
+          style:top={percent(typing.at.y, size.height)}
+          style:outline-color={color}
+          bind:value={typing.text}
+          use:focus
+          onkeydown={typed}
+          onkeyup={contain}
+          onkeypress={contain} />
+      {/if}
+    </div>
+  </div>
+
+  {#snippet footer()}
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-2">
+      <Button icon="xMark" colorSeed={COLOR_SEEDS.cancel} onclick={onclose}
         >{t('cancel')}</Button>
       <Button
         testId="snag-save-edit"
+        icon="checkmark"
         colorSeed={COLOR_SEEDS.accept}
         disabled={bitmap === null}
         onclick={save}>{t('saveEdit')}</Button>
-    </header>
-
-    <div class="stage">
-      <div class="frame">
-        <canvas
-          bind:this={canvas}
-          class:crosshair={tool !== 'text'}
-          class:texting={tool === 'text'}
-          onpointerdown={down}
-          onpointermove={move}
-          onpointerup={up}></canvas>
-        {#if crop}
-          <div
-            class="crop"
-            data-testid="snag-crop"
-            style:left={percent(crop.left, size.width)}
-            style:top={percent(crop.top, size.height)}
-            style:width={percent(crop.width, size.width)}
-            style:height={percent(crop.height, size.height)}>
-          </div>
-        {/if}
-        {#if typing}
-          <input
-            class="text-entry"
-            aria-label={t('toolText')}
-            placeholder={t('typeThenEnter')}
-            style:left={percent(typing.at.x, size.width)}
-            style:top={percent(typing.at.y, size.height)}
-            style:outline-color={color}
-            bind:value={typing.text}
-            use:focus
-            onkeydown={typed}
-            onkeyup={contain}
-            onkeypress={contain} />
-        {/if}
-      </div>
     </div>
-  </div>
-</div>
+  {/snippet}
+</Dialog>
 
 <style lang="scss">
-  .editor {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background: #0008;
-  }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    max-width: 100%;
-    max-height: 100%;
-    padding: 1em;
-  }
   .stage {
     display: flex;
     align-items: center;
@@ -423,7 +396,7 @@
   canvas {
     display: block;
     max-width: calc(100vw - 80px);
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 280px);
     touch-action: none;
     &.crosshair {
       cursor: crosshair;
@@ -431,12 +404,6 @@
     &.texting {
       cursor: text;
     }
-  }
-  .crop {
-    position: absolute;
-    pointer-events: none;
-    border: 1px dashed #fff;
-    box-shadow: 0 0 0 100vmax #0007;
   }
   .text-entry {
     position: absolute;
@@ -452,12 +419,16 @@
     outline: 2px solid;
   }
   .swatch {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 100%;
     border: 2px solid #8886;
+    transition: transform 0.3s var(--bezier-chill);
+    &:hover {
+      transform: scale(1.1);
+    }
     &[aria-checked='true'] {
-      outline: 2px solid #0a84ff;
+      outline: 3px solid var(--_blur-text-color);
       outline-offset: 2px;
     }
   }

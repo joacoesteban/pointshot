@@ -2,12 +2,20 @@
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import { flip } from 'svelte/animate'
-  import { match } from 'ts-pattern'
+  import { match, P } from 'ts-pattern'
+  import type { ButtonSize } from '~/lib/button-size'
   import { draggable, type Placement } from '~/lib/draggable'
-  import { filterShots, sitesOf, type Shot } from '~/lib/shot'
-  import type { Mode } from '~/messages'
+  import {
+    CONFIRM_DELETE_ABOVE,
+    filterShots,
+    sitesOf,
+    type Shot,
+  } from '~/lib/shot'
+  import type { SymbolName } from '~/lib/symbols'
+  import type { Mode, OptionsView } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
+  import Confirm from './confirm.svelte'
   import ShotCard from './shot-card.svelte'
   import SymbolButton from './symbol-button.svelte'
 
@@ -23,10 +31,10 @@
     oncapture: (mode: Mode) => void
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
-    ondownload: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
+    onshown: (shots: readonly Shot[]) => void
     onundo: () => void
-    onoptions: () => void
+    onoptions: (view: OptionsView) => void
   }
 
   const {
@@ -41,25 +49,88 @@
     oncapture,
     onopen,
     oncopy,
-    ondownload,
     onremove,
+    onshown,
     onundo,
     onoptions,
   }: Props = $props()
 
-  const modes = [
-    { name: 'region', title: t('snagArea'), mode: 'selection' },
-    { name: 'window', title: t('snagVisible'), mode: 'visible' },
-    { name: 'page', title: t('snagPage'), mode: 'page' },
-  ] as const
+  type Action = {
+    name: SymbolName
+    title: string
+    caption: string
+    size: ButtonSize
+    testId?: string | undefined
+    onclick: () => void
+  }
+
+  const actions: readonly Action[] = [
+    {
+      name: 'cameraViewfinder',
+      title: t('snagElement'),
+      caption: t('captureElement'),
+      size: 'lg',
+      testId: 'snag-pick',
+      onclick: () => {
+        onpick()
+      },
+    },
+    {
+      name: 'region',
+      title: t('snagArea'),
+      caption: t('captureArea'),
+      size: 'md',
+      onclick: () => {
+        oncapture('selection')
+      },
+    },
+    {
+      name: 'window',
+      title: t('snagVisible'),
+      caption: t('captureVisible'),
+      size: 'md',
+      onclick: () => {
+        oncapture('visible')
+      },
+    },
+    {
+      name: 'page',
+      title: t('snagPage'),
+      caption: t('capturePage'),
+      size: 'md',
+      onclick: () => {
+        oncapture('page')
+      },
+    },
+    {
+      name: 'timer',
+      title: t('snagLater'),
+      caption: t('captureLater'),
+      size: 'md',
+      onclick: () => {
+        onpicklater()
+      },
+    },
+  ]
 
   let query = $state('')
   let site = $state<string | null>(null)
+  let confirming = $state<readonly Shot[] | null>(null)
 
   const sites = $derived(sitesOf(shots))
   // A site whose snags are all gone stops filtering, so its select can disappear without hiding the rest.
   const filteredSite = $derived(sites.find((each) => each === site) ?? null)
   const shown = $derived(filterShots(shots, { query, site: filteredSite }))
+
+  $effect(() => {
+    onshown(shown)
+  })
+
+  const deleteLabel = $derived(
+    match(shown.length)
+      .with(shots.length, () => t('deleteAll'))
+      .otherwise((count) => t('deleteShown', String(count))),
+  )
 
   // Keys typed in the popup stop there, so the page's shortcuts do not see them.
   const contain = (event: KeyboardEvent) => {
@@ -70,6 +141,16 @@
     match(count)
       .with(1, () => t('deletedOne'))
       .otherwise((count) => t('deletedMany', String(count)))
+
+  const removeShown = () => {
+    match(shown.length)
+      .with(P.number.gt(CONFIRM_DELETE_ABOVE), () => {
+        confirming = shown
+      })
+      .otherwise(() => {
+        onremove(shown)
+      })
+  }
 </script>
 
 <div
@@ -80,30 +161,46 @@
   class:shrink={ghost}
   use:draggable={placement}>
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
-    <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
-      <h2 class="font-black m-0 opacity-25">snag</h2>
+    <header class="flex justify-between items-center mb-4">
+      <h2 class="font-black text-sm tracking-widest m-0 opacity-60">snag</h2>
       <div class="flex items-center gap-2">
         <SymbolButton
           name="gear"
           title={t('options')}
-          size="40px"
-          padding="28%"
+          size="sm"
           opaque
           disabled={ghost}
-          onclick={onoptions} />
+          onclick={() => {
+            onoptions('settings')
+          }} />
         <SymbolButton
           name="xMark"
           title={t('close')}
+          size="sm"
           opaque
-          size="40px"
-          padding="30%"
           disabled={ghost}
           onclick={onclose} />
       </div>
     </header>
 
+    <nav class="actions" aria-label={t('capture')}>
+      {#each actions as { name, title, caption, size, testId, onclick } (name)}
+        <div class="action">
+          <SymbolButton
+            {name}
+            {title}
+            {size}
+            {testId}
+            opaque
+            disabled={ghost}
+            {onclick} />
+          <span class="caption">{caption}</span>
+        </div>
+      {/each}
+    </nav>
+
     {#if shots.length}
-      <div class="toolbar flex items-center gap-2 mb-3 px-1" role="search">
+      <div class="flex items-center gap-2 mb-3" role="search">
         <input
           type="search"
           class="input input-sm input-bordered field flex-1 min-w-0"
@@ -127,22 +224,27 @@
             {/each}
           </select>
         {/if}
-        <Button
-          small
+        <SymbolButton
+          name="booksVerticalFill"
+          title={t('browseLibrary')}
+          size="sm"
+          opaque
+          disabled={ghost}
+          onclick={() => {
+            onoptions('library')
+          }} />
+        <SymbolButton
+          name="trashFill"
+          title={deleteLabel}
+          size="sm"
           opaque
           colorSeed={COLOR_SEEDS.cancel}
           disabled={ghost || shown.length === 0}
-          onclick={() => {
-            onremove(shown)
-          }}>
-          {match(shown.length)
-            .with(shots.length, () => t('deleteAll'))
-            .otherwise((count) => t('deleteShown', String(count)))}
-        </Button>
+          onclick={removeShown} />
       </div>
     {/if}
 
-    <main class="px-1">
+    <main>
       {#if shown.length}
         <div class="grid grid-cols-2 gap-3">
           {#each shown as shot (shot.id)}
@@ -155,7 +257,6 @@
                 disabled={ghost}
                 {onopen}
                 {oncopy}
-                {ondownload}
                 onremove={(shot) => {
                   onremove([shot])
                 }} />
@@ -163,57 +264,76 @@
           {/each}
         </div>
       {:else if shots.length}
-        <div class="text-center py-8">
-          <h3 class="font-bold text-xl mb-1">{t('noMatchTitle')}</h3>
-          <p class="opacity-60 text-sm">{t('noMatchBody')}</p>
+        <div class="empty">
+          <h3>{t('noMatchTitle')}</h3>
+          <p>{t('noMatchBody')}</p>
         </div>
       {:else}
-        <div class="text-center py-8">
-          <h3 class="font-bold text-xl mb-1">{t('emptyTitle')}</h3>
-          <p class="opacity-60 text-sm">{t('emptyBody')}</p>
+        <div class="empty">
+          <h3>{t('emptyTitle')}</h3>
+          <p>{t('emptyBody')}</p>
         </div>
       {/if}
     </main>
 
-    <footer class="flex flex-col items-center sticky bottom-0 pt-4">
-      {#if removed.length}
-        <div
-          class="undo flex items-center gap-3 mb-3 text-sm"
-          data-testid="snag-undo"
-          in:transitionIn
-          out:transitionOut>
-          <span>{deleted(removed.length)}</span>
-          <Button small opaque icon="undo" onclick={onundo}
-            >{t('undo')}</Button>
-        </div>
-      {/if}
-      <div class="flex items-center gap-2">
-        <Button testId="snag-pick" disabled={ghost} onclick={onpick}
-          >{t('snag')}</Button>
-        {#each modes as { name, title, mode } (mode)}
-          <SymbolButton
-            {name}
-            {title}
-            size="40px"
-            padding="26%"
-            glassy
-            disabled={ghost}
-            onclick={() => {
-              oncapture(mode)
-            }} />
-        {/each}
-        <SymbolButton
-          name="timer"
-          title={t('snagLater')}
-          size="40px"
-          padding="26%"
-          glassy
-          disabled={ghost}
-          onclick={onpicklater} />
-      </div>
-      <p class="text-xs opacity-50 mt-2">
-        {t('keysHint')}
-      </p>
-    </footer>
+    {#if removed.length}
+      <footer
+        class="flex items-center justify-between gap-3 pt-3 text-sm"
+        data-testid="snag-undo"
+        in:transitionIn
+        out:transitionOut>
+        <span>{deleted(removed.length)}</span>
+        <Button size="sm" opaque icon="undo" onclick={onundo}>{t('undo')}</Button>
+      </footer>
+    {/if}
   </div>
 </div>
+
+{#if confirming}
+  <Confirm
+    title={t('deleteManyTitle', String(confirming.length))}
+    body={t('deleteManyBody')}
+    action={t('delete')}
+    onconfirm={() => {
+      onremove(confirming ?? [])
+      confirming = null
+    }}
+    oncancel={() => {
+      confirming = null
+    }} />
+{/if}
+
+<style lang="scss">
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .caption {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+  .empty {
+    padding: 24px 0;
+    text-align: center;
+    h3 {
+      margin: 0 0 4px;
+      font-size: 1.25em;
+      font-weight: 700;
+    }
+    p {
+      margin: 0;
+      font-size: 0.875em;
+      opacity: 0.6;
+    }
+  }
+</style>
