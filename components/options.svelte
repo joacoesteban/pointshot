@@ -118,11 +118,12 @@
           <h1 class="blend font-black text-4xl mt-0 mb-2">
             {t('optionsTitle')}
           </h1>
-          <code class="pill blend">{t('version')} <b>{version}</b></code>
+          <span class="pill blend">{t('version')} <b>{version}</b></span>
         </div>
         <SymbolButton
           name="github"
           title={t('sourceCode')}
+          size="lg"
           opaque
           onclick={() => {
             open(REPOSITORY_URL)
@@ -189,7 +190,7 @@
           <Row title={t('quality')} help={`${String(Math.round(settings.quality * 100))}%`}>
             <input
               type="range"
-              class="range range-sm max-w-[12rem]"
+              class="range range-sm"
               aria-label={t('quality')}
               min="0.5"
               max="1"
@@ -203,7 +204,7 @@
         <Row title={t('folder')} help={t('folderHelp')}>
           <input
             type="text"
-            class="input input-sm input-bordered field max-w-[12rem]"
+            class="input input-sm input-bordered field"
             aria-label={t('folder')}
             bind:value={folder}
             onchange={() => {
@@ -228,7 +229,7 @@
         <Row title={t('keep')} help={t('keepHelp')}>
           <input
             type="number"
-            class="input input-sm input-bordered field w-24"
+            class="input input-sm input-bordered field"
             aria-label={t('keep')}
             min="10"
             max="1000"
@@ -271,16 +272,20 @@
         <ul class="shortcuts">
           {#each commands as { name, shortcut } (name)}
             <Row as="li" title={name}>
-              <kbd class="pill blend">{shortcut || t('notSet')}</kbd>
+              {#if shortcut}
+                <kbd class="pill">{shortcut}</kbd>
+              {:else}
+                <span class="pill opacity-60">{t('notSet')}</span>
+              {/if}
             </Row>
           {/each}
         </ul>
         {#if import.meta.env.FIREFOX}
-          <p class="blend text-sm">{t('firefoxShortcuts')}</p>
+          <p class="text-sm opacity-60">{t('firefoxShortcuts')}</p>
         {:else}
           <div class="flex mt-2">
             <Button
-              small
+              size="sm"
               opaque
               onclick={() => {
                 open('chrome://extensions/shortcuts')
@@ -294,7 +299,7 @@
       <section>
         <h2 class="blend">{t('sectionHelp')}</h2>
         <Row as="div" title={t('diagnostics')} help={t('diagnosticsHelp')}>
-          <Button small opaque icon="docOnDoc" onclick={copyDiagnostics}
+          <Button size="sm" opaque icon="docOnDoc" onclick={copyDiagnostics}
             >{t('copyDiagnostics')}</Button>
         </Row>
       </section>
@@ -317,6 +322,7 @@
     max-width: 640px;
     margin: 0 auto;
     padding: 48px 24px;
+    color: var(--_blur-text-color);
   }
   h2 {
     margin: 0 0 8px;

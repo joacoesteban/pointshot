@@ -4,4 +4,4 @@
 
 <Toaster
   containerClassName="snag-toaster"
-  toastOptions={{ className: 'bg-blur ghost snag-toast' }} />
+  toastOptions={{ className: 'bg-blur snag-toast' }} />

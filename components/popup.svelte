@@ -23,7 +23,6 @@
     oncapture: (mode: Mode) => void
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
-    ondownload: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
     onundo: () => void
     onoptions: () => void
@@ -41,7 +40,6 @@
     oncapture,
     onopen,
     oncopy,
-    ondownload,
     onremove,
     onundo,
     onoptions,
@@ -80,14 +78,12 @@
   class:shrink={ghost}
   use:draggable={placement}>
   <div class="popup-container bg-blur" class:force-ghost={ghost}>
-    <header class="flex justify-between items-center sticky top-0 z-10 mb-3">
-      <h2 class="font-black m-0 opacity-25">snag</h2>
+    <header class="flex justify-between items-center mb-3">
+      <h2 class="font-black text-sm tracking-widest m-0 opacity-60">snag</h2>
       <div class="flex items-center gap-2">
         <SymbolButton
           name="gear"
           title={t('options')}
-          size="40px"
-          padding="28%"
           opaque
           disabled={ghost}
           onclick={onoptions} />
@@ -95,8 +91,6 @@
           name="xMark"
           title={t('close')}
           opaque
-          size="40px"
-          padding="30%"
           disabled={ghost}
           onclick={onclose} />
       </div>
@@ -128,7 +122,7 @@
           </select>
         {/if}
         <Button
-          small
+          size="sm"
           opaque
           colorSeed={COLOR_SEEDS.cancel}
           disabled={ghost || shown.length === 0}
@@ -155,7 +149,6 @@
                 disabled={ghost}
                 {onopen}
                 {oncopy}
-                {ondownload}
                 onremove={(shot) => {
                   onremove([shot])
                 }} />
@@ -175,7 +168,7 @@
       {/if}
     </main>
 
-    <footer class="flex flex-col items-center sticky bottom-0 pt-4">
+    <footer class="flex flex-col items-center pt-4">
       {#if removed.length}
         <div
           class="undo flex items-center gap-3 mb-3 text-sm"
@@ -183,20 +176,17 @@
           in:transitionIn
           out:transitionOut>
           <span>{deleted(removed.length)}</span>
-          <Button small opaque icon="undo" onclick={onundo}
+          <Button size="sm" opaque icon="undo" onclick={onundo}
             >{t('undo')}</Button>
         </div>
       {/if}
       <div class="flex items-center gap-2">
-        <Button testId="snag-pick" disabled={ghost} onclick={onpick}
+        <Button size="lg" testId="snag-pick" disabled={ghost} onclick={onpick}
           >{t('snag')}</Button>
         {#each modes as { name, title, mode } (mode)}
           <SymbolButton
             {name}
             {title}
-            size="40px"
-            padding="26%"
-            glassy
             disabled={ghost}
             onclick={() => {
               oncapture(mode)
@@ -205,15 +195,9 @@
         <SymbolButton
           name="timer"
           title={t('snagLater')}
-          size="40px"
-          padding="26%"
-          glassy
           disabled={ghost}
           onclick={onpicklater} />
       </div>
-      <p class="text-xs opacity-50 mt-2">
-        {t('keysHint')}
-      </p>
     </footer>
   </div>
 </div>

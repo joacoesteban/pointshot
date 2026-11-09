@@ -93,9 +93,6 @@
   "snagLater": {
     "message": "Snag after a countdown"
   },
-  "keysHint": {
-    "message": "↑ ↓ ← → walk the page · Shift adds a margin · Esc cancels"
-  },
   "open": {
     "message": "Open"
   },

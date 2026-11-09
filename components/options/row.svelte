@@ -12,13 +12,15 @@
 </script>
 
 <svelte:element this={as} class="row">
-  <span class="text blend">
+  <span class="text">
     <b>{title}</b>
     {#if help}
-      <small>{help}</small>
+      <small class="opacity-60">{help}</small>
     {/if}
   </span>
-  {@render children()}
+  <span class="control">
+    {@render children()}
+  </span>
 </svelte:element>
 
 <style lang="scss">
@@ -37,5 +39,14 @@
   small {
     font-size: 0.9em;
     font-weight: 500;
+  }
+  .control {
+    flex: 0 0 12rem;
+    display: flex;
+    justify-content: flex-end;
+    :global(.select),
+    :global(.input) {
+      width: 100%;
+    }
   }
 </style>

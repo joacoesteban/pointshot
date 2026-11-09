@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { expect, FIXTURE_URL, INSECURE_FIXTURE_URL, test } from './fixtures'
 
 type Pixel = readonly [number, number, number, number]
@@ -42,6 +42,15 @@ const center = async (page: Page, selector: string) => {
 const hover = async (page: Page, selector: string) => {
   const { x, y } = await center(page, selector)
   await page.mouse.move(x, y, { steps: 4 })
+}
+
+// Downloads live in the preview, which opens from the card.
+const downloadButton = async (page: Page, shot: Locator) => {
+  await shot.hover()
+  await shot.getByRole('button', { name: 'Open' }).click()
+  return page
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Download' })
 }
 
 test('injects the UI on first use, once', async ({ page, togglePopup }) => {
@@ -188,7 +197,7 @@ test('copies and downloads a stored shot at full size', async ({
 
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    shot.getByRole('button', { name: 'Download' }).click(),
+    (await downloadButton(page, shot)).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.png$/)
 })
@@ -726,10 +735,9 @@ test('downloads in the format from the settings', async ({
   await page.mouse.up()
   const shot = page.getByTestId('snag-shot')
   await expect(shot).toHaveCount(1)
-  await shot.hover()
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    shot.getByRole('button', { name: 'Download' }).click(),
+    (await downloadButton(page, shot)).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.jpg$/)
   const { readFile } = await import('node:fs/promises')
@@ -908,8 +916,7 @@ test('downloads into a folder through the downloads API', async ({
   await togglePopup()
   await snagTarget(page, '#target')
   const shot = page.getByTestId('snag-shot')
-  await shot.hover()
-  await shot.getByRole('button', { name: 'Download' }).click()
+  await (await downloadButton(page, shot)).click()
   await expect
     .poll(() =>
       background.evaluate(() => chrome.storage.local.get('requested')),

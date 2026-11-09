@@ -2,6 +2,7 @@
   import chroma from 'chroma-js'
   import ColorHash from 'color-hash'
   import type { Snippet } from 'svelte'
+  import type { ButtonSize } from '~/lib/button-size'
   import { Id } from '~/lib/id'
   import type { SymbolName } from '~/lib/symbols'
   import Symbol from './symbol.svelte'
@@ -10,17 +11,14 @@
     children: Snippet
     onclick: (event: MouseEvent) => void
     colorSeed?: string | undefined
+    size?: ButtonSize
     round?: boolean
     opaque?: boolean
-    glassy?: boolean
-    small?: boolean
     disabled?: boolean
     highlight?: boolean | undefined
     icon?: SymbolName | undefined
     role?: 'switch' | undefined
     checked?: boolean | undefined
-    roundSize?: string
-    roundPadding?: string
     title?: string
     testId?: string
   }
@@ -31,17 +29,14 @@
     children,
     onclick,
     colorSeed = randomSeed,
+    size = 'md',
     round = false,
     opaque = false,
-    glassy = false,
-    small = false,
     disabled = false,
     highlight,
     icon,
     role,
     checked,
-    roundSize = '',
-    roundPadding = '',
     title = '',
     testId,
   }: Props = $props()
@@ -67,19 +62,15 @@
     data-testid={testId}
     aria-pressed={highlight}
     aria-checked={checked}
-    class="outer f-center btn"
-    class:btn-sm={small}
+    class="outer f-center btn size-{size}"
+    class:btn-sm={size === 'sm'}
     class:round
     class:opaque
-    class:glassy
-    class:small
     class:highlight
     style:--gradient-top={topGradient}
     style:--gradient-bottom={bottomGradient}
     style:--focus-color={focusColor}
     style:--inset-shadow-color={insetShadowColor}
-    style:--_button-size_={roundSize}
-    style:--_round-padding_={roundPadding}
     {onclick}>
     <div class="inner flex gap-2 items-center">
       {#if icon}

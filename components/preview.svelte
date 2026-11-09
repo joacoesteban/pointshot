@@ -1,12 +1,12 @@
 <script lang="ts">
   import { t } from '~/lib/i18n'
-  import { filter, fromEvent } from 'rxjs'
   import { match, P } from 'ts-pattern'
+  import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { age } from '~/lib/age'
   import { paint } from '~/lib/paint'
   import { siteOf, textOf, type Shot, type ShotText } from '~/lib/shot'
-  import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
+  import Dialog from './dialog.svelte'
   import SymbolButton from './symbol-button.svelte'
 
   type Props = {
@@ -38,148 +38,73 @@
     { text: 'dataUrl', label: t('dataUrl') },
     { text: 'link', label: t('pageLink') },
   ]
-
-  $effect(() => {
-    const subscription = fromEvent<KeyboardEvent>(window, 'keydown', {
-      capture: true,
-    })
-      .pipe(filter(({ key }) => key === 'Escape'))
-      .subscribe((event) => {
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        onclose()
-      })
-    return () => {
-      subscription.unsubscribe()
-    }
-  })
 </script>
 
-<div
-  class="backdrop"
-  data-testid="snag-preview"
-  role="presentation"
-  in:transitionIn
-  out:transitionOut>
-  <button
-    type="button"
-    class="scrim"
-    tabindex="-1"
-    aria-hidden="true"
-    onclick={onclose}></button>
-  <div class="panel bg-blur" role="dialog" aria-label={title}>
-    <header class="flex items-start justify-between gap-4 mb-3">
-      <div class="min-w-0">
-        <h2 class="font-bold text-lg leading-tight truncate m-0">
-          {title || siteOf(url)}
-        </h2>
-        <p class="text-xs opacity-60 truncate m-0">
-          <a href={url} target="_blank" rel="noreferrer" class="underline"
-            >{siteOf(url)}</a>
-          · {width} × {height} · {age(createdAt)}
-        </p>
-      </div>
+<Dialog title={title || siteOf(url)} testId="snag-preview" {onclose}>
+  {#snippet subtitle()}
+    <a href={url} target="_blank" rel="noreferrer" class="underline"
+      >{siteOf(url)}</a>
+    · {width} × {height} · {age(createdAt)}
+  {/snippet}
+
+  <div class="image">
+    {#if image}
+      <canvas use:paint={{ dataUrl: image, maxWidth: Infinity }}></canvas>
+    {:else}
+      <span class="loading loading-spinner"></span>
+    {/if}
+  </div>
+
+  {#snippet footer()}
+    <div class="flex items-center gap-2">
       <SymbolButton
-        name="xMark"
-        title={t('close')}
+        name="docOnDoc"
+        title={t('copy')}
+        onclick={() => {
+          oncopy(shot)
+        }} />
+      <SymbolButton
+        name="squareAndArrowDown"
+        title={t('download')}
+        onclick={() => {
+          ondownload(shot)
+        }} />
+      <SymbolButton
+        name="pencil"
+        title={t('edit')}
+        disabled={image === null}
+        onclick={() => {
+          match(image)
+            .with(P.string, (image) => {
+              onedit(shot, image)
+            })
+            .otherwise(() => undefined)
+        }} />
+      <SymbolButton
+        name="trashFill"
+        title={t('delete')}
         opaque
-        size="36px"
-        padding="30%"
-        onclick={onclose} />
-    </header>
-
-    <div class="image">
-      {#if image}
-        <canvas use:paint={{ dataUrl: image, maxWidth: Infinity }}></canvas>
-      {:else}
-        <span class="loading loading-spinner"></span>
-      {/if}
+        colorSeed={COLOR_SEEDS.cancel}
+        onclick={() => {
+          onremove(shot)
+        }} />
     </div>
-
-    <footer class="flex flex-wrap items-center justify-between gap-3 mt-3">
-      <div class="flex items-center gap-2">
-        <SymbolButton
-          name="docOnDoc"
-          title={t('copy')}
-          size="38px"
-          padding="28%"
-          glassy
-          onclick={() => {
-            oncopy(shot)
-          }} />
-        <SymbolButton
-          name="squareAndArrowDown"
-          title={t('download')}
-          size="38px"
-          padding="28%"
-          glassy
-          onclick={() => {
-            ondownload(shot)
-          }} />
-        <SymbolButton
-          name="pencil"
-          title={t('edit')}
-          size="38px"
-          padding="28%"
-          glassy
+    <div class="flex items-center gap-1 text-xs">
+      <span class="opacity-60 mr-1">{t('copyAs')}</span>
+      {#each texts as { text, label } (text)}
+        <Button
+          size="sm"
+          opaque
           disabled={image === null}
           onclick={() => {
-            match(image)
-              .with(P.string, (image) => {
-                onedit(shot, image)
-              })
-              .otherwise(() => undefined)
-          }} />
-        <SymbolButton
-          name="trashFill"
-          title={t('delete')}
-          size="38px"
-          padding="28%"
-          glassy
-          onclick={() => {
-            onremove(shot)
-          }} />
-      </div>
-      <div class="flex items-center gap-1 text-xs">
-        <span class="opacity-60 mr-1">{t('copyAs')}</span>
-        {#each texts as { text, label } (text)}
-          <Button
-            small
-            opaque
-            disabled={image === null}
-            onclick={() => {
-              oncopytext(textOf(text, shot, image ?? ''), label)
-            }}>{label}</Button>
-        {/each}
-      </div>
-    </footer>
-  </div>
-</div>
+            oncopytext(textOf(text, shot, image ?? ''), label)
+          }}>{label}</Button>
+      {/each}
+    </div>
+  {/snippet}
+</Dialog>
 
 <style lang="scss">
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .scrim {
-    position: absolute;
-    inset: 0;
-    background: #0006;
-    cursor: default;
-  }
-  .panel {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    max-width: min(1100px, 100%);
-    max-height: 100%;
-    min-width: min(420px, 100%);
-    padding: 1em;
-  }
   .image {
     display: flex;
     align-items: center;
@@ -191,7 +116,7 @@
     background-size: 16px 16px;
     canvas {
       max-width: 100%;
-      max-height: calc(100vh - 220px);
+      max-height: calc(100vh - 240px);
       object-fit: contain;
     }
   }

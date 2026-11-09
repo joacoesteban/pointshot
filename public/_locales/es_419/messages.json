@@ -93,9 +93,6 @@
   "snagLater": {
     "message": "Capturar después de una cuenta regresiva"
   },
-  "keysHint": {
-    "message": "↑ ↓ ← → recorren la página · Shift suma un margen · Esc cancela"
-  },
   "open": {
     "message": "Abrir"
   },

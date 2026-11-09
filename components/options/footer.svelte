@@ -9,11 +9,11 @@
     <img src={logo} alt="Snag" class="w-8 h-8" />
   </a>
   <a
-    class="blend font-medium"
+    class="font-medium opacity-80"
     href={`${REPOSITORY_URL}/issues`}
     target="_blank"
     rel="noreferrer">{t('reportBug')}</a>
-  <code class="pill blend">
+  <span class="pill opacity-80">
     {t('madeBy')}
     <b>
       <a
@@ -22,5 +22,5 @@
         target="_blank"
         rel="noreferrer">Joaco</a>
     </b>
-  </code>
+  </span>
 </footer>

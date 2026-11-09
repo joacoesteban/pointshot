@@ -339,7 +339,6 @@
     oncapture={capture}
     onopen={open}
     oncopy={copy}
-    ondownload={download}
     onremove={remove}
     onundo={() => {
       library.undo()
