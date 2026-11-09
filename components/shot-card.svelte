@@ -59,9 +59,9 @@
     </div>
   </div>
   <footer class="flex flex-col px-3 py-2 text-xs leading-tight">
-    <span class="font-bold truncate">{host}</span>
+    <span class="font-bold truncate">{title || host}</span>
     <span class="opacity-60 truncate">
-      {width} × {height} · {age(createdAt)}
+      {host} · {width} × {height} · {age(createdAt)}
     </span>
   </footer>
 </article>

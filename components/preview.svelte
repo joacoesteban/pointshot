@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '~/lib/i18n'
+  import { fromEvent } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { age } from '~/lib/age'
@@ -16,6 +17,7 @@
     ondownload: (shot: Shot) => void
     onremove: (shot: Shot) => void
     onedit: (shot: Shot, image: string) => void
+    onstep: (delta: -1 | 1) => void
   }
 
   const {
@@ -26,7 +28,36 @@
     ondownload,
     onremove,
     onedit,
+    onstep,
   }: Props = $props()
+
+  // Arrows walk the list and Delete removes, caught before the host page like Escape in Dialog.
+  $effect(() => {
+    const subscription = fromEvent<KeyboardEvent>(window, 'keydown', {
+      capture: true,
+    }).subscribe((event) => {
+      match(event.key)
+        .with('ArrowLeft', () => {
+          onstep(-1)
+        })
+        .with('ArrowRight', () => {
+          onstep(1)
+        })
+        .with(P.union('Delete', 'Backspace'), () => {
+          onremove(shot)
+        })
+        .otherwise(() => undefined)
+      match(event.key)
+        .with(P.union('ArrowLeft', 'ArrowRight', 'Delete', 'Backspace'), () => {
+          event.preventDefault()
+          event.stopImmediatePropagation()
+        })
+        .otherwise(() => undefined)
+    })
+    return () => {
+      subscription.unsubscribe()
+    }
+  })
 
   const { url, title, width, height, createdAt } = $derived(shot)
 

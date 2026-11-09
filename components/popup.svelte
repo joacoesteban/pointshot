@@ -2,14 +2,20 @@
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { t } from '~/lib/i18n'
   import { flip } from 'svelte/animate'
-  import { match } from 'ts-pattern'
+  import { match, P } from 'ts-pattern'
   import type { ButtonSize } from '~/lib/button-size'
   import { draggable, type Placement } from '~/lib/draggable'
-  import { filterShots, sitesOf, type Shot } from '~/lib/shot'
+  import {
+    CONFIRM_DELETE_ABOVE,
+    filterShots,
+    sitesOf,
+    type Shot,
+  } from '~/lib/shot'
   import type { SymbolName } from '~/lib/symbols'
   import type { Mode, OptionsView } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
+  import Confirm from './confirm.svelte'
   import ShotCard from './shot-card.svelte'
   import SymbolButton from './symbol-button.svelte'
 
@@ -107,6 +113,7 @@
 
   let query = $state('')
   let site = $state<string | null>(null)
+  let confirming = $state<readonly Shot[] | null>(null)
 
   const sites = $derived(sitesOf(shots))
   // A site whose snags are all gone stops filtering, so its select can disappear without hiding the rest.
@@ -128,6 +135,16 @@
     match(count)
       .with(1, () => t('deletedOne'))
       .otherwise((count) => t('deletedMany', String(count)))
+
+  const removeShown = () => {
+    match(shown.length)
+      .with(P.number.gt(CONFIRM_DELETE_ABOVE), () => {
+        confirming = shown
+      })
+      .otherwise(() => {
+        onremove(shown)
+      })
+  }
 </script>
 
 <div
@@ -217,9 +234,7 @@
           opaque
           colorSeed={COLOR_SEEDS.cancel}
           disabled={ghost || shown.length === 0}
-          onclick={() => {
-            onremove(shown)
-          }} />
+          onclick={removeShown} />
       </div>
     {/if}
 
@@ -267,6 +282,20 @@
     {/if}
   </div>
 </div>
+
+{#if confirming}
+  <Confirm
+    title={t('deleteManyTitle', String(confirming.length))}
+    body={t('deleteManyBody')}
+    action={t('delete')}
+    onconfirm={() => {
+      onremove(confirming ?? [])
+      confirming = null
+    }}
+    oncancel={() => {
+      confirming = null
+    }} />
+{/if}
 
 <style lang="scss">
   .actions {

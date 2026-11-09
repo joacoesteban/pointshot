@@ -80,6 +80,10 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   that picked the element is the user gesture the clipboard needs.
 - Shot IDs are minted in the background, because `crypto.randomUUID` is
   missing on insecure pages.
+- After every save or removal the background bumps `shotsRevision` in
+  `storage.local` (`ShotRevision`), and every `ShotLibrary`, in content
+  scripts and the options page alike, refreshes on that change, so open
+  surfaces stay in sync without a tab list.
 - The background stores each shot's full image as a `Blob` next to a small
   WebP thumbnail. Listings carry only thumbnails; the full image crosses the
   message channel once to be saved and again only to be copied or downloaded

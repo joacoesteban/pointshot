@@ -130,6 +130,12 @@ optional `footer` snippet laid out `justify-between`.
 - Children size themselves. The panel is a flex column capped at the
   viewport, so a scrolling body needs its own `overflow`.
 
+### `Confirm` (`confirm.svelte`)
+
+A `Dialog` with a body line and two footer buttons, cancel and a `cancel`
+coloured action. The popup and the library open it before deleting more than
+`CONFIRM_DELETE_ABOVE` snags at once; smaller deletions rely on undo alone.
+
 ### `Divider` (`divider.svelte`)
 
 An `<hr>` with `.blend` and 20px of vertical margin. For the options page: its
@@ -233,6 +239,8 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 - Draws on a `<canvas>` through `paint`, because the page's CSP governs
   `img-src` inside the shadow root. The same goes for `Preview` and `Editor`.
+- The first line is the page title, falling back to the host; the second is
+  host, size and age.
 - Actions show on hover and on `:focus-within`, so they stay keyboard
   reachable. The card holds open, copy and delete; download sits in
   `Preview`, where the format settings are visible.
@@ -247,6 +255,9 @@ Renders through `Dialog`.
 - The footer holds copy, download and edit as round buttons, and delete
   alone at the far edge in the `cancel` colour. Copy puts the image on the
   clipboard; there are no text formats.
+- Left and right arrows call `onstep`, and Delete or Backspace `onremove`,
+  caught on `window` in the capture phase like Escape. `ShotViewer.step`
+  walks the list the grid shows and stays put at either end.
 
 ### `Editor` (`editor.svelte`)
 
@@ -288,14 +299,17 @@ Hidden SVG holding `#aberration`. Required wherever `bg-blur` renders.
 
 ### `Toaster` (`toaster.svelte`)
 
-`svelte-french-toast` with `bg-blur`.
+`svelte-french-toast` with `bg-blur`, at the bottom centre so toasts stay
+clear of the popup and of the element being picked.
 
 ## Options page
 
 ### `options.svelte`
 
 Two views picked by the URL hash: `#library` and anything else for the
-settings. The popup opens the library through `openOptions('library')`,
+settings, which live in `options/settings.svelte` with their handlers. The
+page holds the settings store, the commands list, the header, the nav and
+the footer. The popup opens the library through `openOptions('library')`,
 which the background turns into a tab on `options.html#library`, since
 `openOptionsPage` cannot set a hash. The page widens to 1100px for the
 library and stays at 640px for the settings.
@@ -311,9 +325,12 @@ library and stays at 640px for the settings.
 The full-width shot browser: a search field, the count, a `cancel` coloured
 trash button for the shown snags, one chip per site coloured by hashing the
 site name so a domain keeps its colour across visits, a responsive card grid
-and an undo bar stuck to the bottom. Every shot action goes through its own
-`ShotViewer`. It refreshes from the background on mount; a removal pending
-in a popup elsewhere is still listed until that popup's undo window closes.
+and an undo bar stuck to the bottom. Sites past the first `MAX_CHIPS` by
+count move into a select. Every shot action goes through its own
+`ShotViewer`, whose arrow keys follow the filtered list. The empty state
+names the toolbar gesture and, when set, the `shortcut` prop with the
+element pick's key. A removal pending in a popup elsewhere is still listed
+until that popup's undo window closes.
 
 ### `options/backdrop.svelte`
 
@@ -339,8 +356,8 @@ element:
 
 ### `options/footer.svelte`
 
-Bug report link and credit. Links open in a new tab. The icon sits in the
-page header next to the title.
+Bug report link, version pill and credit. Links open in a new tab. The icon
+sits in the page header next to the title.
 
 ## Left out of the port
 

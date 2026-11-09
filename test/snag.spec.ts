@@ -1126,19 +1126,57 @@ test('browses, filters and deletes snags in the options library', async ({
 
   await shots.first().hover()
   await shots.first().getByRole('button', { name: 'Open' }).click()
-  await expect(options.getByTestId('snag-preview')).toBeVisible()
-  await options
-    .getByTestId('snag-preview')
-    .getByRole('button', { name: 'Delete' })
-    .click()
-  await expect(options.getByTestId('snag-preview')).toBeHidden()
+  const preview = options.getByTestId('snag-preview')
+  await expect(preview).toBeVisible()
+  await expect(preview).toContainText('120 × 40')
+  await options.keyboard.press('ArrowRight')
+  await expect(preview).toContainText('200 × 120')
+  await options.keyboard.press('ArrowRight')
+  await expect(preview).toContainText('200 × 120')
+  await options.keyboard.press('ArrowLeft')
+  await expect(preview).toContainText('120 × 40')
+  await options.keyboard.press('Delete')
+  await expect(preview).toBeHidden()
   await expect(shots).toHaveCount(1)
   await options.getByRole('button', { name: 'Undo' }).click()
   await expect(shots).toHaveCount(2)
 
+  await page.bringToFront()
+  await snagTarget(page, '#logo')
+  await expect(shots).toHaveCount(3)
+  await expect(options.getByText('3 snags')).toBeVisible()
+
   await options.getByRole('button', { name: 'Settings' }).click()
   await expect(options.getByRole('combobox', { name: 'Theme' })).toBeVisible()
   await expect(shots).toHaveCount(0)
+})
+
+test('asks before deleting more than five snags at once', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  for (const selector of ['#target', '#pill', '#logo', '#below', '#link']) {
+    await snagTarget(page, selector)
+  }
+  await expect(page.getByTestId('snag-shot')).toHaveCount(5)
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  await expect(page.getByTestId('snag-confirm')).toBeHidden()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Undo' }).click()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(5)
+
+  await snagTarget(page, '#tall')
+  await expect(page.getByTestId('snag-shot')).toHaveCount(6)
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  const confirm = page.getByTestId('snag-confirm')
+  await expect(confirm).toContainText('Delete 6 snags?')
+  await confirm.getByRole('button', { name: 'Cancel' }).click()
+  await expect(confirm).toBeHidden()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(6)
+  await page.getByRole('button', { name: 'Delete all' }).click()
+  await confirm.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
 })
 
 test('changes settings on the options page', async ({
@@ -1257,6 +1295,8 @@ test.describe('in Spanish', () => {
   test.use({ lang: 'es-419' })
 
   test('speaks Argentinian Spanish', async ({ page, togglePopup }) => {
+    // Chromium on macOS ignores --lang and keeps the system language, so the extension stays in English there.
+    test.skip(process.platform === 'darwin', 'Chromium ignores --lang on macOS')
     await togglePopup()
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')

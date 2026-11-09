@@ -91,13 +91,13 @@
     "message": "Area"
   },
   "captureVisible": {
-    "message": "Visible"
+    "message": "Screen"
   },
   "capturePage": {
     "message": "Page"
   },
   "captureLater": {
-    "message": "Delay"
+    "message": "Timer"
   },
   "capture": {
     "message": "Capture"
@@ -378,9 +378,36 @@
     "message": "1 snag"
   },
   "libraryEmptyBody": {
-    "message": "Snags you take on any page show up here."
+    "message": "Open Snag from the toolbar on any page and pick an element."
   },
   "couldNotOpen": {
     "message": "Could not open that snag"
+  },
+  "libraryEmptyShortcut": {
+    "message": "Or press $SHORTCUT$ to pick one right away.",
+    "placeholders": {
+      "shortcut": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyTitle": {
+    "message": "Delete $COUNT$ snags?",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyBody": {
+    "message": "You can undo for a few seconds afterwards."
+  },
+  "moreSites": {
+    "message": "$COUNT$ more sites",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }

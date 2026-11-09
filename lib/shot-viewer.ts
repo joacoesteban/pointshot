@@ -25,8 +25,29 @@ export class ShotViewer {
     private readonly library: ShotLibrary,
     private readonly actions: ShotActions,
     private readonly settings: () => Settings,
+    private readonly shots: () => readonly Shot[],
     private readonly onremove: (shots: readonly Shot[]) => void,
   ) {}
+
+  // Opens the neighbour of the previewed shot in the list the grid shows, staying put at either end.
+  step(delta: -1 | 1) {
+    const shots = this.shots()
+    match(this.previewing$$.value)
+      .with(P.nonNullable, ({ shot: { id } }) => {
+        const next = shots.at(
+          Math.min(
+            Math.max(shots.findIndex((shot) => shot.id === id) + delta, 0),
+            shots.length - 1,
+          ),
+        )
+        match(next)
+          .with(P.nonNullable, (next) => {
+            this.open(next)
+          })
+          .otherwise(() => undefined)
+      })
+      .otherwise(() => undefined)
+  }
 
   open(shot: Shot) {
     this.previewing$$.next({ shot, image: null })

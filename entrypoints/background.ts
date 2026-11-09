@@ -9,6 +9,7 @@ import { CaptureError, DownloadError, toError } from '~/lib/errors'
 import { t } from '~/lib/i18n'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
+import { ShotRevision } from '~/lib/shot-revision'
 import {
   openOptionsStream,
   downloadFileStream,
@@ -125,11 +126,15 @@ export default defineBackground(() => {
   })
   saveShotStream.subscribe(([shot, , respond]) => {
     void ReplyCodec.encode(
-      SettingsStore.load().andThen(({ limit }) => store.save(shot, limit)),
+      SettingsStore.load()
+        .andThen(({ limit }) => store.save(shot, limit))
+        .andTee(() => ShotRevision.bump()),
     ).then(respond)
   })
   removeShotsStream.subscribe(([ids, , respond]) => {
-    void ReplyCodec.encode(store.remove(ids)).then(respond)
+    void ReplyCodec.encode(
+      store.remove(ids).andTee(() => ShotRevision.bump()),
+    ).then(respond)
   })
   // The options page opens on its library through the URL hash, which openOptionsPage cannot set.
   openOptionsStream.subscribe(([view]) => {

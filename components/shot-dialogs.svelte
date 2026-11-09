@@ -33,6 +33,9 @@
     }}
     onedit={(shot: Shot, image: string) => {
       viewer.edit(shot, image)
+    }}
+    onstep={(delta: -1 | 1) => {
+      viewer.step(delta)
     }} />
 {/if}
 {#if $editing$}

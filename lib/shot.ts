@@ -51,3 +51,6 @@ export const filterShots = (
 
 export const sitesOf = (shots: readonly Shot[]) =>
   [...new Set(shots.map(({ url }) => siteOf(url)))].sort()
+
+// Deleting more snags than this at once asks first; undo alone is too short a net for a whole library.
+export const CONFIRM_DELETE_ABOVE = 5

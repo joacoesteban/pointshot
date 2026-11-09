@@ -91,13 +91,13 @@
     "message": "Área"
   },
   "captureVisible": {
-    "message": "Visible"
+    "message": "Pantalla"
   },
   "capturePage": {
     "message": "Página"
   },
   "captureLater": {
-    "message": "Demora"
+    "message": "Timer"
   },
   "capture": {
     "message": "Capturar"
@@ -378,9 +378,36 @@
     "message": "1 captura"
   },
   "libraryEmptyBody": {
-    "message": "Las capturas que hagas en cualquier página aparecen acá."
+    "message": "Abrí Snag desde la barra de herramientas en cualquier página y elegí un elemento."
   },
   "couldNotOpen": {
     "message": "No se pudo abrir esa captura"
+  },
+  "libraryEmptyShortcut": {
+    "message": "O presioná $SHORTCUT$ para elegir uno directamente.",
+    "placeholders": {
+      "shortcut": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyTitle": {
+    "message": "¿Eliminar $COUNT$ capturas?",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "deleteManyBody": {
+    "message": "Vas a poder deshacerlo durante unos segundos."
+  },
+  "moreSites": {
+    "message": "$COUNT$ sitios más",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
   }
 }

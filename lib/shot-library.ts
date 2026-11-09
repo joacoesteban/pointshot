@@ -15,6 +15,7 @@ import { QuotaError, StorageError } from './errors'
 import { Img } from './image'
 import { ReplyCodec } from './reply'
 import type { NewShot, Shot } from './shot'
+import { ShotRevision } from './shot-revision'
 import { listShots, removeShots, saveShot, shotImageUrl } from '~/messages'
 
 // How long removed shots wait, hidden, for an undo before they are deleted.
@@ -51,6 +52,10 @@ export class ShotLibrary {
       .subscribe(() => {
         void this.commit()
       })
+    // Another page saved or deleted, so this listing is stale. Failures surface on the next explicit refresh.
+    ShotRevision.changes().subscribe(() => {
+      void this.refresh()
+    })
   }
 
   refresh() {

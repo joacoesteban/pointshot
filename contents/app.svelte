@@ -194,7 +194,13 @@
     viewer.forget(shots)
   }
 
-  const viewer = new ShotViewer(library, actions, () => settings, remove)
+  const viewer = new ShotViewer(
+    library,
+    actions,
+    () => settings,
+    () => $shots$,
+    remove,
+  )
 
   library.failures$.subscribe((error) => {
     Failure.report(error, t('couldNotDelete'))

@@ -1,15 +1,21 @@
 <script lang="ts">
   import { flip } from 'svelte/animate'
-  import { match } from 'ts-pattern'
+  import { match, P } from 'ts-pattern'
   import { COLOR_SEEDS } from '~/lib/color-seeds'
   import { Failure } from '~/lib/failure'
   import { t } from '~/lib/i18n'
   import type { Settings } from '~/lib/settings'
-  import { filterShots, siteOf, type Shot } from '~/lib/shot'
+  import {
+    CONFIRM_DELETE_ABOVE,
+    filterShots,
+    siteOf,
+    type Shot,
+  } from '~/lib/shot'
   import type { ShotActions } from '~/lib/shot-actions'
   import type { ShotLibrary } from '~/lib/shot-library'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
+  import Confirm from './confirm.svelte'
   import ShotCard from './shot-card.svelte'
   import { ShotViewer } from '~/lib/shot-viewer'
   import ShotDialogs from './shot-dialogs.svelte'
@@ -19,9 +25,14 @@
     library: ShotLibrary
     actions: ShotActions
     settings: Settings
+    // The shortcut that picks an element, shown in the empty state when set.
+    shortcut: string
   }
 
-  const { library, actions, settings }: Props = $props()
+  const { library, actions, settings, shortcut }: Props = $props()
+
+  // Sites beyond this many chips move into a select, so a long tail of domains does not wrap into rows of pills.
+  const MAX_CHIPS = 8
 
   // svelte-ignore state_referenced_locally
   const shots$ = library.shots$
@@ -30,6 +41,7 @@
 
   let query = $state('')
   let site = $state<string | null>(null)
+  let confirming = $state<readonly Shot[] | null>(null)
 
   // Sites with their snag counts, most snagged first.
   const sites = $derived(
@@ -40,6 +52,11 @@
         new Map<string, number>(),
       ),
     ].sort(([a, countA], [b, countB]) => countB - countA || a.localeCompare(b)),
+  )
+  const chips = $derived(sites.slice(0, MAX_CHIPS))
+  const overflow = $derived(sites.slice(MAX_CHIPS))
+  const overflowSite = $derived(
+    overflow.find(([each]) => each === site)?.[0] ?? '',
   )
   const filteredSite = $derived(
     sites.find(([each]) => each === site)?.[0] ?? null,
@@ -67,8 +84,25 @@
     viewer.forget(shots)
   }
 
-  // svelte-ignore state_referenced_locally
-  const viewer = new ShotViewer(library, actions, () => settings, remove)
+  const removeShown = () => {
+    match(shown.length)
+      .with(P.number.gt(CONFIRM_DELETE_ABOVE), () => {
+        confirming = shown
+      })
+      .otherwise(() => {
+        remove(shown)
+      })
+  }
+
+  const viewer = new ShotViewer(
+    // svelte-ignore state_referenced_locally
+    library,
+    // svelte-ignore state_referenced_locally
+    actions,
+    () => settings,
+    () => shown,
+    remove,
+  )
 
   // svelte-ignore state_referenced_locally
   void library.refresh().mapErr(Failure.report)
@@ -95,9 +129,7 @@
         opaque
         colorSeed={COLOR_SEEDS.cancel}
         disabled={shown.length === 0}
-        onclick={() => {
-          remove(shown)
-        }} />
+        onclick={removeShown} />
     </div>
     <div class="sites" role="group" aria-label={t('site')}>
       <Button
@@ -109,7 +141,7 @@
         onclick={() => {
           site = null
         }}>{t('allSites')}</Button>
-      {#each sites as [each, total] (each)}
+      {#each chips as [each, total] (each)}
         <Button
           size="sm"
           opaque
@@ -121,6 +153,20 @@
               .otherwise(() => each)
           }}>{each} · {total}</Button>
       {/each}
+      {#if overflow.length}
+        <select
+          class="select select-sm select-bordered field"
+          aria-label={t('moreSites')}
+          value={overflowSite}
+          onchange={({ currentTarget: { value } }) => {
+            site = value || null
+          }}>
+          <option value="">{t('moreSites', String(overflow.length))}</option>
+          {#each overflow as [each, total] (each)}
+            <option value={each}>{each} · {total}</option>
+          {/each}
+        </select>
+      {/if}
     </div>
   {/if}
 
@@ -152,6 +198,9 @@
     <div class="empty blend">
       <h3>{t('emptyTitle')}</h3>
       <p>{t('libraryEmptyBody')}</p>
+      {#if shortcut}
+        <p>{t('libraryEmptyShortcut', shortcut)}</p>
+      {/if}
     </div>
   {/if}
 
@@ -170,6 +219,20 @@
 </section>
 
 <ShotDialogs {viewer} />
+
+{#if confirming}
+  <Confirm
+    title={t('deleteManyTitle', String(confirming.length))}
+    body={t('deleteManyBody')}
+    action={t('delete')}
+    onconfirm={() => {
+      remove(confirming ?? [])
+      confirming = null
+    }}
+    oncancel={() => {
+      confirming = null
+    }} />
+{/if}
 
 <style lang="scss">
   .library {
