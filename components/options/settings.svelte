@@ -79,7 +79,6 @@
         P.instanceOf(HTMLInputElement),
         ({ valueAsNumber }) => valueAsNumber,
       )
-      .with(P.instanceOf(HTMLSelectElement), ({ value }) => Number(value))
       .otherwise(() => NaN)
 </script>
 
@@ -99,19 +98,6 @@
       }}>
       <option value="device">{t('resolutionDevice')}</option>
       <option value="css">{t('resolutionCss')}</option>
-    </select>
-  </Row>
-  <Row title={t('countdownLabel')} help={t('countdownHelp')}>
-    <select
-      class="select select-sm select-bordered field"
-      aria-label={t('countdownLabel')}
-      value={String(settings.delay)}
-      onchange={(event) => {
-        update({ delay: numberOf(event) })
-      }}>
-      {#each [1, 2, 3, 5, 10] as seconds (seconds)}
-        <option value={String(seconds)}>{t('seconds', String(seconds))}</option>
-      {/each}
     </select>
   </Row>
 </section>

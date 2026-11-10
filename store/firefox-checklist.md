@@ -11,12 +11,11 @@ errors; its two warnings come from Svelte's template cloning. Then run
 3. Snag an element taller than the window, and one inside a scrolling pane.
    Both come out whole, and the page scrolls back.
 4. Snag an area, the visible window and the whole page from the popup.
-5. Start the countdown, open a menu on the page, and let it snag.
-6. Open a snag, copy it as Markdown and as a page link, edit it with each
+5. Open a snag, copy it as Markdown and as a page link, edit it with each
    tool, and save it as a new snag.
-7. Delete a snag, undo, delete it again and reload: it stays deleted.
-8. Open the options from the gear. Set a folder: Firefox asks for the
+6. Delete a snag, undo, delete it again and reload: it stays deleted.
+7. Open the options from the gear. Set a folder: Firefox asks for the
    downloads permission, and downloads land in that folder.
-9. Switch the theme to dark, and Firefox's language to Spanish: the popup
+8. Switch the theme to dark, and Firefox's language to Spanish: the popup
    follows both.
-10. Open `about:addons`: the toolbar badge shows `!` after a click there.
+9. Open `about:addons`: the toolbar badge shows `!` after a click there.

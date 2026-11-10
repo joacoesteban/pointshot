@@ -1,5 +1,4 @@
 import {
-  EMPTY,
   type Observable,
   Subject,
   distinctUntilChanged,
@@ -16,7 +15,6 @@ import {
   take,
   takeUntil,
   tap,
-  timer,
   withLatestFrom,
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
@@ -56,8 +54,6 @@ const ARROWS = {
 type Arrow = keyof typeof ARROWS
 
 const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
-// A timed pick leaves the page usable, to open the menu or hover state to snag, so it only takes Escape.
-const TIMED_KEYS = ['Escape']
 
 const isArrow = (key: string): key is Arrow => key in ARROWS
 
@@ -152,19 +148,15 @@ export class ElementPicker {
     )
   }
 
-  // With a delay in seconds, the element under the pointer when it runs out is snagged, and the page keeps its clicks meanwhile.
-  pick(delay = 0) {
+  pick() {
     const ended$ = new Subject<void>()
-    const keys = match(delay)
-      .with(0, () => KEYS)
-      .otherwise(() => TIMED_KEYS)
 
     // Events inside same-origin frames stay in their window, so the picker listens there too.
     const frames = Dom.frames()
     const views = [window, ...frames.map(({ view }) => view)]
 
     const keys$ = listen<KeyboardEvent>(views, 'keydown', capture).pipe(
-      filter(({ key }) => keys.includes(key)),
+      filter(({ key }) => KEYS.includes(key)),
       tap<KeyboardEvent>(swallow),
       share(),
     )
@@ -219,62 +211,31 @@ export class ElementPicker {
         })),
       )
 
-    const pressed$ = match(delay)
-      .with(0, () =>
-        merge(
-          ...[
-            'pointerdown',
-            'pointerup',
-            'mousedown',
-            'mouseup',
-            'auxclick',
-          ].map((type) => listen<MouseEvent>(views, type, capture)),
-        ).pipe(
-          filter(({ target }) => !this.isOwn(target)),
-          tap<MouseEvent>(swallow),
-          ignoreElements(),
-        ),
-      )
-      .otherwise(() => EMPTY)
+    const pressed$ = merge(
+      ...['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'auxclick'].map(
+        (type) => listen<MouseEvent>(views, type, capture),
+      ),
+    ).pipe(
+      filter(({ target }) => !this.isOwn(target)),
+      tap<MouseEvent>(swallow),
+      ignoreElements(),
+    )
 
-    // A right click cancels like Escape. A timed pick keeps it, so a page's own context menu can be snagged.
-    const dismissed$ = match(delay)
-      .with(0, () =>
-        listen<MouseEvent>(views, 'contextmenu', capture).pipe(
-          filter(({ target }) => !this.isOwn(target)),
-          tap<MouseEvent>(swallow),
-        ),
-      )
-      .otherwise(() => EMPTY)
+    const dismissed$ = listen<MouseEvent>(views, 'contextmenu', capture).pipe(
+      filter(({ target }) => !this.isOwn(target)),
+      tap<MouseEvent>(swallow),
+    )
 
     // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
-    // A timer has no such activation, so a timed snag may only be saved.
-    const chosen$ = match(delay)
-      .with(0, () =>
-        aimed(
-          merge(
-            listen<MouseEvent>(views, 'click', capture).pipe(
-              filter(({ target }) => !this.isOwn(target)),
-              tap<MouseEvent>(swallow),
-            ),
-            keys$.pipe(filter(({ key }) => key === 'Enter')),
-          ),
-        ).pipe(filter(isPick)),
-      )
-      .otherwise((delay) =>
-        // Resolved when the time is up, since clicking open a menu changes what is under a still pointer.
-        timer(delay * 1000).pipe(
-          withLatestFrom(pointer$.pipe(startWith(null))),
-          map(([, point]) => ({
-            element: match(point)
-              .with(P.nonNullable, (point) => this.elementAt(point))
-              .otherwise(() => null),
-            framing: 'element' as const,
-          })),
-          take(1),
-          filter(isPick),
+    const chosen$ = aimed(
+      merge(
+        listen<MouseEvent>(views, 'click', capture).pipe(
+          filter(({ target }) => !this.isOwn(target)),
+          tap<MouseEvent>(swallow),
         ),
-      )
+        keys$.pipe(filter(({ key }) => key === 'Enter')),
+      ),
+    ).pipe(filter(isPick))
 
     const picked$ = merge(pressed$, chosen$).pipe(
       take(1),

@@ -20,7 +20,6 @@ corners and all.
 - Pick any element with the mouse, or walk the page with the arrow keys.
 - Drag over an area, take the visible window, or the whole page.
 - Elements taller than the window, or inside scrolling panes, come out whole.
-- A countdown captures menus and hover states.
 - Every snag is kept in a popup on the page: search it, open it full size,
   copy it again, or download it as PNG, JPEG or WebP.
 - Mark snags up with arrows, boxes, text and blur, and crop them.
@@ -55,7 +54,6 @@ con bordes redondeados y todo.
   entera.
 - Los elementos más altos que la ventana, o dentro de paneles con scroll,
   salen enteros.
-- Una cuenta regresiva captura menús y estados al pasar el mouse.
 - Cada captura queda en un panel en la página: buscala, abrila en tamaño
   completo, copiala de nuevo o descargala como PNG, JPEG o WebP.
 - Marcá tus capturas con flechas, recuadros, texto y desenfoque, y

@@ -9,23 +9,22 @@ and runs on Chrome and on Firefox 127 or later.
 
 ## Use
 
-| Action                             | How                                                              |
-| ---------------------------------- | ---------------------------------------------------------------- |
-| Open the popup                     | Click the toolbar icon, or press `Alt+S`                         |
-| Pick an element                    | Press **Snag** in the popup, or press `Alt+Shift+S`              |
-| Select the parent / child          | `↑` / `↓` while picking                                          |
-| Select the previous / next sibling | `←` / `→` while picking                                          |
-| Snag the selected element          | Click, or press `Enter`                                          |
-| Snag it with a margin of page      | Hold `Shift` while snagging                                      |
-| Snag an area                       | Press the frame in the popup, then drag over the page            |
-| Snag what the window shows         | Press the window in the popup                                    |
-| Snag the whole page                | Press the page in the popup                                      |
-| Snag after a countdown             | Press the timer in the popup, then hover or open what to capture |
-| Cancel                             | `Esc`                                                            |
-| Open a snag full size              | Hover it in the popup and press the arrows                       |
-| Mark a snag up or crop it          | Press the pencil in the full size view                           |
-| Undo a deletion                    | Press **Undo** in the popup within five seconds                  |
-| Change the settings                | Press the gear in the popup                                      |
+| Action                             | How                                                   |
+| ---------------------------------- | ----------------------------------------------------- |
+| Open the popup                     | Click the toolbar icon, or press `Alt+S`              |
+| Pick an element                    | Press **Snag** in the popup, or press `Alt+Shift+S`   |
+| Select the parent / child          | `↑` / `↓` while picking                               |
+| Select the previous / next sibling | `←` / `→` while picking                               |
+| Snag the selected element          | Click, or press `Enter`                               |
+| Snag it with a margin of page      | Hold `Shift` while snagging                           |
+| Snag an area                       | Press the frame in the popup, then drag over the page |
+| Snag what the window shows         | Press the window in the popup                         |
+| Snag the whole page                | Press the page in the popup                           |
+| Cancel                             | `Esc`                                                 |
+| Open a snag full size              | Hover it in the popup and press the arrows            |
+| Mark a snag up or crop it          | Press the pencil in the full size view                |
+| Undo a deletion                    | Press **Undo** in the popup within five seconds       |
+| Change the settings                | Press the gear in the popup                           |
 
 The area, window and page snags also have keyboard commands, unassigned by
 default. Set them where the browser keeps extension shortcuts, which the
@@ -43,10 +42,10 @@ and same-origin frames.
 
 ## Settings
 
-The options page sets the resolution of snags, the countdown, the download
-format and quality, a download folder and whether to ask where to save, how
-many snags to keep, and the theme. A download folder and the Save As dialog
-need the downloads permission, which Snag asks for when you turn either on.
+The options page sets the resolution of snags, the download format and
+quality, a download folder and whether to ask where to save, how many snags to
+keep, and the theme. A download folder and the Save As dialog need the
+downloads permission, which Snag asks for when you turn either on.
 
 **Copy diagnostics** puts the version, the browser, the settings and the
 recent errors on the clipboard, to paste into a bug report. It includes no

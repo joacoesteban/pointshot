@@ -93,7 +93,7 @@ To add one, copy the JSON from Vind's `assets/symbols/` catalogue (SF Symbols
 as paths), then import it and list it in `raw` in `lib/symbols.ts`.
 `toastIcon(name)` in `lib/toast-icon.ts` turns one into the `icon` a toast
 takes: the toast library mounts icons without props, so the name is bound
-into a component first. The picking, countdown and selection hints use it. Each file is parsed with `zod` at module load, so a
+into a component first. The picking and selection hints use it. Each file is parsed with `zod` at module load, so a
 malformed file breaks every entrypoint that imports symbols. `fillRule`
 defaults to `evenodd`; set `nonzero` if the shape fills in wrong.
 
