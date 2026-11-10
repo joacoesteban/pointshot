@@ -9,21 +9,21 @@ and runs on Chrome and on Firefox 127 or later.
 
 ## Use
 
-| Action                             | How                                                 |
-| ---------------------------------- | --------------------------------------------------- |
-| Open the popup                     | Click the toolbar icon, or press `Alt+S`            |
-| Start snagging                     | Press **Snag** in the popup, or press `Alt+Shift+S` |
-| Select the parent / child          | `↑` / `↓` while picking                             |
-| Select the previous / next sibling | `←` / `→` while picking                             |
-| Snag the selected element          | Click, or press `Enter`                             |
-| Snag an area                       | Hold `Shift` and drag over the page                 |
-| Snag the page in view              | Press `Cmd`/`Ctrl` + `Enter`                        |
-| Snag the full page                 | Press `Cmd`/`Ctrl` + `Shift` + `Enter`              |
-| Cancel                             | `Esc`                                               |
-| Open a snag full size              | Hover it in the popup and press the arrows          |
-| Mark a snag up or crop it          | Press the pencil in the full size view              |
-| Undo a deletion                    | Press **Undo** in the popup within five seconds     |
-| Change the settings                | Press the gear in the popup                         |
+| Action                             | How                                                  |
+| ---------------------------------- | ---------------------------------------------------- |
+| Open the popup                     | Click the toolbar icon, or press `Alt+S`             |
+| Start snagging                     | Press **Snag** in the popup, or press `Alt+Shift+S`  |
+| Select the parent / child          | `↑` / `↓` while picking                              |
+| Select the previous / next sibling | `←` / `→` while picking                              |
+| Snag the selected element          | Click, or press `Enter`                              |
+| Snag an area                       | Hold `Shift` and drag over the page                  |
+| Snag the page in view              | Press `Cmd` + `Enter`, or `Ctrl` + `Enter` off macOS |
+| Snag the full page                 | The same, with `Shift` held                          |
+| Cancel                             | `Esc`                                                |
+| Open a snag full size              | Hover it in the popup and press the arrows           |
+| Mark a snag up or crop it          | Press the pencil in the full size view               |
+| Undo a deletion                    | Press **Undo** in the popup within five seconds      |
+| Change the settings                | Press the gear in the popup                          |
 
 The toast at the bottom of the page follows the keys you hold and shows which
 snag is next. Its buttons pin a mode for a mouse-only snag.

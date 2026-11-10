@@ -21,6 +21,13 @@ type Intent = {
 
 const RELEASED: Held = { shift: false, command: false }
 
+// Control+click is a right click on macOS, so only Command counts there.
+const commandOf = (userAgent: string) =>
+  match(userAgent)
+    .returnType<{ key: 'metaKey' | 'ctrlKey'; glyph: string }>()
+    .with(P.string.includes('Mac'), () => ({ key: 'metaKey', glyph: '⌘' }))
+    .otherwise(() => ({ key: 'ctrlKey', glyph: 'Ctrl' }))
+
 export class Chord {
   static readonly released = RELEASED
   static readonly idle: SnagState = {
@@ -29,10 +36,15 @@ export class Chord {
     marquee: null,
   }
 
-  static readonly read = ({ shiftKey, metaKey, ctrlKey }: Modifiers): Held => ({
-    shift: shiftKey,
-    command: metaKey || ctrlKey,
-  })
+  static readonly reader = (userAgent: string) => {
+    const { key } = commandOf(userAgent)
+    return (modifiers: Modifiers): Held => ({
+      shift: modifiers.shiftKey,
+      command: modifiers[key],
+    })
+  }
+
+  static readonly read = Chord.reader(navigator.userAgent)
 
   static readonly same = (a: Held, b: Held) =>
     a.shift === b.shift && a.command === b.command
@@ -49,8 +61,6 @@ export class Chord {
   }
 
   static commandGlyph(userAgent: string) {
-    return match(userAgent)
-      .with(P.string.includes('Mac'), () => '⌘')
-      .otherwise(() => 'Ctrl')
+    return commandOf(userAgent).glyph
   }
 }

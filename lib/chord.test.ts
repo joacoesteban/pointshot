@@ -39,13 +39,19 @@ describe('Chord.mode', () => {
   })
 })
 
-describe('Chord.read', () => {
+describe('Chord.reader', () => {
   const event = { shiftKey: false, metaKey: false, ctrlKey: false }
+  const mac = Chord.reader('Mozilla/5.0 (Macintosh; Intel Mac OS X)')
+  const linux = Chord.reader('Mozilla/5.0 (X11; Linux x86_64)')
 
-  it('treats Control and Command as the same modifier', () => {
-    expect(Chord.read({ ...event, metaKey: true }).command).toBe(true)
-    expect(Chord.read({ ...event, ctrlKey: true }).command).toBe(true)
-    expect(Chord.read(event).command).toBe(false)
+  it('reads Command on macOS, where Control+click is a right click', () => {
+    expect(mac({ ...event, metaKey: true }).command).toBe(true)
+    expect(mac({ ...event, ctrlKey: true }).command).toBe(false)
+  })
+
+  it('reads Control elsewhere', () => {
+    expect(linux({ ...event, ctrlKey: true }).command).toBe(true)
+    expect(linux({ ...event, metaKey: true }).command).toBe(false)
   })
 })
 
