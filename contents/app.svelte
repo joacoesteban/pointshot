@@ -2,7 +2,7 @@
   import '~/lib/fonts-importer'
   import { match } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { of, take, timer, type Observable } from 'rxjs'
+  import { of, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
@@ -12,7 +12,6 @@
   import { Failure } from '~/lib/failure'
   import { toastIcon } from '~/lib/toast-icon'
   import { t } from '~/lib/i18n'
-  import { DisposeBag } from '~/lib/dispose-bag'
   import { ElementPicker } from '~/lib/picker'
   import { PopupPosition, type Position } from '~/lib/popup-position'
   import type { Shot } from '~/lib/shot'
@@ -103,10 +102,10 @@
     )
   }
 
-  function pick(delay = 0) {
+  function pick() {
     match(busy)
       .with(false, () => {
-        startPicking(delay)
+        startPicking()
       })
       .otherwise(() => undefined)
   }
@@ -140,41 +139,19 @@
     snag({ kind: 'selection', rect })
   }
 
-  const countdown = (seconds: number) => t('countdown', String(seconds))
-
-  function startPicking(delay: number) {
-    const { target$: aimed$, picked$ } = picker.pick(delay)
-    const { sink, dispose } = new DisposeBag()
+  function startPicking() {
+    const { target$: aimed$, picked$ } = picker.pick()
     picking = true
     target$ = aimed$
-    const hint = toast(
-      match(delay)
-        .with(0, () => t('pickHint'))
-        .otherwise(countdown),
-      {
-        duration: Infinity,
-        icon: toastIcon(
-          match(delay)
-            .with(0, () => 'cursorArrowRays' as const)
-            .otherwise(() => 'timer' as const),
-        ),
-      },
-    )
-    timer(1000, 1000)
-      .pipe(take(Math.max(delay - 1, 0)), sink())
-      .subscribe((tick) => {
-        toast(countdown(delay - tick - 1), {
-          id: hint,
-          duration: Infinity,
-          icon: toastIcon('timer'),
-        })
-      })
+    const hint = toast(t('pickHint'), {
+      duration: Infinity,
+      icon: toastIcon('cursorArrowRays'),
+    })
     picked$.subscribe({
       next: ({ element, framing }) => {
         snag({ kind: 'element', element, framing })
       },
       complete: () => {
-        dispose()
         toast.dismiss(hint)
         picking = false
         target$ = idle$
@@ -208,9 +185,7 @@
     Failure.report(error, t('couldNotDelete'))
   })
   togglePopupStream.subscribe(toggle)
-  pickElementStream.subscribe(() => {
-    pick()
-  })
+  pickElementStream.subscribe(pick)
   captureModeStream.subscribe(([mode]) => {
     capture(mode)
   })
@@ -226,12 +201,7 @@
     onclose={() => {
       visible = false
     }}
-    onpick={() => {
-      pick()
-    }}
-    onpicklater={() => {
-      pick(settings.delay)
-    }}
+    onpick={pick}
     oncapture={capture}
     onopen={(shot: Shot) => {
       viewer.open(shot)

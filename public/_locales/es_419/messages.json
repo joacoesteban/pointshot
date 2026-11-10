@@ -96,9 +96,6 @@
   "capturePage": {
     "message": "Página"
   },
-  "captureLater": {
-    "message": "Timer"
-  },
   "capture": {
     "message": "Capturar"
   },
@@ -110,9 +107,6 @@
   },
   "snagPage": {
     "message": "Capturar la página entera"
-  },
-  "snagLater": {
-    "message": "Capturar después de una cuenta regresiva"
   },
   "open": {
     "message": "Abrir"
@@ -183,14 +177,6 @@
   "pickHint": {
     "message": "Hacé clic o presioná Enter para capturar, con Shift para sumar un margen. Las flechas cambian el elemento, Esc o clic derecho cancela."
   },
-  "countdown": {
-    "message": "Capturando lo que esté bajo el puntero en $SECONDS$… Esc cancela.",
-    "placeholders": {
-      "seconds": {
-        "content": "$1"
-      }
-    }
-  },
   "selectionHint": {
     "message": "Arrastrá sobre el área que querés capturar. Esc o clic derecho cancela."
   },
@@ -246,20 +232,6 @@
   },
   "resolutionCss": {
     "message": "Un píxel por píxel CSS"
-  },
-  "countdownLabel": {
-    "message": "Cuenta regresiva"
-  },
-  "countdownHelp": {
-    "message": "Cuánto espera el temporizador antes de capturar."
-  },
-  "seconds": {
-    "message": "$SECONDS$ s",
-    "placeholders": {
-      "seconds": {
-        "content": "$1"
-      }
-    }
   },
   "sectionDownloads": {
     "message": "Descargas"

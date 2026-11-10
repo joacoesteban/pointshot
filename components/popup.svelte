@@ -27,7 +27,6 @@
     placement: Placement
     onclose: () => void
     onpick: () => void
-    onpicklater: () => void
     oncapture: (mode: Mode) => void
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
@@ -45,7 +44,6 @@
     placement,
     onclose,
     onpick,
-    onpicklater,
     oncapture,
     onopen,
     oncopy,
@@ -100,15 +98,6 @@
       size: 'md',
       onclick: () => {
         oncapture('page')
-      },
-    },
-    {
-      name: 'timer',
-      title: t('snagLater'),
-      caption: t('captureLater'),
-      size: 'md',
-      onclick: () => {
-        onpicklater()
       },
     },
   ]
@@ -306,7 +295,7 @@
 <style lang="scss">
   .actions {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     align-items: end;
     gap: 8px;
     margin-bottom: 16px;

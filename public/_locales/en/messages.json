@@ -96,9 +96,6 @@
   "capturePage": {
     "message": "Page"
   },
-  "captureLater": {
-    "message": "Timer"
-  },
   "capture": {
     "message": "Capture"
   },
@@ -110,9 +107,6 @@
   },
   "snagPage": {
     "message": "Snag the whole page"
-  },
-  "snagLater": {
-    "message": "Snag after a countdown"
   },
   "open": {
     "message": "Open"
@@ -183,14 +177,6 @@
   "pickHint": {
     "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc or right click cancels."
   },
-  "countdown": {
-    "message": "Snagging what is under the pointer in $SECONDS$… Esc cancels.",
-    "placeholders": {
-      "seconds": {
-        "content": "$1"
-      }
-    }
-  },
   "selectionHint": {
     "message": "Drag over the area to snag. Esc or right click cancels."
   },
@@ -246,20 +232,6 @@
   },
   "resolutionCss": {
     "message": "One pixel per CSS pixel"
-  },
-  "countdownLabel": {
-    "message": "Countdown"
-  },
-  "countdownHelp": {
-    "message": "How long the timer waits before it snags."
-  },
-  "seconds": {
-    "message": "$SECONDS$ s",
-    "placeholders": {
-      "seconds": {
-        "content": "$1"
-      }
-    }
   },
   "sectionDownloads": {
     "message": "Downloads"

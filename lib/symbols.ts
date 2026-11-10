@@ -20,7 +20,6 @@ import region from '~/assets/symbols/region.json'
 import sliderHorizontal3 from '~/assets/symbols/slider.horizontal.3.json'
 import squareAndArrowDown from '~/assets/symbols/square.and.arrow.down.json'
 import text from '~/assets/symbols/text.json'
-import timer from '~/assets/symbols/timer.json'
 import trashFill from '~/assets/symbols/trash.fill.json'
 import undo from '~/assets/symbols/undo.json'
 import window from '~/assets/symbols/window.json'
@@ -68,7 +67,6 @@ const raw = {
   sliderHorizontal3,
   squareAndArrowDown,
   text,
-  timer,
   trashFill,
   undo,
   window,
