@@ -16,7 +16,6 @@ import page from '~/assets/symbols/page.json'
 import pencil from '~/assets/symbols/pencil.json'
 import rectangle from '~/assets/symbols/rectangle.json'
 import rectangleDashed from '~/assets/symbols/rectangle.dashed.json'
-import region from '~/assets/symbols/region.json'
 import sliderHorizontal3 from '~/assets/symbols/slider.horizontal.3.json'
 import squareAndArrowDown from '~/assets/symbols/square.and.arrow.down.json'
 import text from '~/assets/symbols/text.json'
@@ -63,7 +62,6 @@ const raw = {
   pencil,
   rectangle,
   rectangleDashed,
-  region,
   sliderHorizontal3,
   squareAndArrowDown,
   text,

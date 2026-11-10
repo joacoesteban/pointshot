@@ -1,16 +1,12 @@
 import type { ResultAsync } from 'neverthrow'
 import { match } from 'ts-pattern'
-import { Region, type Area, type Framing } from './region'
+import { Region, type Area } from './region'
 import type { ShotLibrary, Source } from './shot-library'
 import type { Stitcher } from './stitcher'
 import { Unclip } from './unclip'
 
 export type Target =
-  | {
-      readonly kind: 'element'
-      readonly element: Element
-      readonly framing: Framing
-    }
+  | { readonly kind: 'element'; readonly element: Element }
   | { readonly kind: 'visible' }
   | { readonly kind: 'page' }
   | { readonly kind: 'selection'; readonly rect: Area }
@@ -26,8 +22,8 @@ export class Snagger {
 
   private plan(target: Target) {
     return match(target)
-      .with({ kind: 'element' }, ({ element, framing }) =>
-        Region.plan(element, framing, this.host),
+      .with({ kind: 'element' }, ({ element }) =>
+        Region.plan(element, this.host),
       )
       .with({ kind: 'visible' }, () => Region.visible())
       .with({ kind: 'page' }, () => Region.page(this.host))

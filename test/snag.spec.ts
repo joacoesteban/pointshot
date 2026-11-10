@@ -143,6 +143,25 @@ test('swallows the picking click so the page does not react', async ({
   expect(page.url()).toBe(FIXTURE_URL)
 })
 
+test('the ghosted popup cannot be dragged while snagging', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  const popup = page.getByTestId('snag-popup')
+  await expect(popup).toHaveClass(/visible/)
+  await page.getByTestId('snag-pick').click()
+  await expect(popup).toHaveClass(/shrink/)
+  const box = await popup.boundingBox()
+  const grip = { x: (box?.x ?? 0) + 120, y: (box?.y ?? 0) + 24 }
+  const transform = await popup.evaluate(({ style }) => style.transform)
+  await page.mouse.move(grip.x, grip.y)
+  await page.mouse.down()
+  await page.mouse.move(grip.x - 150, grip.y + 100, { steps: 6 })
+  await page.mouse.up()
+  expect(await popup.evaluate(({ style }) => style.transform)).toBe(transform)
+})
+
 test('escape cancels picking without capturing', async ({
   page,
   togglePopup,
@@ -305,29 +324,6 @@ test('clips rounded corners to transparency', async ({ page, togglePopup }) => {
     corners: [
       [0, 0, 0, 0],
       [0, 0, 0, 0],
-    ],
-  })
-})
-
-test('keeps a margin of page around the element with Shift', async ({
-  page,
-  togglePopup,
-}) => {
-  await togglePopup()
-  await page.getByTestId('snag-pick').click()
-  await hover(page, '#target')
-  await page.keyboard.down('Shift')
-  await page.mouse.down()
-  await page.mouse.up()
-  await page.keyboard.up('Shift')
-  await expect(page.getByText('Copied to clipboard')).toBeVisible()
-  // 24 px on each side of the 200 × 120 target, all of it inside the blue parent.
-  expect(await clipboardImage(page)).toMatchObject({
-    width: 248,
-    height: 168,
-    corners: [
-      [51, 102, 255, 255],
-      [51, 102, 255, 255],
     ],
   })
 })
@@ -563,7 +559,8 @@ test('snags what the window shows, without the popup', async ({
   togglePopup,
 }) => {
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag what the window shows' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.press('ControlOrMeta+Enter')
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
   // The popup sits over the red half of #tall at 700, 200.
   expect(await clipboardImage(page, [[700, 200]])).toMatchObject({
@@ -578,7 +575,8 @@ test('snags the whole page, with fixed elements once', async ({
   togglePopup,
 }) => {
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag the whole page' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.press('ControlOrMeta+Shift+Enter')
   await expect(page.getByText('Copied to clipboard')).toBeVisible({
     timeout: 15_000,
   })
@@ -614,7 +612,8 @@ test('keeps a fixed element where a clamped last tile overlaps it', async ({
       })
   })
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag the whole page' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.press('ControlOrMeta+Shift+Enter')
   await expect(page.getByText('Copied to clipboard')).toBeVisible({
     timeout: 15_000,
   })
@@ -626,13 +625,21 @@ test('keeps a fixed element where a clamped last tile overlaps it', async ({
 
 test('snags an area dragged over the page', async ({ page, togglePopup }) => {
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.down('Shift')
   await expect(page.getByText('Drag over the area to snag')).toBeVisible()
   await page.mouse.move(100, 130)
   await page.mouse.down()
   await page.mouse.move(200, 180, { steps: 4 })
   await page.mouse.move(300, 230, { steps: 4 })
   await expect(page.getByTestId('snag-selection')).toContainText('200 × 100')
+  await expect(page.getByTestId('snag-toast')).toContainText('Release to snag')
+  await expect(page.getByTestId('snag-toast')).toContainText('200 × 100')
+  await page.keyboard.up('Shift')
+  await expect(page.getByTestId('snag-toast')).toHaveAttribute(
+    'data-mode',
+    'area',
+  )
   await page.mouse.up()
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
   await expect(page.getByTestId('snag-selection')).toBeHidden()
@@ -649,9 +656,11 @@ test('snags an area dragged over the page', async ({ page, togglePopup }) => {
 
 test('escape cancels an area selection', async ({ page, togglePopup }) => {
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.down('Shift')
   await expect(page.getByTestId('snag-selection')).toBeVisible()
   await page.keyboard.press('Escape')
+  await page.keyboard.up('Shift')
   await expect(page.getByTestId('snag-selection')).toBeHidden()
   await expect(page.getByText('Drag over the area to snag')).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
@@ -659,12 +668,90 @@ test('escape cancels an area selection', async ({ page, togglePopup }) => {
 
 test('right click cancels an area selection', async ({ page, togglePopup }) => {
   await togglePopup()
-  await page.getByRole('button', { name: 'Snag an area' }).click()
+  await page.getByTestId('snag-pick').click()
+  await page.keyboard.down('Shift')
   await expect(page.getByTestId('snag-selection')).toBeVisible()
   await page.mouse.click(300, 300, { button: 'right' })
+  await page.keyboard.up('Shift')
   await expect(page.getByTestId('snag-selection')).toBeHidden()
   await expect(page.getByText('Drag over the area to snag')).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+})
+
+test('the snag toast follows the keys held', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  const toast = page.getByTestId('snag-toast')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(toast).toHaveAttribute('data-mode', 'element')
+  await expect(toast).toContainText('Click or press Enter to snag this element')
+
+  await page.keyboard.down('Shift')
+  await expect(toast).toHaveAttribute('data-mode', 'area')
+  await expect(page.getByTestId('snag-mode-area')).toHaveAttribute(
+    'aria-checked',
+    'true',
+  )
+  await expect(toast).toContainText('Drag over the area to snag')
+  await expect(page.getByTestId('snag-selection')).toBeVisible()
+
+  await page.keyboard.down('ControlOrMeta')
+  await expect(toast).toHaveAttribute('data-mode', 'page')
+  await expect(toast).toContainText('snag the full page')
+  await expect(page.getByTestId('snag-selection')).toBeHidden()
+  await expect(highlight).toContainText('Full page')
+  await expect(highlight).toContainText('980 × 2000')
+
+  await page.keyboard.up('Shift')
+  await expect(toast).toHaveAttribute('data-mode', 'visible')
+  await expect(toast).toContainText('snag the page in view')
+  await expect(highlight).toContainText('980 × 700')
+
+  await page.keyboard.up('ControlOrMeta')
+  await expect(toast).toHaveAttribute('data-mode', 'element')
+  await page.keyboard.press('Escape')
+  await expect(toast).toBeHidden()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+})
+
+test('choosing a mode in the toast pins it until a chord overrides', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  const toast = page.getByTestId('snag-toast')
+  await page.getByTestId('snag-mode-visible').click()
+  await expect(toast).toHaveAttribute('data-mode', 'visible')
+  await page.keyboard.down('Shift')
+  await expect(toast).toHaveAttribute('data-mode', 'area')
+  await page.keyboard.up('Shift')
+  await expect(toast).toHaveAttribute('data-mode', 'visible')
+  await page.mouse.click(100, 400)
+  await expect(page.getByText('Copied to clipboard')).toBeVisible()
+  expect(await clipboardImage(page)).toMatchObject({ width: 980, height: 700 })
+})
+
+test('the toast cancels with its Esc key', async ({ page, togglePopup }) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  const toast = page.getByTestId('snag-toast')
+  await toast.getByRole('button', { name: 'Cancel' }).click()
+  await expect(toast).toBeHidden()
+  await expect(page.getByTestId('snag-popup')).not.toHaveClass(/shrink/)
+})
+
+test('a modifier does not snag the element with Enter in area mode', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  await page.keyboard.press('Shift+Enter')
+  await expect(page.getByTestId('snag-toast')).toBeVisible()
+  await expect(page.getByTestId('snag-shot')).toHaveCount(0)
+  await page.keyboard.press('Escape')
 })
 
 test('scales a snag past the size limit down and says so', async ({
@@ -1245,8 +1332,9 @@ test.describe('in Spanish', () => {
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')
     await expect(popup).toContainText('Elegí un elemento')
-    await page.getByRole('button', { name: 'Capturar un elemento' }).click()
+    await page.getByRole('button', { name: 'Capturar', exact: true }).click()
     await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
+    await expect(page.getByTestId('snag-toast')).toContainText('Página entera')
     await hover(page, '#target')
     await page.mouse.down()
     await page.mouse.up()

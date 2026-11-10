@@ -1,14 +1,15 @@
 <script lang="ts">
-  import { filter, fromEvent } from 'rxjs'
+  import { fade } from 'svelte/transition'
   import { match, P } from 'ts-pattern'
   import { span, type Area, type Point } from '~/lib/region'
 
   type Props = {
     onpick: (rect: Area) => void
     oncancel: () => void
+    onmarquee: (rect: Area | null) => void
   }
 
-  const { onpick, oncancel }: Props = $props()
+  const { onpick, oncancel, onmarquee }: Props = $props()
 
   // CSS pixels a drag must cover on each side, so a stray click does not snag a sliver.
   const MIN_SIDE = 4
@@ -31,18 +32,7 @@
   })
 
   $effect(() => {
-    const subscription = fromEvent<KeyboardEvent>(window, 'keydown', {
-      capture: true,
-    })
-      .pipe(filter(({ key }) => key === 'Escape'))
-      .subscribe((event) => {
-        event.preventDefault()
-        event.stopImmediatePropagation()
-        oncancel()
-      })
-    return () => {
-      subscription.unsubscribe()
-    }
+    onmarquee(rect)
   })
 
   function down(event: PointerEvent) {
@@ -83,6 +73,7 @@
   class:dim={rect === null}
   data-testid="snag-selection"
   role="presentation"
+  transition:fade={{ duration: 120 }}
   onpointerdown={down}
   onpointermove={move}
   onpointerup={up}
@@ -111,6 +102,7 @@
     cursor: crosshair;
     touch-action: none;
     user-select: none;
+    transition: background-color 0.15s linear;
     &.dim {
       background: #0003;
     }

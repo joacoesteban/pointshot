@@ -8,14 +8,18 @@
     type Observable,
   } from 'rxjs'
   import { match, P } from 'ts-pattern'
+  import type { SnagMode } from '~/lib/chord'
   import { Dom } from '~/lib/dom'
+  import { t } from '~/lib/i18n'
+  import { Region } from '~/lib/region'
   import { transitionIn, transitionOut } from '~/lib/transitions'
 
   type Props = {
     target$: Observable<Element | null>
+    mode: SnagMode
   }
 
-  const { target$ }: Props = $props()
+  const { target$, mode }: Props = $props()
 
   const reflow$ = merge(
     fromEvent(window, 'scroll', { capture: true, passive: true }),
@@ -34,24 +38,52 @@
         .join(''),
     ].join('')
 
+  const frameFor =
+    (mode: SnagMode) =>
+    ([target]: readonly [Element | null, unknown]) =>
+      match({ mode, target })
+        .with(
+          { mode: 'element', target: P.when(Dom.isElement) },
+          ({ target }) => {
+            const bounds = Dom.rect(target)
+            return {
+              bounds,
+              size: bounds,
+              radius: Dom.style(target).borderRadius,
+              label: label(target),
+              scope: null,
+            }
+          },
+        )
+        .with({ mode: 'visible' }, ({ mode }) => {
+          const bounds = Region.screen()
+          return {
+            bounds,
+            size: bounds,
+            radius: '0',
+            label: t('modeVisible'),
+            scope: mode,
+          }
+        })
+        .with({ mode: 'page' }, ({ mode }) => ({
+          bounds: Region.screen(),
+          size: Region.whole(),
+          radius: '0',
+          label: t('modePage'),
+          scope: mode,
+        }))
+        .otherwise(() => null)
+
   const frame$ = $derived(
-    combineLatest([target$, reflow$]).pipe(
-      map(([target]) =>
-        match(target)
-          .with(P.when(Dom.isElement), (target) => ({
-            bounds: Dom.rect(target),
-            radius: Dom.style(target).borderRadius,
-            label: label(target),
-          }))
-          .otherwise(() => null),
-      ),
-    ),
+    combineLatest([target$, reflow$]).pipe(map(frameFor(mode))),
   )
 </script>
 
 {#if $frame$}
   <div
     class="fixed pointer-events-none highlight"
+    class:scope={$frame$.scope !== null}
+    class:continues={$frame$.scope === 'page'}
     data-testid="snag-highlight"
     in:transitionIn
     out:transitionOut
@@ -63,7 +95,7 @@
     <span class="tag bg-blur bg-blur:soft bg-blur:round">
       <b>{$frame$.label}</b>
       <span class="opacity-60">
-        {Math.round($frame$.bounds.width)} × {Math.round($frame$.bounds.height)}
+        {Math.round($frame$.size.width)} × {Math.round($frame$.size.height)}
       </span>
     </span>
   </div>
@@ -99,6 +131,23 @@
       border-radius: inherit;
       background-color: $ping-color;
       animation: ping 2s linear infinite;
+    }
+
+    &.scope {
+      background-color: hsla($base-hue 100% 50% / 0.05);
+      box-shadow: inset 0 0 40px 2px $glow-color;
+      &::before {
+        display: none;
+      }
+      .tag {
+        top: 12px;
+        left: 12px;
+        bottom: auto;
+      }
+    }
+    &.continues {
+      border-bottom-color: transparent;
+      mask-image: linear-gradient(#000 70%, #0003);
     }
   }
   .tag {

@@ -81,32 +81,38 @@
   "snag": {
     "message": "Snag"
   },
-  "snagElement": {
-    "message": "Snag an element"
-  },
-  "captureElement": {
+  "modeElement": {
     "message": "Element"
   },
-  "captureArea": {
+  "modeArea": {
     "message": "Area"
   },
-  "captureVisible": {
-    "message": "Screen"
-  },
-  "capturePage": {
+  "modeVisible": {
     "message": "Page"
   },
-  "capture": {
-    "message": "Capture"
+  "modePage": {
+    "message": "Full page"
   },
-  "snagArea": {
-    "message": "Snag an area"
+  "snagMode": {
+    "message": "Snag mode"
   },
-  "snagVisible": {
-    "message": "Snag what the window shows"
+  "hintElement": {
+    "message": "Click or press Enter to snag this element"
   },
-  "snagPage": {
-    "message": "Snag the whole page"
+  "hintArea": {
+    "message": "Drag over the area to snag"
+  },
+  "hintRelease": {
+    "message": "Release to snag"
+  },
+  "hintVisible": {
+    "message": "Click or press Enter to snag the page in view"
+  },
+  "hintPage": {
+    "message": "Click or press Enter to snag the full page"
+  },
+  "hintArrows": {
+    "message": "Arrows change the element"
   },
   "open": {
     "message": "Open"
@@ -173,12 +179,6 @@
   },
   "typeThenEnter": {
     "message": "Type, then Enter"
-  },
-  "pickHint": {
-    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc or right click cancels."
-  },
-  "selectionHint": {
-    "message": "Drag over the area to snag. Esc or right click cancels."
   },
   "copied": {
     "message": "Copied to clipboard"

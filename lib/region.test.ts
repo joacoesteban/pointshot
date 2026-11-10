@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   axis,
-  grow,
   intersect,
   radius,
   shift,
@@ -33,12 +32,6 @@ describe('intersect', () => {
     expect(intersect(box(0, 0, 100, 100), box(200, 200, 100, 100))).toEqual(
       box(200, 200, -100, -100),
     )
-  })
-})
-
-describe('grow', () => {
-  it('expands the area by the same amount on every side', () => {
-    expect(grow(box(10, 20, 100, 50), 24)).toEqual(box(-14, -4, 148, 98))
   })
 })
 

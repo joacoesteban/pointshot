@@ -1,6 +1,8 @@
 import {
+  BehaviorSubject,
   type Observable,
   Subject,
+  combineLatest,
   distinctUntilChanged,
   filter,
   finalize,
@@ -18,8 +20,9 @@ import {
   withLatestFrom,
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
+import { Chord, type Held, type SnagMode, type SnagState } from './chord'
 import { Dom } from './dom'
-import type { Framing } from './region'
+import type { Area } from './region'
 
 type Point = Readonly<Record<'x' | 'y', number>>
 
@@ -28,10 +31,11 @@ export type Aim = {
   readonly trail: readonly Element[]
 }
 
-export type Pick = {
-  readonly element: Element
-  readonly framing: Framing
-}
+export type Pick =
+  | { readonly kind: 'element'; readonly element: Element }
+  | { readonly kind: 'visible' | 'page' }
+
+export type PickSession = ReturnType<ElementPicker['pick']>
 
 export type Step =
   | { readonly kind: 'point'; readonly element: Element | null }
@@ -57,14 +61,18 @@ const KEYS = [...Object.keys(ARROWS), 'Enter', 'Escape']
 
 const isArrow = (key: string): key is Arrow => key in ARROWS
 
-const isPick = (pick: { element: Element | null }): pick is Pick =>
-  pick.element !== null
+const pickOf = (mode: SnagMode, element: Element | null): Pick | null =>
+  match({ mode, element })
+    .returnType<Pick | null>()
+    .with({ mode: 'element', element: P.nonNullable }, ({ element }) => ({
+      kind: 'element',
+      element,
+    }))
+    .with({ mode: 'visible' }, () => ({ kind: 'visible' }))
+    .with({ mode: 'page' }, () => ({ kind: 'page' }))
+    .otherwise(() => null)
 
-const framingOf = (shiftKey: boolean): Framing =>
-  match(shiftKey)
-    .with(true, () => 'padded' as const)
-    .with(false, () => 'element' as const)
-    .exhaustive()
+const isPick = (pick: Pick | null): pick is Pick => pick !== null
 
 const rendered = (element: Element) => element.getClientRects().length > 0
 
@@ -148,8 +156,11 @@ export class ElementPicker {
     )
   }
 
-  pick() {
+  pick(start: SnagMode) {
     const ended$ = new Subject<void>()
+    const cancelled$ = new Subject<void>()
+    const pinned$ = new BehaviorSubject(start)
+    const marquee$ = new BehaviorSubject<Area | null>(null)
 
     // Events inside same-origin frames stay in their window, so the picker listens there too.
     const frames = Dom.frames()
@@ -202,14 +213,29 @@ export class ElementPicker {
       shareReplay({ bufferSize: 1, refCount: true }),
     )
 
-    const aimed = (trigger$: Observable<{ readonly shiftKey: boolean }>) =>
-      trigger$.pipe(
-        withLatestFrom(target$),
-        map(([{ shiftKey }, element]) => ({
-          element,
-          framing: framingOf(shiftKey),
-        })),
-      )
+    // Blur resets the chord: a modifier released in another window never reaches this page.
+    const held$: Observable<Held> = merge(
+      merge(
+        ...['keydown', 'keyup', 'pointermove', 'pointerdown'].map((type) =>
+          listen<KeyboardEvent | PointerEvent>(views, type, capture),
+        ),
+      ).pipe(map(Chord.read)),
+      fromEvent(window, 'blur').pipe(map(() => Chord.released)),
+    ).pipe(startWith(Chord.released), distinctUntilChanged(Chord.same))
+
+    const state$: Observable<SnagState> = combineLatest([
+      held$,
+      pinned$,
+      marquee$,
+    ]).pipe(
+      map(([held, pinned, marquee]) => ({
+        held,
+        marquee,
+        mode: Chord.mode({ held, pinned, marquee }),
+      })),
+      takeUntil(ended$),
+      shareReplay({ bufferSize: 1, refCount: true }),
+    )
 
     const pressed$ = merge(
       ...['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'auxclick'].map(
@@ -227,20 +253,32 @@ export class ElementPicker {
     )
 
     // Subscribers run inside the click or keydown dispatch, which keeps the user activation the clipboard asks for.
-    const chosen$ = aimed(
-      merge(
-        listen<MouseEvent>(views, 'click', capture).pipe(
-          filter(({ target }) => !this.isOwn(target)),
-          tap<MouseEvent>(swallow),
-        ),
-        keys$.pipe(filter(({ key }) => key === 'Enter')),
+    // The trigger's own modifiers decide the mode, so a chord pressed in the same tick as the trigger counts.
+    const chosen$ = merge(
+      listen<MouseEvent>(views, 'click', capture).pipe(
+        filter(({ target }) => !this.isOwn(target)),
+        tap<MouseEvent>(swallow),
       ),
-    ).pipe(filter(isPick))
+      keys$.pipe(filter(({ key }) => key === 'Enter')),
+    ).pipe(
+      withLatestFrom(target$, pinned$, marquee$),
+      map(([event, element, pinned, marquee]) =>
+        pickOf(
+          Chord.mode({ held: Chord.read(event), pinned, marquee }),
+          element,
+        ),
+      ),
+      filter(isPick),
+    )
 
     const picked$ = merge(pressed$, chosen$).pipe(
       take(1),
       takeUntil(
-        merge(keys$.pipe(filter(({ key }) => key === 'Escape')), dismissed$),
+        merge(
+          keys$.pipe(filter(({ key }) => key === 'Escape')),
+          dismissed$,
+          cancelled$,
+        ),
       ),
       finalize(() => {
         ended$.next()
@@ -249,7 +287,20 @@ export class ElementPicker {
       share(),
     )
 
-    return { target$, picked$ }
+    return {
+      target$,
+      state$,
+      picked$,
+      pin: (mode: SnagMode) => {
+        pinned$.next(mode)
+      },
+      mark: (marquee: Area | null) => {
+        marquee$.next(marquee)
+      },
+      cancel: () => {
+        cancelled$.next()
+      },
+    }
   }
 
   private isOwn(target: EventTarget | null) {

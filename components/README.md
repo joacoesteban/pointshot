@@ -91,9 +91,7 @@ defaults to `100%`, so it fills its parent.
 
 To add one, copy the JSON from Vind's `assets/symbols/` catalogue (SF Symbols
 as paths), then import it and list it in `raw` in `lib/symbols.ts`.
-`toastIcon(name)` in `lib/toast-icon.ts` turns one into the `icon` a toast
-takes: the toast library mounts icons without props, so the name is bound
-into a component first. The picking and selection hints use it. Each file is parsed with `zod` at module load, so a
+Each file is parsed with `zod` at module load, so a
 malformed file breaks every entrypoint that imports symbols. `fillRule`
 defaults to `evenodd`; set `nonzero` if the shape fills in wrong.
 
@@ -213,10 +211,8 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 ### `Popup` (`popup.svelte`, `popup.scss`)
 
-- The capture strip comes first: five round buttons with a caption under
-  each, the element pick at `lg` and the rest at `md`, bottom-aligned. The
-  `title` is the full sentence tests and screen readers use, the caption one
-  word. Modes live in the `actions` list; a new one is an entry there.
+- One `lg` **Snag** button comes first. Every other snag mode lives in
+  `SnagToast`, which the button opens.
 - The library follows, with the search, the site select and a `cancel`
   coloured trash button whose title is "Delete all" or "Delete N" for a
   filtered view. The undo bar is a footer that appears only after a removal.
@@ -284,14 +280,25 @@ instance bound with `bind:this` is `any` to ESLint.
 
 ### `Highlight` (`highlight.svelte`)
 
-Outlines the picker's target. It recomputes on scroll (captured, so nested
-scrollers count) and resize. It reads `target$` and has no callbacks.
+Outlines the picker's target, and morphs to frame the window in the `visible`
+and `page` modes. It recomputes on scroll (captured, so nested scrollers count)
+and resize. It reads `target$` and `mode` and has no callbacks.
 
 ### `Selection` (`selection.svelte`)
 
-The drag-to-select overlay. Uses pointer capture, ignores drags under
-`MIN_SIDE`, and calls `onpick` inside `pointerup`, which is the user gesture
-the clipboard write needs. Do not defer it.
+The drag-to-select overlay, mounted while the mode is `area`. Uses pointer
+capture, ignores drags under `MIN_SIDE`, and calls `onpick` inside `pointerup`,
+which is the user gesture the clipboard write needs. Do not defer it. It
+reports the rectangle through `onmarquee`, which holds the area mode until the
+drag ends. `Escape` belongs to the picker session.
+
+### `SnagToast` (`snag-toast.svelte`)
+
+The live surface of a snag session, fed `SnagState`. A sliding thumb marks the
+mode, keycaps go down with the modifiers held, and the status line says what a
+click, `Enter` or a release will do. Its buttons pin a mode, and a held chord
+overrides the pin until released. Its root is `.hud`: daisyUI owns `.toast`
+and `.label` globally.
 
 ### `Filters` (`filters.svelte`)
 
@@ -301,6 +308,8 @@ Hidden SVG holding `#aberration`. Required wherever `bg-blur` renders.
 
 `svelte-french-toast` with `bg-blur`, at the bottom centre so toasts stay
 clear of the popup and of the element being picked.
+
+`lifted` raises it above `SnagToast` while a snag session runs.
 
 ## Options page
 
