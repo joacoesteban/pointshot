@@ -7,8 +7,6 @@ export type Area = Readonly<Record<'left' | 'top' | 'width' | 'height', number>>
 
 export type Point = Readonly<Record<'x' | 'y', number>>
 
-export type Framing = 'element' | 'padded'
-
 export type Plan = {
   readonly area: Area
   readonly tiles: readonly Point[]
@@ -20,8 +18,6 @@ export type Plan = {
   }
 }
 
-// CSS pixels of page kept around the element in a padded snag.
-const MARGIN = 24
 // Lifts the viewport out of the intersection, so only the element's clipping ancestors cut its rect.
 const UNBOUNDED = '1000000px'
 
@@ -42,13 +38,6 @@ export const shift = (
   top: top + y,
   width,
   height,
-})
-
-export const grow = ({ left, top, width, height }: Area, by: number): Area => ({
-  left: left - by,
-  top: top - by,
-  width: width + 2 * by,
-  height: height + 2 * by,
 })
 
 export const intersect = (a: Area, b: Area): Area => {
@@ -175,7 +164,6 @@ export const span = (a: Point, b: Point): Area => ({
 export class Region {
   static plan(
     element: Element,
-    framing: Framing,
     host: Element,
   ): ResultAsync<Plan, EmptyAreaError> {
     return ResultAsync.fromSafePromise(visibleRect(element)).andThen(
@@ -185,26 +173,17 @@ export class Region {
         const bounds = match(ancestors.find(isPinned))
           .with(P.nonNullable, () => screenAt(origin))
           .otherwise(wholePage)
-        const framed = match(framing)
-          .with('element', () => shift(visible, origin))
-          .with('padded', () => grow(shift(visible, origin), MARGIN))
-          .exhaustive()
-        const area = intersect(framed, bounds)
+        const area = intersect(shift(visible, origin), bounds)
         const box = shift(Dom.rect(element), origin)
+        const style = Dom.style(element)
         const pinned = pinnedOf(host, ancestors)
         return checked({
           area,
           tiles: tilesOver(area, origin),
-          clip: match(framing)
-            .with('element', () => {
-              const style = Dom.style(element)
-              return {
-                box,
-                radii: CORNERS.map((corner) => radius(style[corner], box)),
-              }
-            })
-            .with('padded', () => null)
-            .exhaustive(),
+          clip: {
+            box,
+            radii: CORNERS.map((corner) => radius(style[corner], box)),
+          },
           pinned: {
             outside: pinned.filter((other) => !element.contains(other)),
             fixed: pinned.filter(

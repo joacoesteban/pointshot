@@ -16,7 +16,6 @@ and runs on Chrome and on Firefox 127 or later.
 | Select the parent / child          | `↑` / `↓` while picking                               |
 | Select the previous / next sibling | `←` / `→` while picking                               |
 | Snag the selected element          | Click, or press `Enter`                               |
-| Snag it with a margin of page      | Hold `Shift` while snagging                           |
 | Snag an area                       | Press the frame in the popup, then drag over the page |
 | Snag what the window shows         | Press the window in the popup                         |
 | Snag the whole page                | Press the page in the popup                           |

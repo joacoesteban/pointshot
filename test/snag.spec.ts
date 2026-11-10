@@ -328,29 +328,6 @@ test('clips rounded corners to transparency', async ({ page, togglePopup }) => {
   })
 })
 
-test('keeps a margin of page around the element with Shift', async ({
-  page,
-  togglePopup,
-}) => {
-  await togglePopup()
-  await page.getByTestId('snag-pick').click()
-  await hover(page, '#target')
-  await page.keyboard.down('Shift')
-  await page.mouse.down()
-  await page.mouse.up()
-  await page.keyboard.up('Shift')
-  await expect(page.getByText('Copied to clipboard')).toBeVisible()
-  // 24 px on each side of the 200 × 120 target, all of it inside the blue parent.
-  expect(await clipboardImage(page)).toMatchObject({
-    width: 248,
-    height: 168,
-    corners: [
-      [51, 102, 255, 255],
-      [51, 102, 255, 255],
-    ],
-  })
-})
-
 test('flags the toolbar on pages that refuse content scripts', async ({
   page,
   background,

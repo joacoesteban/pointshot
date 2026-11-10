@@ -19,7 +19,6 @@ import {
 } from 'rxjs'
 import { match, P } from 'ts-pattern'
 import { Dom } from './dom'
-import type { Framing } from './region'
 
 type Point = Readonly<Record<'x' | 'y', number>>
 
@@ -30,7 +29,6 @@ export type Aim = {
 
 export type Pick = {
   readonly element: Element
-  readonly framing: Framing
 }
 
 export type Step =
@@ -59,12 +57,6 @@ const isArrow = (key: string): key is Arrow => key in ARROWS
 
 const isPick = (pick: { element: Element | null }): pick is Pick =>
   pick.element !== null
-
-const framingOf = (shiftKey: boolean): Framing =>
-  match(shiftKey)
-    .with(true, () => 'padded' as const)
-    .with(false, () => 'element' as const)
-    .exhaustive()
 
 const rendered = (element: Element) => element.getClientRects().length > 0
 
@@ -202,13 +194,10 @@ export class ElementPicker {
       shareReplay({ bufferSize: 1, refCount: true }),
     )
 
-    const aimed = (trigger$: Observable<{ readonly shiftKey: boolean }>) =>
+    const aimed = (trigger$: Observable<unknown>) =>
       trigger$.pipe(
         withLatestFrom(target$),
-        map(([{ shiftKey }, element]) => ({
-          element,
-          framing: framingOf(shiftKey),
-        })),
+        map(([, element]) => ({ element })),
       )
 
     const pressed$ = merge(

@@ -148,8 +148,8 @@
       icon: toastIcon('cursorArrowRays'),
     })
     picked$.subscribe({
-      next: ({ element, framing }) => {
-        snag({ kind: 'element', element, framing })
+      next: ({ element }) => {
+        snag({ kind: 'element', element })
       },
       complete: () => {
         toast.dismiss(hint)

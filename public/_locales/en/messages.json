@@ -175,7 +175,7 @@
     "message": "Type, then Enter"
   },
   "pickHint": {
-    "message": "Click or press Enter to snag, with Shift to add a margin. Arrows change the element, Esc or right click cancels."
+    "message": "Click or press Enter to snag. Arrows change the element, Esc or right click cancels."
   },
   "selectionHint": {
     "message": "Drag over the area to snag. Esc or right click cancels."

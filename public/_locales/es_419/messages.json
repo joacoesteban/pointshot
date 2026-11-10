@@ -175,7 +175,7 @@
     "message": "Escribí y presioná Enter"
   },
   "pickHint": {
-    "message": "Hacé clic o presioná Enter para capturar, con Shift para sumar un margen. Las flechas cambian el elemento, Esc o clic derecho cancela."
+    "message": "Hacé clic o presioná Enter para capturar. Las flechas cambian el elemento, Esc o clic derecho cancela."
   },
   "selectionHint": {
     "message": "Arrastrá sobre el área que querés capturar. Esc o clic derecho cancela."
