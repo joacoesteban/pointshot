@@ -81,32 +81,38 @@
   "snag": {
     "message": "Capturar"
   },
-  "snagElement": {
-    "message": "Capturar un elemento"
-  },
-  "captureElement": {
+  "modeElement": {
     "message": "Elemento"
   },
-  "captureArea": {
+  "modeArea": {
     "message": "Área"
   },
-  "captureVisible": {
-    "message": "Pantalla"
-  },
-  "capturePage": {
+  "modeVisible": {
     "message": "Página"
   },
-  "capture": {
-    "message": "Capturar"
+  "modePage": {
+    "message": "Página entera"
   },
-  "snagArea": {
-    "message": "Capturar un área"
+  "snagMode": {
+    "message": "Modo de captura"
   },
-  "snagVisible": {
-    "message": "Capturar lo que muestra la ventana"
+  "hintElement": {
+    "message": "Hacé clic o presioná Enter para capturar este elemento"
   },
-  "snagPage": {
-    "message": "Capturar la página entera"
+  "hintArea": {
+    "message": "Arrastrá sobre el área que querés capturar"
+  },
+  "hintRelease": {
+    "message": "Soltá para capturar"
+  },
+  "hintVisible": {
+    "message": "Hacé clic o presioná Enter para capturar lo que se ve"
+  },
+  "hintPage": {
+    "message": "Hacé clic o presioná Enter para capturar la página entera"
+  },
+  "hintArrows": {
+    "message": "Las flechas cambian el elemento"
   },
   "open": {
     "message": "Abrir"
@@ -173,12 +179,6 @@
   },
   "typeThenEnter": {
     "message": "Escribí y presioná Enter"
-  },
-  "pickHint": {
-    "message": "Hacé clic o presioná Enter para capturar. Las flechas cambian el elemento, Esc o clic derecho cancela."
-  },
-  "selectionHint": {
-    "message": "Arrastrá sobre el área que querés capturar. Esc o clic derecho cancela."
   },
   "copied": {
     "message": "Copiado al portapapeles"

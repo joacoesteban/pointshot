@@ -3,7 +3,6 @@
   import { t } from '~/lib/i18n'
   import { flip } from 'svelte/animate'
   import { match, P } from 'ts-pattern'
-  import type { ButtonSize } from '~/lib/button-size'
   import { draggable, type Placement } from '~/lib/draggable'
   import {
     CONFIRM_DELETE_ABOVE,
@@ -11,8 +10,7 @@
     sitesOf,
     type Shot,
   } from '~/lib/shot'
-  import type { SymbolName } from '~/lib/symbols'
-  import type { Mode, OptionsView } from '~/messages'
+  import type { OptionsView } from '~/messages'
   import { transitionIn, transitionOut } from '~/lib/transitions'
   import Button from './button.svelte'
   import Confirm from './confirm.svelte'
@@ -27,7 +25,6 @@
     placement: Placement
     onclose: () => void
     onpick: () => void
-    oncapture: (mode: Mode) => void
     onopen: (shot: Shot) => void
     oncopy: (shot: Shot) => void
     onremove: (shots: readonly Shot[]) => void
@@ -44,7 +41,6 @@
     placement,
     onclose,
     onpick,
-    oncapture,
     onopen,
     oncopy,
     onremove,
@@ -52,55 +48,6 @@
     onundo,
     onoptions,
   }: Props = $props()
-
-  type Action = {
-    name: SymbolName
-    title: string
-    caption: string
-    size: ButtonSize
-    testId?: string | undefined
-    onclick: () => void
-  }
-
-  const actions: readonly Action[] = [
-    {
-      name: 'cameraViewfinder',
-      title: t('snagElement'),
-      caption: t('captureElement'),
-      size: 'lg',
-      testId: 'snag-pick',
-      onclick: () => {
-        onpick()
-      },
-    },
-    {
-      name: 'region',
-      title: t('snagArea'),
-      caption: t('captureArea'),
-      size: 'md',
-      onclick: () => {
-        oncapture('selection')
-      },
-    },
-    {
-      name: 'window',
-      title: t('snagVisible'),
-      caption: t('captureVisible'),
-      size: 'md',
-      onclick: () => {
-        oncapture('visible')
-      },
-    },
-    {
-      name: 'page',
-      title: t('snagPage'),
-      caption: t('capturePage'),
-      size: 'md',
-      onclick: () => {
-        oncapture('page')
-      },
-    },
-  ]
 
   let query = $state('')
   let site = $state<string | null>(null)
@@ -172,21 +119,17 @@
       </div>
     </header>
 
-    <nav class="actions" aria-label={t('capture')}>
-      {#each actions as { name, title, caption, size, testId, onclick } (name)}
-        <div class="action">
-          <SymbolButton
-            {name}
-            {title}
-            {size}
-            {testId}
-            opaque
-            disabled={ghost}
-            {onclick} />
-          <span class="caption">{caption}</span>
-        </div>
-      {/each}
-    </nav>
+    <div class="mb-4">
+      <Button
+        size="lg"
+        opaque
+        icon="cameraViewfinder"
+        testId="snag-pick"
+        disabled={ghost}
+        onclick={onpick}>
+        {t('snag')}
+      </Button>
+    </div>
 
     {#if shots.length}
       <div class="flex items-center gap-2 mb-3" role="search">
@@ -272,7 +215,8 @@
         in:transitionIn
         out:transitionOut>
         <span>{deleted(removed.length)}</span>
-        <Button size="sm" opaque icon="undo" onclick={onundo}>{t('undo')}</Button>
+        <Button size="sm" opaque icon="undo" onclick={onundo}
+          >{t('undo')}</Button>
       </footer>
     {/if}
   </div>
@@ -293,24 +237,6 @@
 {/if}
 
 <style lang="scss">
-  .actions {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    align-items: end;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .caption {
-    font-size: 12px;
-    font-weight: 500;
-    opacity: 0.7;
-  }
   .empty {
     padding: 24px 0;
     text-align: center;

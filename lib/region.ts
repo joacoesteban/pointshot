@@ -200,6 +200,14 @@ export class Region {
     )
   }
 
+  static screen(): Area {
+    return screenAt({ x: 0, y: 0 })
+  }
+
+  static whole(): Area {
+    return wholePage()
+  }
+
   // What the window shows, fixed elements included.
   static visible(): ResultAsync<Plan, EmptyAreaError> {
     const origin = scrolled()

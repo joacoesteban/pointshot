@@ -8,11 +8,12 @@
   import Popup from '~/components/popup.svelte'
   import Selection from '~/components/selection.svelte'
   import ShotDialogs from '~/components/shot-dialogs.svelte'
+  import SnagToast from '~/components/snag-toast.svelte'
   import Toaster from '~/components/toaster.svelte'
+  import { Chord, type SnagMode, type SnagState } from '~/lib/chord'
   import { Failure } from '~/lib/failure'
-  import { toastIcon } from '~/lib/toast-icon'
   import { t } from '~/lib/i18n'
-  import { ElementPicker } from '~/lib/picker'
+  import { ElementPicker, type PickSession } from '~/lib/picker'
   import { PopupPosition, type Position } from '~/lib/popup-position'
   import type { Shot } from '~/lib/shot'
   import { ShotActions } from '~/lib/shot-actions'
@@ -53,9 +54,8 @@
   const idle$: Observable<Element | null> = of(null)
 
   let visible = $state(false)
-  let picking = $state<boolean>(false)
-  let selecting = $state<boolean>(false)
-  let selectionHint = $state<string | undefined>()
+  let session = $state.raw<PickSession | null>(null)
+  let live = $state.raw<SnagState>(Chord.idle)
   let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
   // What the popup's grid shows after its search and site filter, so the preview's arrow keys walk the same list.
@@ -77,7 +77,7 @@
     settings = next
   })
 
-  const busy = $derived(picking || selecting)
+  const busy = $derived(session !== null)
 
   const density = () =>
     match(settings.density)
@@ -105,7 +105,7 @@
   function pick() {
     match(busy)
       .with(false, () => {
-        startPicking()
+        begin('element')
       })
       .otherwise(() => undefined)
   }
@@ -114,11 +114,7 @@
     match({ mode, busy })
       .with({ busy: true }, () => undefined)
       .with({ mode: 'selection' }, () => {
-        selecting = true
-        selectionHint = toast(t('selectionHint'), {
-          duration: Infinity,
-          icon: toastIcon('rectangleDashed'),
-        })
+        begin('area')
       })
       .with({ mode: 'visible' }, () => {
         snag({ kind: 'visible' })
@@ -129,31 +125,19 @@
       .exhaustive()
   }
 
-  function endSelection() {
-    selecting = false
-    toast.dismiss(selectionHint)
-  }
-
-  function select(rect: Area) {
-    endSelection()
-    snag({ kind: 'selection', rect })
-  }
-
-  function startPicking() {
-    const { target$: aimed$, picked$ } = picker.pick()
-    picking = true
+  function begin(mode: SnagMode) {
+    const current = picker.pick(mode)
+    const { target$: aimed$, state$, picked$ } = current
+    session = current
     target$ = aimed$
-    const hint = toast(t('pickHint'), {
-      duration: Infinity,
-      icon: toastIcon('cursorArrowRays'),
+    state$.subscribe((state) => {
+      live = state
     })
     picked$.subscribe({
-      next: ({ element }) => {
-        snag({ kind: 'element', element })
-      },
+      next: snag,
       complete: () => {
-        toast.dismiss(hint)
-        picking = false
+        session = null
+        live = Chord.idle
         target$ = idle$
       },
     })
@@ -202,7 +186,6 @@
       visible = false
     }}
     onpick={pick}
-    oncapture={capture}
     onopen={(shot: Shot) => {
       viewer.open(shot)
     }}
@@ -220,10 +203,20 @@
       void openOptions(view)
     }} />
   <ShotDialogs {viewer} />
-  <Highlight {target$} />
-  {#if selecting}
-    <Selection onpick={select} oncancel={endSelection} />
+  <Highlight {target$} mode={live.mode} />
+  {#if session}
+    {@const { pin, mark, cancel } = session}
+    {#if live.mode === 'area'}
+      <Selection
+        onpick={(rect: Area) => {
+          cancel()
+          snag({ kind: 'selection', rect })
+        }}
+        oncancel={cancel}
+        onmarquee={mark} />
+    {/if}
+    <SnagToast {live} onpin={pin} oncancel={cancel} />
   {/if}
   <Filters />
-  <Toaster />
+  <Toaster lifted={busy} />
 </div>

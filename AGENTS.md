@@ -74,6 +74,9 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   fixed or sticky elements to hide) and drawn by `Stitcher`, one
   `captureVisibleTab` per tile. The background throttles those calls to
   Chrome's limit of two a second.
+- A snag session is one `ElementPicker.pick`, whose `state$` carries the live
+  mode. `Chord.mode` derives it from the held modifiers, the mode pinned in the
+  toast and any drag in progress, and `SnagToast` renders it.
 - `Stage.offstage` hides the UI for the capture. WXT resets the shadow host
   with `all: initial !important`, so it styles the inner container instead.
 - `Snagger.snag` must stay synchronous up to the clipboard write: the click
