@@ -27,6 +27,7 @@
       transform: scale(var(--visible-scale-factor));
     }
     &.shrink {
+      pointer-events: none;
       --visible-scale-factor: 0.98;
     }
   }

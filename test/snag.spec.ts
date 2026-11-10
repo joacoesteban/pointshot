@@ -143,6 +143,25 @@ test('swallows the picking click so the page does not react', async ({
   expect(page.url()).toBe(FIXTURE_URL)
 })
 
+test('the ghosted popup cannot be dragged while snagging', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  const popup = page.getByTestId('snag-popup')
+  await expect(popup).toHaveClass(/visible/)
+  await page.getByTestId('snag-pick').click()
+  await expect(popup).toHaveClass(/shrink/)
+  const box = await popup.boundingBox()
+  const grip = { x: (box?.x ?? 0) + 120, y: (box?.y ?? 0) + 24 }
+  const transform = await popup.evaluate(({ style }) => style.transform)
+  await page.mouse.move(grip.x, grip.y)
+  await page.mouse.down()
+  await page.mouse.move(grip.x - 150, grip.y + 100, { steps: 6 })
+  await page.mouse.up()
+  expect(await popup.evaluate(({ style }) => style.transform)).toBe(transform)
+})
+
 test('escape cancels picking without capturing', async ({
   page,
   togglePopup,
