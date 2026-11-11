@@ -19,7 +19,7 @@
     <b>
       <a
         class="underline"
-        href="https://joacoesteban.com"
+        href="https://joaco.io"
         target="_blank"
         rel="noreferrer">Joaco</a>
     </b>

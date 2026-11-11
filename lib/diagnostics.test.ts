@@ -7,7 +7,7 @@ beforeEach(() => {
   fakeBrowser.reset()
   vi.spyOn(fakeBrowser.runtime, 'getManifest').mockReturnValue({
     manifest_version: 3,
-    name: 'Snag',
+    name: 'Pointshot',
     version: '1.1.0',
   })
 })
@@ -16,7 +16,7 @@ describe('Diagnostics', () => {
   it('reports the settings and the recent errors', async () => {
     await Diagnostics.record(new StorageError('disk on fire'))
     const report = (await Diagnostics.report())._unsafeUnwrap()
-    expect(report).toMatch(/^Snag 1\.1\.0\n/)
+    expect(report).toMatch(/^Pointshot 1\.1\.0\n/)
     expect(report).toContain('Settings: {"limit":100')
     expect(report).toMatch(/Z StorageError: disk on fire$/)
   })

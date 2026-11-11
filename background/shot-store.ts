@@ -76,7 +76,7 @@ export class ShotStore {
           Img.blobToDataUrl(image).mapErr(toError(StorageError)),
         )
         .otherwise(() =>
-          errAsync(new StorageError('The snag is no longer stored')),
+          errAsync(new StorageError('The screenshot is no longer stored')),
         ),
     )
   }

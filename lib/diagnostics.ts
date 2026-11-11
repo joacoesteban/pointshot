@@ -37,7 +37,7 @@ export class Diagnostics {
     return ResultAsync.combine([load(), SettingsStore.load()]).map(
       ([entries, settings]) =>
         [
-          `Snag ${browser.runtime.getManifest().version}`,
+          `Pointshot ${browser.runtime.getManifest().version}`,
           navigator.userAgent,
           `Settings: ${JSON.stringify(settings)}`,
           'Recent errors:',

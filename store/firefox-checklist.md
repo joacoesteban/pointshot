@@ -6,14 +6,14 @@ errors; its two warnings come from Svelte's template cloning. Then run
 `mise run firefox:run` and, on an https page:
 
 1. Click the toolbar icon. The popup opens; clicking again closes it.
-2. Press **Snag**, hover an element, use the arrows, click. The toast says
+2. Press **Capture**, hover an element, use the arrows, click. The toast says
    it was copied, and pasting into an image editor gives the element.
-3. Snag an element taller than the window, and one inside a scrolling pane.
+3. Capture an element taller than the window, and one inside a scrolling pane.
    Both come out whole, and the page scrolls back.
-4. Snag an area, the visible window and the whole page from the popup.
-5. Open a snag, copy it as Markdown and as a page link, edit it with each
-   tool, and save it as a new snag.
-6. Delete a snag, undo, delete it again and reload: it stays deleted.
+4. Capture an area, the visible window and the whole page from the popup.
+5. Open a screenshot, copy it as Markdown and as a page link, edit it with each
+   tool, and save it as a new screenshot.
+6. Delete a screenshot, undo, delete it again and reload: it stays deleted.
 7. Open the options from the gear. Set a folder: Firefox asks for the
    downloads permission, and downloads land in that folder.
 8. Switch the theme to dark, and Firefox's language to Spanish: the popup

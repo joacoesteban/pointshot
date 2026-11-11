@@ -96,9 +96,11 @@
   class:visible
   class:shrink={ghost}
   use:draggable={placement}>
-  <div class="popup-container bg-blur" class:force-ghost={ghost}>
+  <div class="popup-container bg-blur" class:force-ghost={visible && ghost}>
     <header class="flex justify-between items-center mb-4">
-      <h2 class="font-black text-sm tracking-widest m-0 opacity-60">snag</h2>
+      <h2 class="font-black text-sm tracking-widest m-0 opacity-60">
+        pointshot
+      </h2>
       <div class="flex items-center gap-2">
         <SymbolButton
           name="gear"

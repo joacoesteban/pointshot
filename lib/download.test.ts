@@ -15,7 +15,7 @@ const shot: Shot = {
 describe('fileName', () => {
   it('names a download after the site and time, with the extension of its format', () => {
     expect(fileName(shot, 'png')).toBe(
-      'snag-example.com-2026-11-08T12-30-15-250Z.png',
+      'pointshot-example.com-2026-11-08T12-30-15-250Z.png',
     )
     expect(fileName(shot, 'jpeg')).toMatch(/\.jpg$/)
     expect(fileName(shot, 'webp')).toMatch(/\.webp$/)

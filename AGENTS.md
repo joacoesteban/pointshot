@@ -1,8 +1,13 @@
-# Snag
+# Pointshot
 
 Browser extension that screenshots a picked element, copies it to the
 clipboard, and keeps it in an in-page popup. Built with WXT (Chrome MV3,
 Firefox MV2), Svelte 5, Tailwind 3 with daisyUI, and SCSS.
+
+It was called Snag before its first store release, and the code still says
+so: `Snagger`, `SnagToast`, the `snag-*` test ids and command names, the
+`snag-db` database, the `snag-ui` shadow host and the `snag.test` fixture
+host. The copy says "capture" for the action and "screenshot" for the result.
 
 ## Commands
 
@@ -14,6 +19,8 @@ bun run build      # production build in build/chrome-mv3
 bun run test:unit  # Vitest over lib/ and background/, with happy-dom and fake-indexeddb
 bun run test       # builds build/chrome-mv3-e2e, then runs Playwright on it
 bun run bundle:all # zips for Chrome and Firefox in build/
+
+mise run store:screenshots # builds the e2e build, then renders the store images
 ```
 
 Bun installs packages and runs scripts, while the tools themselves run on Node:
@@ -56,6 +63,13 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
+- `store/`: the store listing and its images. `screenshots.spec.ts` is a
+  Playwright spec, with its own config, that plays the scenes through
+  `Studio` (`studio.ts`) over `demo.html`, a made-up site served at
+  `lumen.example` and `app.lumen.example`. Window captures go to
+  `build/store/<language>`, and each store image is `slide.html` rendering
+  one of them framed under a headline from `copy.ts`, into the tracked
+  `store/screenshots/<language>`. `listing.md` lists the images.
 
 ## How it fits together
 
@@ -93,6 +107,16 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   (`ShotLibrary.imageUrl`). Saves and removals reply with the change, not the
   whole list.
 - Shots saved by 1.0.0 were migrated with their full image as the thumbnail.
+- The store images are meant to look the same on every run. Buttons and the
+  options backdrop take their colours from `Math.random`, so `Studio` seeds it
+  (`SEEDS`), in the content script's world through `scripting.executeScript`
+  and in the options page through an init script, and before each capture it
+  stops the animations that never end at `FROZEN_AT`, shadow roots included.
+  Buttons that blur what is behind them still differ by a few levels between
+  runs, so a run can leave a few PNGs changed with nothing visible. Playwright
+  screenshots have no pointer, so `slide.html` draws one where `Studio` last
+  moved it. The demo serves DejaVu Sans for the arrows on the toast's keys,
+  which Outfit lacks.
 
 ## Conventions
 

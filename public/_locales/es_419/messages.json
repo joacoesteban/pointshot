@@ -3,13 +3,13 @@
     "message": "es-419"
   },
   "name": {
-    "message": "Snag: capturá cualquier elemento"
+    "message": "Pointshot: capturas de pantalla con un clic"
   },
   "description": {
-    "message": "Apuntá. Hacé clic. Pegá. Lo que toca tu mouse se ilumina, un clic lo copia. Tablas, formularios, gráficos, hasta la página entera."
+    "message": "Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu mouse: tablas, gráficos, hasta la página completa. Sin cuenta."
   },
   "commandToggle": {
-    "message": "Mostrar u ocultar Snag en la página actual"
+    "message": "Mostrar u ocultar Pointshot en la página actual"
   },
   "commandPick": {
     "message": "Elegir algo de la página para capturar"
@@ -24,7 +24,7 @@
     "message": "Capturar la página entera"
   },
   "blockedPage": {
-    "message": "Snag no puede funcionar en esta página"
+    "message": "Pointshot no puede funcionar en esta página"
   },
   "close": {
     "message": "Cerrar"
@@ -216,7 +216,7 @@
     "message": "No se pudieron borrar esas capturas"
   },
   "optionsTitle": {
-    "message": "Configuración de Snag"
+    "message": "Configuración de Pointshot"
   },
   "sectionCapture": {
     "message": "Captura"
@@ -258,7 +258,7 @@
     "message": "Mostrar el diálogo Guardar como en cada descarga."
   },
   "downloadsPermission": {
-    "message": "Permitile a Snag administrar descargas para usar esto"
+    "message": "Permitile a Pointshot administrar descargas para usar esto"
   },
   "sectionLibrary": {
     "message": "Biblioteca"
@@ -350,7 +350,7 @@
     "message": "1 captura"
   },
   "libraryEmptyBody": {
-    "message": "Abrí Snag desde la barra de herramientas en cualquier página y hacé clic en lo que quieras capturar."
+    "message": "Abrí Pointshot desde la barra de herramientas en cualquier página y hacé clic en lo que quieras capturar."
   },
   "couldNotOpen": {
     "message": "No se pudo abrir esa captura"

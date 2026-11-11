@@ -211,7 +211,7 @@ and mounts everything below along with `Filters` and `Toaster`.
 
 ### `Popup` (`popup.svelte`, `popup.scss`)
 
-- One `lg` **Snag** button comes first. Every other snag mode lives in
+- One `lg` **Capture** button comes first. Every other snag mode lives in
   `SnagToast`, which the button opens.
 - The library follows, with the search, the site select and a `cancel`
   coloured trash button whose title is "Delete all" or "Delete N" for a
@@ -346,8 +346,8 @@ until that popup's undo window closes.
 Random gradient with a hue rotation and a pulsing mosaic of the icon. It is
 fixed at `z-index: -1`.
 
-- Lightness is pinned to 0.35. Vind picks any colour, but Snag has small help
-  text, which washes out over a pale gradient.
+- Lightness is pinned to 0.35. Vind picks any colour, but Pointshot has small
+  help text, which washes out over a pale gradient.
 - Full-page screenshots paint it over the first viewport only. Scroll and
   capture instead.
 
@@ -370,12 +370,12 @@ sits in the page header next to the title.
 
 ## Left out of the port
 
-| From Vind                                        | Why                                                                 |
-| ------------------------------------------------ | ------------------------------------------------------------------- |
-| Vind's `Dialog`                                  | Nothing prompts. Snag's `Dialog` is a panel shell, not a prompt.    |
-| `WithTooltip`                                    | Card actions are inline. Needs floating-ui.                         |
-| `DisplayUrl`, `BindingButton`                    | Specific to Vind's path bindings.                                   |
-| `Button` `as`, `ping`, `iconPosition`, `pressed` | No caller in Snag.                                                  |
-| `v_toggle-*` classes                             | No caller in Snag.                                                  |
-| Options tabs                                     | Six short sections read fine on one page.                           |
-| Made Tommy                                       | Its files are marked personal use. Snag ships Outfit under the OFL. |
+| From Vind                                        | Why                                                                      |
+| ------------------------------------------------ | ------------------------------------------------------------------------ |
+| Vind's `Dialog`                                  | Nothing prompts. Pointshot's `Dialog` is a panel shell, not a prompt.    |
+| `WithTooltip`                                    | Card actions are inline. Needs floating-ui.                              |
+| `DisplayUrl`, `BindingButton`                    | Specific to Vind's path bindings.                                        |
+| `Button` `as`, `ping`, `iconPosition`, `pressed` | No caller in Pointshot.                                                  |
+| `v_toggle-*` classes                             | No caller in Pointshot.                                                  |
+| Options tabs                                     | Six short sections read fine on one page.                                |
+| Made Tommy                                       | Its files are marked personal use. Pointshot ships Outfit under the OFL. |

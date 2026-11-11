@@ -1,1 +1,1 @@
-export const REPOSITORY_URL = 'https://github.com/joacoesteban/snag'
+export const REPOSITORY_URL = 'https://github.com/joacoesteban/pointshot'
