@@ -684,7 +684,7 @@ test('the snag toast follows the keys held', async ({ page, togglePopup }) => {
   const toast = page.getByTestId('snag-toast')
   const highlight = page.getByTestId('snag-highlight')
   await expect(toast).toHaveAttribute('data-mode', 'element')
-  await expect(toast).toContainText('Click or press Enter to snag this element')
+  await expect(toast).toContainText('Click or press Enter to snag this')
 
   await page.keyboard.down('Shift')
   await expect(toast).toHaveAttribute('data-mode', 'area')
@@ -704,7 +704,7 @@ test('the snag toast follows the keys held', async ({ page, togglePopup }) => {
 
   await page.keyboard.up('Shift')
   await expect(toast).toHaveAttribute('data-mode', 'visible')
-  await expect(toast).toContainText('snag the page in view')
+  await expect(toast).toContainText('snag what the window shows')
   await expect(highlight).toContainText('980 × 700')
 
   await page.keyboard.up('ControlOrMeta')
@@ -1218,7 +1218,7 @@ test('changes settings on the options page', async ({
   await options.goto(optionsUrl(background))
   await expect(options.getByRole('heading', { name: 'snag' })).toBeVisible()
   await expect(
-    options.getByText('Toggle the Snag popup on the current page.'),
+    options.getByText('Toggle the Snag popup on the current page'),
   ).toBeVisible()
 
   const keep = options.getByRole('spinbutton', { name: 'Snags to keep' })
@@ -1255,7 +1255,7 @@ test('turns Save As back off when downloads are refused', async ({
   const saveAs = options.getByRole('switch', { name: 'Ask where to save' })
   await saveAs.click()
   await expect(
-    options.getByText('Snag needs permission to manage downloads for this'),
+    options.getByText('Allow Snag to manage downloads to use this'),
   ).toBeVisible()
   await expect(saveAs).not.toBeChecked()
   expect(
@@ -1317,7 +1317,7 @@ test('opens the options from the popup', async ({
   await togglePopup()
   const [options] = await Promise.all([
     context.waitForEvent('page'),
-    page.getByRole('button', { name: 'Options' }).click(),
+    page.getByRole('button', { name: 'Settings' }).click(),
   ])
   await expect(options).toHaveURL(optionsUrl(background))
 })
@@ -1331,7 +1331,7 @@ test.describe('in Spanish', () => {
     await togglePopup()
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')
-    await expect(popup).toContainText('Elegí un elemento')
+    await expect(popup).toContainText('Presioná Capturar')
     await page.getByRole('button', { name: 'Capturar', exact: true }).click()
     await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
     await expect(page.getByTestId('snag-toast')).toContainText('Página entera')

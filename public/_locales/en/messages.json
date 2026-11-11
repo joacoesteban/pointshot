@@ -6,22 +6,22 @@
     "message": "Snag: Screenshot Any Element"
   },
   "description": {
-    "message": "Screenshot any element on the page. Pick it with the mouse, get it in your clipboard."
+    "message": "Point. Click. Paste. Whatever your mouse touches lights up, click copies it. Tables, forms, charts, even the whole page."
   },
   "commandToggle": {
-    "message": "Toggle the Snag popup on the current page."
+    "message": "Toggle the Snag popup on the current page"
   },
   "commandPick": {
-    "message": "Pick an element to screenshot."
+    "message": "Pick something on the page to screenshot"
   },
   "commandSelection": {
-    "message": "Drag over an area to screenshot."
+    "message": "Drag over an area to screenshot"
   },
   "commandVisible": {
-    "message": "Screenshot what the window shows."
+    "message": "Screenshot what the window shows"
   },
   "commandPage": {
-    "message": "Screenshot the whole page."
+    "message": "Screenshot the whole page"
   },
   "blockedPage": {
     "message": "Snag cannot run on this page"
@@ -30,7 +30,7 @@
     "message": "Close"
   },
   "options": {
-    "message": "Options"
+    "message": "Settings"
   },
   "searchSnags": {
     "message": "Search snags"
@@ -62,7 +62,7 @@
     "message": "No snags yet"
   },
   "emptyBody": {
-    "message": "Pick an element and it lands in your clipboard."
+    "message": "Press Snag and click anything on the page. It lands in your clipboard."
   },
   "deletedOne": {
     "message": "Deleted 1 snag"
@@ -82,13 +82,13 @@
     "message": "Snag"
   },
   "modeElement": {
-    "message": "Element"
+    "message": "Pick"
   },
   "modeArea": {
     "message": "Area"
   },
   "modeVisible": {
-    "message": "Page"
+    "message": "Visible"
   },
   "modePage": {
     "message": "Full page"
@@ -97,7 +97,7 @@
     "message": "Snag mode"
   },
   "hintElement": {
-    "message": "Click or press Enter to snag this element"
+    "message": "Click or press Enter to snag this"
   },
   "hintArea": {
     "message": "Drag over the area to snag"
@@ -106,13 +106,13 @@
     "message": "Release to snag"
   },
   "hintVisible": {
-    "message": "Click or press Enter to snag the page in view"
+    "message": "Click or press Enter to snag what the window shows"
   },
   "hintPage": {
     "message": "Click or press Enter to snag the full page"
   },
   "hintArrows": {
-    "message": "Arrows change the element"
+    "message": "Arrows change the selection"
   },
   "open": {
     "message": "Open"
@@ -216,7 +216,7 @@
     "message": "Could not delete those snags"
   },
   "optionsTitle": {
-    "message": "Snag options"
+    "message": "Snag settings"
   },
   "sectionCapture": {
     "message": "Capture"
@@ -225,13 +225,13 @@
     "message": "Resolution"
   },
   "resolutionHelp": {
-    "message": "Screen keeps sharp detail on high-density displays."
+    "message": "Native keeps snags sharp on high-density displays. Standard makes smaller files."
   },
   "resolutionDevice": {
-    "message": "Screen pixels"
+    "message": "Native"
   },
   "resolutionCss": {
-    "message": "One pixel per CSS pixel"
+    "message": "Standard (1x)"
   },
   "sectionDownloads": {
     "message": "Downloads"
@@ -258,7 +258,7 @@
     "message": "Show the Save As dialog for every download."
   },
   "downloadsPermission": {
-    "message": "Snag needs permission to manage downloads for this"
+    "message": "Allow Snag to manage downloads to use this"
   },
   "sectionLibrary": {
     "message": "Library"
@@ -267,7 +267,7 @@
     "message": "Snags to keep"
   },
   "keepHelp": {
-    "message": "The oldest go once there are more."
+    "message": "Past this number, the oldest are deleted."
   },
   "sectionAppearance": {
     "message": "Appearance"
@@ -350,13 +350,13 @@
     "message": "1 snag"
   },
   "libraryEmptyBody": {
-    "message": "Open Snag from the toolbar on any page and pick an element."
+    "message": "Open Snag from the toolbar on any page and click what you want to snag."
   },
   "couldNotOpen": {
     "message": "Could not open that snag"
   },
   "libraryEmptyShortcut": {
-    "message": "Or press $SHORTCUT$ to pick one right away.",
+    "message": "Or press $SHORTCUT$ to start right away.",
     "placeholders": {
       "shortcut": {
         "content": "$1"
