@@ -3,37 +3,37 @@
     "message": "en"
   },
   "name": {
-    "message": "Snag: Screenshot Any Element"
+    "message": "Pointshot: Click-to-Capture Screenshot Tool"
   },
   "description": {
-    "message": "Screenshot any element on the page. Pick it with the mouse, get it in your clipboard."
+    "message": "Point. Click. Paste. Screenshot whatever your mouse touches: tables, forms, charts, even the full page. No account, no uploads."
   },
   "commandToggle": {
-    "message": "Toggle the Snag popup on the current page."
+    "message": "Toggle the Pointshot popup on the current page"
   },
   "commandPick": {
-    "message": "Pick an element to screenshot."
+    "message": "Pick something on the page to screenshot"
   },
   "commandSelection": {
-    "message": "Drag over an area to screenshot."
+    "message": "Drag over an area to screenshot"
   },
   "commandVisible": {
-    "message": "Screenshot what the window shows."
+    "message": "Screenshot what the window shows"
   },
   "commandPage": {
-    "message": "Screenshot the whole page."
+    "message": "Screenshot the whole page"
   },
   "blockedPage": {
-    "message": "Snag cannot run on this page"
+    "message": "Pointshot cannot run on this page"
   },
   "close": {
     "message": "Close"
   },
   "options": {
-    "message": "Options"
+    "message": "Settings"
   },
   "searchSnags": {
-    "message": "Search snags"
+    "message": "Search screenshots"
   },
   "site": {
     "message": "Site"
@@ -53,22 +53,22 @@
     }
   },
   "noMatchTitle": {
-    "message": "No snags match"
+    "message": "No screenshots match"
   },
   "noMatchBody": {
     "message": "Try another search or site."
   },
   "emptyTitle": {
-    "message": "No snags yet"
+    "message": "No screenshots yet"
   },
   "emptyBody": {
-    "message": "Pick an element and it lands in your clipboard."
+    "message": "Press Capture and click anything on the page. It lands in your clipboard."
   },
   "deletedOne": {
-    "message": "Deleted 1 snag"
+    "message": "Deleted 1 screenshot"
   },
   "deletedMany": {
-    "message": "Deleted $COUNT$ snags",
+    "message": "Deleted $COUNT$ screenshots",
     "placeholders": {
       "count": {
         "content": "$1"
@@ -79,40 +79,40 @@
     "message": "Undo"
   },
   "snag": {
-    "message": "Snag"
+    "message": "Capture"
   },
   "modeElement": {
-    "message": "Element"
+    "message": "Pick"
   },
   "modeArea": {
     "message": "Area"
   },
   "modeVisible": {
-    "message": "Page"
+    "message": "Visible"
   },
   "modePage": {
     "message": "Full page"
   },
   "snagMode": {
-    "message": "Snag mode"
+    "message": "Capture mode"
   },
   "hintElement": {
-    "message": "Click or press Enter to snag this element"
+    "message": "Click or press Enter to capture this"
   },
   "hintArea": {
-    "message": "Drag over the area to snag"
+    "message": "Drag over the area to capture"
   },
   "hintRelease": {
-    "message": "Release to snag"
+    "message": "Release to capture"
   },
   "hintVisible": {
-    "message": "Click or press Enter to snag the page in view"
+    "message": "Click or press Enter to capture what the window shows"
   },
   "hintPage": {
-    "message": "Click or press Enter to snag the full page"
+    "message": "Click or press Enter to capture the full page"
   },
   "hintArrows": {
-    "message": "Arrows change the element"
+    "message": "Arrows change the selection"
   },
   "open": {
     "message": "Open"
@@ -130,7 +130,7 @@
     "message": "Edit"
   },
   "editSnag": {
-    "message": "Edit snag"
+    "message": "Edit screenshot"
   },
   "tools": {
     "message": "Tools"
@@ -175,7 +175,7 @@
     "message": "Cancel"
   },
   "saveEdit": {
-    "message": "Save as new snag"
+    "message": "Save as new screenshot"
   },
   "typeThenEnter": {
     "message": "Type, then Enter"
@@ -193,16 +193,16 @@
     "message": "Saved, but the page blocked the clipboard"
   },
   "nothingVisible": {
-    "message": "Nothing visible to snag"
+    "message": "Nothing visible to capture"
   },
   "storageFull": {
-    "message": "Copied, but storage is full. Delete some snags to keep more"
+    "message": "Copied, but storage is full. Delete some screenshots to keep more"
   },
   "notSaved": {
     "message": "Copied, but it could not be saved"
   },
   "couldNotSnag": {
-    "message": "Could not snag that: $REASON$",
+    "message": "Could not capture that: $REASON$",
     "placeholders": {
       "reason": {
         "content": "$1"
@@ -213,10 +213,10 @@
     "message": "The page blocked the clipboard"
   },
   "couldNotDelete": {
-    "message": "Could not delete those snags"
+    "message": "Could not delete those screenshots"
   },
   "optionsTitle": {
-    "message": "Snag options"
+    "message": "Pointshot settings"
   },
   "sectionCapture": {
     "message": "Capture"
@@ -225,13 +225,13 @@
     "message": "Resolution"
   },
   "resolutionHelp": {
-    "message": "Screen keeps sharp detail on high-density displays."
+    "message": "Native keeps screenshots sharp on high-density displays. Standard makes smaller files."
   },
   "resolutionDevice": {
-    "message": "Screen pixels"
+    "message": "Native"
   },
   "resolutionCss": {
-    "message": "One pixel per CSS pixel"
+    "message": "Standard (1x)"
   },
   "sectionDownloads": {
     "message": "Downloads"
@@ -258,16 +258,16 @@
     "message": "Show the Save As dialog for every download."
   },
   "downloadsPermission": {
-    "message": "Snag needs permission to manage downloads for this"
+    "message": "Allow Pointshot to manage downloads to use this"
   },
   "sectionLibrary": {
     "message": "Library"
   },
   "keep": {
-    "message": "Snags to keep"
+    "message": "Screenshots to keep"
   },
   "keepHelp": {
-    "message": "The oldest go once there are more."
+    "message": "Past this number, the oldest are deleted."
   },
   "sectionAppearance": {
     "message": "Appearance"
@@ -330,7 +330,7 @@
     "message": "With 🧠 + 🩷 by"
   },
   "browseLibrary": {
-    "message": "Browse all snags"
+    "message": "Browse all screenshots"
   },
   "settingsTitle": {
     "message": "Settings"
@@ -339,7 +339,7 @@
     "message": "Library"
   },
   "snagCount": {
-    "message": "$COUNT$ snags",
+    "message": "$COUNT$ screenshots",
     "placeholders": {
       "count": {
         "content": "$1"
@@ -347,16 +347,16 @@
     }
   },
   "snagCountOne": {
-    "message": "1 snag"
+    "message": "1 screenshot"
   },
   "libraryEmptyBody": {
-    "message": "Open Snag from the toolbar on any page and pick an element."
+    "message": "Open Pointshot from the toolbar on any page and click what you want to capture."
   },
   "couldNotOpen": {
-    "message": "Could not open that snag"
+    "message": "Could not open that screenshot"
   },
   "libraryEmptyShortcut": {
-    "message": "Or press $SHORTCUT$ to pick one right away.",
+    "message": "Or press $SHORTCUT$ to start right away.",
     "placeholders": {
       "shortcut": {
         "content": "$1"
@@ -364,7 +364,7 @@
     }
   },
   "deleteManyTitle": {
-    "message": "Delete $COUNT$ snags?",
+    "message": "Delete $COUNT$ screenshots?",
     "placeholders": {
       "count": {
         "content": "$1"

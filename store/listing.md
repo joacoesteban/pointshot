@@ -1,73 +1,95 @@
 # Store listing
 
-Copy for the Chrome Web Store and Firefox Add-ons. Screenshots come from
-`mise run store:screenshots`, which writes them to `build/store/<language>`.
+Copy and images for the Chrome Web Store and Firefox Add-ons.
+
+## Images
+
+`mise run store:screenshots` renders the five store screenshots, 1280 × 800,
+into `store/screenshots/en-US` and `store/screenshots/es-419`. Upload them in
+order. Each one is a headline on a gradient, and the first four frame a
+capture of the extension on a demo site.
+
+| Screenshot   | Shows                | Headline                            |
+| ------------ | -------------------- | ----------------------------------- |
+| `01-point`   | Pointing at a chart  | Point. Click. Paste.                |
+| `02-modes`   | Dragging an area     | Area, window and full page captures |
+| `03-editor`  | The editor           | Arrows, boxes, text and blur        |
+| `04-library` | The library          | Every screenshot saved              |
+| `05-local`   | The icon, on its own | No account, no uploads, no tracking |
+
+To change them:
+
+- The headlines are in `store/copy.ts`, with `**bold**` for the heavy words.
+- The scenes, and which capture each image shows, are in
+  `store/screenshots.spec.ts`.
+- The frame, the gradients and the layouts are in `store/slide.html`, and the
+  demo site is `store/demo.html`.
 
 ## English
 
-**Name:** Snag: Screenshot Any Element
+**Name:** Pointshot: Click-to-Capture Screenshot Tool
 
-**Summary** (132 characters at most): Screenshot any element, area or
-whole page. Pick it with the mouse and it is in your clipboard, kept in a
-library you can edit.
+**Summary** (132 characters at most): Point. Click. Paste. Screenshot
+whatever your mouse touches: tables, forms, charts, even the full page. No
+account, no uploads.
 
 **Description:**
 
-Snag captures exactly the part of the page you need. Point at an element and
-click: it lands in your clipboard as a PNG, trimmed to the element, rounded
-corners and all.
+Every screenshot tool makes you drag a rectangle and then fix it. Pointshot
+doesn't. Point at what you want (a table, a chart, a form, a post) and it
+lights up. Click, and it is on your clipboard, cut to its exact edges.
 
-- Pick any element with the mouse, or walk the page with the arrow keys.
-- Drag over an area, take the visible window, or the whole page.
-- Elements taller than the window, or inside scrolling panes, come out whole.
-- Every snag is kept in a popup on the page: search it, open it full size,
-  copy it again, or download it as PNG, JPEG or WebP.
-- Mark snags up with arrows, boxes, text and blur, and crop them.
-- Works in English and Spanish, in light and dark.
+- Point and click to screenshot anything on a page. No cropping afterwards.
+- Full page, visible area and drag-an-area screenshots too, with scrolling
+  capture for long pages.
+- Every screenshot is copied to the clipboard as a PNG, ready to paste.
+- Every screenshot is kept in a library: search it, filter by site, open it
+  full size, copy it again, or download it as PNG, JPEG or WebP.
+- Built-in editor: arrows, boxes, text, blur and crop.
 
-Snag only runs on the tab you open it on and keeps your snags on your
-computer. It sends nothing anywhere.
+No account, no uploads, no tracking. Pointshot only runs on the tab where you
+open it, and your screenshots stay on your computer.
 
 **Permissions:**
 
-- _activeTab_ and _scripting_: run on the current tab when you open Snag.
-- _storage_ and _unlimitedStorage_: keep your snags and settings locally.
+- _activeTab_ and _scripting_: run on the current tab when you open
+  Pointshot.
+- _storage_ and _unlimitedStorage_: keep your screenshots and settings
+  locally.
 - _downloads_, optional: save into a folder or ask where to save, only if you
   turn that on.
 
 ## Español (Argentina)
 
-**Nombre:** Snag: capturá cualquier elemento
+**Nombre:** Pointshot: capturas de pantalla con un clic
 
-**Resumen:** Capturá cualquier elemento, área o la página entera. Elegilo con
-el mouse y lo tenés en el portapapeles, guardado en una biblioteca que podés
-editar.
+**Resumen:** Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu
+mouse: tablas, gráficos, hasta la página completa. Sin cuenta.
 
 **Descripción:**
 
-Snag captura justo la parte de la página que necesitás. Apuntá a un elemento
-y hacé clic: va directo a tu portapapeles como PNG, recortado al elemento,
-con bordes redondeados y todo.
+Todas las herramientas de captura de pantalla te hacen arrastrar un
+rectángulo y después corregirlo. Pointshot no. Apuntá a lo que querés (una
+tabla, un gráfico, un formulario, un posteo) y se ilumina. Hacé clic y ya está
+en tu portapapeles, recortado justo en sus bordes.
 
-- Elegí cualquier elemento con el mouse, o recorré la página con las flechas.
-- Arrastrá sobre un área, capturá lo que muestra la ventana o la página
-  entera.
-- Los elementos más altos que la ventana, o dentro de paneles con scroll,
-  salen enteros.
-- Cada captura queda en un panel en la página: buscala, abrila en tamaño
-  completo, copiala de nuevo o descargala como PNG, JPEG o WebP.
-- Marcá tus capturas con flechas, recuadros, texto y desenfoque, y
-  recortalas.
-- Funciona en español e inglés, en modo claro y oscuro.
+- Apuntá y hacé clic para capturar cualquier cosa de la página. Sin recortar
+  después.
+- También capturas de página completa, de lo que muestra la ventana o de un
+  área que arrastrás, con captura con scroll para páginas largas.
+- Cada captura se copia al portapapeles como PNG, lista para pegar.
+- Cada captura queda en una biblioteca: buscala, filtrala por sitio, abrila
+  en tamaño completo, copiala de nuevo o descargala como PNG, JPEG o WebP.
+- Editor incluido: flechas, recuadros, texto, desenfoque y recorte.
 
-Snag solo funciona en la pestaña donde lo abrís y guarda tus capturas en tu
-computadora. No manda nada a ningún lado.
+Sin cuenta, sin subir nada, sin rastreo. Pointshot solo funciona en la
+pestaña donde lo abrís, y tus capturas quedan en tu computadora.
 
 **Permisos:**
 
 - _activeTab_ y _scripting_: funcionar en la pestaña actual cuando abrís
-  Snag.
-- _storage_ y _unlimitedStorage_: guardar tus capturas y opciones en tu
+  Pointshot.
+- _storage_ y _unlimitedStorage_: guardar tus capturas y configuración en tu
   computadora.
 - _downloads_, opcional: guardar en una carpeta o preguntar dónde guardar,
   solo si lo activás.

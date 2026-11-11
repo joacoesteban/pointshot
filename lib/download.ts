@@ -10,7 +10,7 @@ const extensionOf = (format: Format) =>
     .exhaustive()
 
 export const fileName = ({ url, createdAt }: Shot, format: Format) =>
-  `snag-${siteOf(url)}-${new Date(createdAt)
+  `pointshot-${siteOf(url)}-${new Date(createdAt)
     .toISOString()
     .replace(/[:.]/g, '-')}.${extensionOf(format)}`
 

@@ -70,7 +70,7 @@ test('picks an element, copies it to the clipboard and stores it', async ({
   await togglePopup()
   const popup = page.getByTestId('snag-popup')
   await expect(popup).toHaveClass(/visible/)
-  await expect(popup).toContainText('No snags yet')
+  await expect(popup).toContainText('No screenshots yet')
 
   await page.getByTestId('snag-pick').click()
   await hover(page, '#target')
@@ -162,6 +162,15 @@ test('the ghosted popup cannot be dragged while snagging', async ({
   expect(await popup.evaluate(({ style }) => style.transform)).toBe(transform)
 })
 
+test('a closed popup stays hidden while picking from the shortcut', async ({
+  page,
+  runCommand,
+}) => {
+  await runCommand('pick-element')
+  await expect(page.getByTestId('snag-toast')).toBeVisible()
+  await expect(page.locator('.popup-container')).toHaveCSS('opacity', '0')
+})
+
 test('escape cancels picking without capturing', async ({
   page,
   togglePopup,
@@ -170,10 +179,10 @@ test('escape cancels picking without capturing', async ({
   await page.getByTestId('snag-pick').click()
   await hover(page, '#target')
   await expect(page.getByTestId('snag-highlight')).toBeVisible()
-  await expect(page.getByText('Click or press Enter to snag')).toBeVisible()
+  await expect(page.getByText('Click or press Enter to capture')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByTestId('snag-highlight')).toBeHidden()
-  await expect(page.getByText('Click or press Enter to snag')).toBeHidden()
+  await expect(page.getByText('Click or press Enter to capture')).toBeHidden()
   await page.mouse.down()
   await page.mouse.up()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
@@ -190,7 +199,7 @@ test('right click cancels picking without capturing', async ({
   await page.mouse.down({ button: 'right' })
   await page.mouse.up({ button: 'right' })
   await expect(page.getByTestId('snag-highlight')).toBeHidden()
-  await expect(page.getByText('Click or press Enter to snag')).toBeHidden()
+  await expect(page.getByText('Click or press Enter to capture')).toBeHidden()
   await page.mouse.down()
   await page.mouse.up()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
@@ -207,7 +216,9 @@ test('deletes a stored shot', async ({ page, togglePopup }) => {
   await shot.hover()
   await shot.getByRole('button', { name: 'Delete' }).click()
   await expect(shot).toHaveCount(0)
-  await expect(page.getByTestId('snag-popup')).toContainText('No snags yet')
+  await expect(page.getByTestId('snag-popup')).toContainText(
+    'No screenshots yet',
+  )
 })
 
 test('copies and downloads a stored shot at full size', async ({
@@ -235,7 +246,7 @@ test('copies and downloads a stored shot at full size', async ({
     page.waitForEvent('download'),
     (await downloadButton(page, shot)).click(),
   ])
-  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.png$/)
+  expect(download.suggestedFilename()).toMatch(/^pointshot-snag\.test-.*\.png$/)
   await download.path()
 })
 
@@ -349,7 +360,7 @@ test('flags the toolbar on pages that refuse content scripts', async ({
     })
   await expect
     .poll(badge)
-    .toEqual({ text: '!', title: 'Snag cannot run on this page' })
+    .toEqual({ text: '!', title: 'Pointshot cannot run on this page' })
 
   await page.goto(FIXTURE_URL)
   await togglePopup()
@@ -627,13 +638,15 @@ test('snags an area dragged over the page', async ({ page, togglePopup }) => {
   await togglePopup()
   await page.getByTestId('snag-pick').click()
   await page.keyboard.down('Shift')
-  await expect(page.getByText('Drag over the area to snag')).toBeVisible()
+  await expect(page.getByText('Drag over the area to capture')).toBeVisible()
   await page.mouse.move(100, 130)
   await page.mouse.down()
   await page.mouse.move(200, 180, { steps: 4 })
   await page.mouse.move(300, 230, { steps: 4 })
   await expect(page.getByTestId('snag-selection')).toContainText('200 × 100')
-  await expect(page.getByTestId('snag-toast')).toContainText('Release to snag')
+  await expect(page.getByTestId('snag-toast')).toContainText(
+    'Release to capture',
+  )
   await expect(page.getByTestId('snag-toast')).toContainText('200 × 100')
   await page.keyboard.up('Shift')
   await expect(page.getByTestId('snag-toast')).toHaveAttribute(
@@ -662,7 +675,7 @@ test('escape cancels an area selection', async ({ page, togglePopup }) => {
   await page.keyboard.press('Escape')
   await page.keyboard.up('Shift')
   await expect(page.getByTestId('snag-selection')).toBeHidden()
-  await expect(page.getByText('Drag over the area to snag')).toBeHidden()
+  await expect(page.getByText('Drag over the area to capture')).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
 })
 
@@ -674,7 +687,7 @@ test('right click cancels an area selection', async ({ page, togglePopup }) => {
   await page.mouse.click(300, 300, { button: 'right' })
   await page.keyboard.up('Shift')
   await expect(page.getByTestId('snag-selection')).toBeHidden()
-  await expect(page.getByText('Drag over the area to snag')).toBeHidden()
+  await expect(page.getByText('Drag over the area to capture')).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(0)
 })
 
@@ -684,7 +697,7 @@ test('the snag toast follows the keys held', async ({ page, togglePopup }) => {
   const toast = page.getByTestId('snag-toast')
   const highlight = page.getByTestId('snag-highlight')
   await expect(toast).toHaveAttribute('data-mode', 'element')
-  await expect(toast).toContainText('Click or press Enter to snag this element')
+  await expect(toast).toContainText('Click or press Enter to capture this')
 
   await page.keyboard.down('Shift')
   await expect(toast).toHaveAttribute('data-mode', 'area')
@@ -692,19 +705,19 @@ test('the snag toast follows the keys held', async ({ page, togglePopup }) => {
     'aria-checked',
     'true',
   )
-  await expect(toast).toContainText('Drag over the area to snag')
+  await expect(toast).toContainText('Drag over the area to capture')
   await expect(page.getByTestId('snag-selection')).toBeVisible()
 
   await page.keyboard.down('ControlOrMeta')
   await expect(toast).toHaveAttribute('data-mode', 'page')
-  await expect(toast).toContainText('snag the full page')
+  await expect(toast).toContainText('capture the full page')
   await expect(page.getByTestId('snag-selection')).toBeHidden()
   await expect(highlight).toContainText('Full page')
   await expect(highlight).toContainText('980 × 2000')
 
   await page.keyboard.up('Shift')
   await expect(toast).toHaveAttribute('data-mode', 'visible')
-  await expect(toast).toContainText('snag the page in view')
+  await expect(toast).toContainText('capture what the window shows')
   await expect(highlight).toContainText('980 × 700')
 
   await page.keyboard.up('ControlOrMeta')
@@ -798,7 +811,7 @@ test('downloads in the format from the settings', async ({
     page.waitForEvent('download'),
     (await downloadButton(page, shot)).click(),
   ])
-  expect(download.suggestedFilename()).toMatch(/^snag-snag\.test-.*\.jpg$/)
+  expect(download.suggestedFilename()).toMatch(/^pointshot-snag\.test-.*\.jpg$/)
   const { readFile } = await import('node:fs/promises')
   const bytes = await readFile(await download.path())
   expect([...bytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff])
@@ -822,7 +835,9 @@ test('undoes a deletion, and keeps one that was not undone', async ({
   await shot.hover()
   await shot.getByRole('button', { name: 'Delete' }).click()
   await expect(shot).toHaveCount(0)
-  await expect(page.getByTestId('snag-undo')).toContainText('Deleted 1 snag')
+  await expect(page.getByTestId('snag-undo')).toContainText(
+    'Deleted 1 screenshot',
+  )
   await page.getByRole('button', { name: 'Undo' }).click()
   await expect(shot).toHaveCount(1)
   await expect(page.getByTestId('snag-undo')).toBeHidden()
@@ -832,7 +847,9 @@ test('undoes a deletion, and keeps one that was not undone', async ({
   await expect(shot).toHaveCount(0)
   await page.reload()
   await togglePopup()
-  await expect(page.getByTestId('snag-popup')).toContainText('No snags yet')
+  await expect(page.getByTestId('snag-popup')).toContainText(
+    'No screenshots yet',
+  )
 })
 
 test('searches snags and deletes the ones shown', async ({
@@ -844,14 +861,16 @@ test('searches snags and deletes the ones shown', async ({
   await snagTarget(page, '#pill')
   const shots = page.getByTestId('snag-shot')
   await expect(shots).toHaveCount(2)
-  const search = page.getByRole('searchbox', { name: 'Search snags' })
+  const search = page.getByRole('searchbox', { name: 'Search screenshots' })
   await search.fill('nothing like it')
-  await expect(page.getByText('No snags match')).toBeVisible()
+  await expect(page.getByText('No screenshots match')).toBeVisible()
   await search.fill('FIXTURE')
   await expect(shots).toHaveCount(2)
   await page.getByRole('button', { name: 'Delete all' }).click()
   await expect(shots).toHaveCount(0)
-  await expect(page.getByTestId('snag-undo')).toContainText('Deleted 2 snags')
+  await expect(page.getByTestId('snag-undo')).toContainText(
+    'Deleted 2 screenshots',
+  )
 })
 
 test('stops filtering by a site once its snags are gone', async ({
@@ -889,8 +908,8 @@ test('keeps keys typed in the search away from the page', async ({
   })
   await togglePopup()
   await snagTarget(page, '#target')
-  await page.getByRole('searchbox', { name: 'Search snags' }).fill('')
-  await page.getByRole('searchbox', { name: 'Search snags' }).press('s')
+  await page.getByRole('searchbox', { name: 'Search screenshots' }).fill('')
+  await page.getByRole('searchbox', { name: 'Search screenshots' }).press('s')
   expect(await page.title()).toBe('Snag fixture')
 })
 
@@ -926,7 +945,7 @@ test('remembers where the popup was left', async ({
   await togglePopup()
   const popup = page.getByTestId('snag-popup')
   await expect(popup).toHaveClass(/visible/)
-  const title = popup.getByRole('heading', { name: 'snag', exact: true })
+  const title = popup.getByRole('heading', { name: 'pointshot', exact: true })
   const before = await title.boundingBox()
   if (!before) throw new Error('The popup title is not visible')
   await page.mouse.move(before.x + 5, before.y + 5)
@@ -971,7 +990,9 @@ test('downloads into a folder through the downloads API', async ({
       background.evaluate(() => chrome.storage.local.get('requested')),
     )
     .toMatchObject({
-      requested: expect.stringMatching(/^Snag shots\/snag-snag\.test-.*\.png$/),
+      requested: expect.stringMatching(
+        /^Snag shots\/pointshot-snag\.test-.*\.png$/,
+      ),
     })
 })
 
@@ -1017,7 +1038,7 @@ test('annotates and crops a snag into a new one', async ({
   await editor.getByRole('button', { name: 'Crop' }).click()
   await drag([5, 5], [205, 155])
   await expect(editor.getByTestId('snag-crop')).toBeVisible()
-  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+  await editor.getByRole('button', { name: 'Save as new screenshot' }).click()
 
   await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
   await expect(editor).toBeHidden()
@@ -1067,7 +1088,7 @@ test('keeps text still being typed when the edit is saved', async ({
   await editor.getByRole('radio', { name: 'Black' }).click()
   await page.mouse.click(box.x + 20, box.y + 20)
   await editor.getByRole('textbox', { name: 'Text' }).fill('Look')
-  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+  await editor.getByRole('button', { name: 'Save as new screenshot' }).click()
   await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
   // The blue and pink #parent has nothing near black, so near-black pixels are the #1c1c1e text.
   const dark = await page.evaluate(async () => {
@@ -1112,7 +1133,7 @@ test('blurs an area of a snag into blocks', async ({ page, togglePopup }) => {
   await page.mouse.down()
   await page.mouse.move(box.x + 125, box.y + 140, { steps: 4 })
   await page.mouse.up()
-  await editor.getByRole('button', { name: 'Save as new snag' }).click()
+  await editor.getByRole('button', { name: 'Save as new screenshot' }).click()
   await expect(page.getByText('Saved and copied to clipboard')).toBeVisible()
   // Cells are 10 px, so the cell from x = 95 to 105 mixes five columns of blue with five of pink.
   const image = await clipboardImage(page, [[100, 120]])
@@ -1136,23 +1157,27 @@ test('browses, filters and deletes snags in the options library', async ({
 
   const [options] = await Promise.all([
     context.waitForEvent('page'),
-    page.getByRole('button', { name: 'Browse all snags' }).click(),
+    page.getByRole('button', { name: 'Browse all screenshots' }).click(),
   ])
   await options.waitForLoadState()
   expect(options.url()).toMatch(/options\.html#library$/)
   const shots = options.getByTestId('snag-shot')
   await expect(shots).toHaveCount(2)
-  await expect(options.getByText('2 snags')).toBeVisible()
+  await expect(options.getByText('2 screenshots')).toBeVisible()
   await expect(
     options.getByRole('button', { name: 'snag.test · 2' }),
   ).toHaveAttribute('aria-pressed', 'false')
 
   await options.getByRole('button', { name: 'snag.test · 2' }).click()
   await expect(shots).toHaveCount(2)
-  await options.getByRole('searchbox', { name: 'Search snags' }).fill('nope')
+  await options
+    .getByRole('searchbox', { name: 'Search screenshots' })
+    .fill('nope')
   await expect(shots).toHaveCount(0)
-  await expect(options.getByText('No snags match')).toBeVisible()
-  await options.getByRole('searchbox', { name: 'Search snags' }).fill('fixture')
+  await expect(options.getByText('No screenshots match')).toBeVisible()
+  await options
+    .getByRole('searchbox', { name: 'Search screenshots' })
+    .fill('fixture')
   await expect(shots).toHaveCount(2)
 
   await shots.first().hover()
@@ -1175,7 +1200,7 @@ test('browses, filters and deletes snags in the options library', async ({
   await page.bringToFront()
   await snagTarget(page, '#logo')
   await expect(shots).toHaveCount(3)
-  await expect(options.getByText('3 snags')).toBeVisible()
+  await expect(options.getByText('3 screenshots')).toBeVisible()
 
   await options.getByRole('button', { name: 'Settings' }).click()
   await expect(options.getByRole('combobox', { name: 'Theme' })).toBeVisible()
@@ -1201,7 +1226,7 @@ test('asks before deleting more than five snags at once', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(6)
   await page.getByRole('button', { name: 'Delete all' }).click()
   const confirm = page.getByTestId('snag-confirm')
-  await expect(confirm).toContainText('Delete 6 snags?')
+  await expect(confirm).toContainText('Delete 6 screenshots?')
   await confirm.getByRole('button', { name: 'Cancel' }).click()
   await expect(confirm).toBeHidden()
   await expect(page.getByTestId('snag-shot')).toHaveCount(6)
@@ -1216,12 +1241,14 @@ test('changes settings on the options page', async ({
 }) => {
   const options = await context.newPage()
   await options.goto(optionsUrl(background))
-  await expect(options.getByRole('heading', { name: 'snag' })).toBeVisible()
   await expect(
-    options.getByText('Toggle the Snag popup on the current page.'),
+    options.getByRole('heading', { name: 'Pointshot' }),
+  ).toBeVisible()
+  await expect(
+    options.getByText('Toggle the Pointshot popup on the current page'),
   ).toBeVisible()
 
-  const keep = options.getByRole('spinbutton', { name: 'Snags to keep' })
+  const keep = options.getByRole('spinbutton', { name: 'Screenshots to keep' })
   await keep.fill('20')
   await keep.press('Enter')
   await options.getByRole('combobox', { name: 'Theme' }).selectOption('dark')
@@ -1238,7 +1265,7 @@ test('changes settings on the options page', async ({
   await options.getByRole('button', { name: 'Copy diagnostics' }).click()
   await expect(options.getByText('Copied diagnostics')).toBeVisible()
   expect(await options.evaluate(() => navigator.clipboard.readText())).toMatch(
-    /^Snag \d+\.\d+\.\d+\n.*\nSettings: \{"limit":20/,
+    /^Pointshot \d+\.\d+\.\d+\n.*\nSettings: \{"limit":20/,
   )
 })
 
@@ -1255,7 +1282,7 @@ test('turns Save As back off when downloads are refused', async ({
   const saveAs = options.getByRole('switch', { name: 'Ask where to save' })
   await saveAs.click()
   await expect(
-    options.getByText('Snag needs permission to manage downloads for this'),
+    options.getByText('Allow Pointshot to manage downloads to use this'),
   ).toBeVisible()
   await expect(saveAs).not.toBeChecked()
   expect(
@@ -1317,7 +1344,7 @@ test('opens the options from the popup', async ({
   await togglePopup()
   const [options] = await Promise.all([
     context.waitForEvent('page'),
-    page.getByRole('button', { name: 'Options' }).click(),
+    page.getByRole('button', { name: 'Settings' }).click(),
   ])
   await expect(options).toHaveURL(optionsUrl(background))
 })
@@ -1331,7 +1358,7 @@ test.describe('in Spanish', () => {
     await togglePopup()
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')
-    await expect(popup).toContainText('Elegí un elemento')
+    await expect(popup).toContainText('Presioná Capturar')
     await page.getByRole('button', { name: 'Capturar', exact: true }).click()
     await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
     await expect(page.getByTestId('snag-toast')).toContainText('Página entera')

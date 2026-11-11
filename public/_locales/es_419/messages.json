@@ -3,34 +3,34 @@
     "message": "es-419"
   },
   "name": {
-    "message": "Snag: capturá cualquier elemento"
+    "message": "Pointshot: capturas de pantalla con un clic"
   },
   "description": {
-    "message": "Capturá cualquier elemento de la página. Elegilo con el mouse y lo tenés en el portapapeles."
+    "message": "Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu mouse: tablas, gráficos, hasta la página completa. Sin cuenta."
   },
   "commandToggle": {
-    "message": "Mostrar u ocultar Snag en la página actual."
+    "message": "Mostrar u ocultar Pointshot en la página actual"
   },
   "commandPick": {
-    "message": "Elegir un elemento para capturar."
+    "message": "Elegir algo de la página para capturar"
   },
   "commandSelection": {
-    "message": "Arrastrar sobre un área para capturarla."
+    "message": "Arrastrar sobre un área para capturarla"
   },
   "commandVisible": {
-    "message": "Capturar lo que muestra la ventana."
+    "message": "Capturar lo que muestra la ventana"
   },
   "commandPage": {
-    "message": "Capturar la página entera."
+    "message": "Capturar la página entera"
   },
   "blockedPage": {
-    "message": "Snag no puede funcionar en esta página"
+    "message": "Pointshot no puede funcionar en esta página"
   },
   "close": {
     "message": "Cerrar"
   },
   "options": {
-    "message": "Opciones"
+    "message": "Configuración"
   },
   "searchSnags": {
     "message": "Buscar capturas"
@@ -62,7 +62,7 @@
     "message": "Todavía no hay capturas"
   },
   "emptyBody": {
-    "message": "Elegí un elemento y va directo a tu portapapeles."
+    "message": "Presioná Capturar y hacé clic en lo que quieras de la página. Va directo a tu portapapeles."
   },
   "deletedOne": {
     "message": "Se borró 1 captura"
@@ -82,13 +82,13 @@
     "message": "Capturar"
   },
   "modeElement": {
-    "message": "Elemento"
+    "message": "Elegir"
   },
   "modeArea": {
     "message": "Área"
   },
   "modeVisible": {
-    "message": "Página"
+    "message": "Visible"
   },
   "modePage": {
     "message": "Página entera"
@@ -97,7 +97,7 @@
     "message": "Modo de captura"
   },
   "hintElement": {
-    "message": "Hacé clic o presioná Enter para capturar este elemento"
+    "message": "Hacé clic o presioná Enter para capturar esto"
   },
   "hintArea": {
     "message": "Arrastrá sobre el área que querés capturar"
@@ -106,13 +106,13 @@
     "message": "Soltá para capturar"
   },
   "hintVisible": {
-    "message": "Hacé clic o presioná Enter para capturar lo que se ve"
+    "message": "Hacé clic o presioná Enter para capturar lo que muestra la ventana"
   },
   "hintPage": {
     "message": "Hacé clic o presioná Enter para capturar la página entera"
   },
   "hintArrows": {
-    "message": "Las flechas cambian el elemento"
+    "message": "Las flechas cambian la selección"
   },
   "open": {
     "message": "Abrir"
@@ -190,16 +190,16 @@
     "message": "Guardado y copiado al portapapeles"
   },
   "savedClipboardBlocked": {
-    "message": "Se guardó, pero la página bloqueó el portapapeles"
+    "message": "Guardado, pero la página bloqueó el portapapeles"
   },
   "nothingVisible": {
     "message": "No hay nada visible para capturar"
   },
   "storageFull": {
-    "message": "Se copió, pero el almacenamiento está lleno. Borrá algunas capturas para guardar más"
+    "message": "Copiado, pero el almacenamiento está lleno. Borrá algunas capturas para guardar más"
   },
   "notSaved": {
-    "message": "Se copió, pero no se pudo guardar"
+    "message": "Copiado, pero no se pudo guardar"
   },
   "couldNotSnag": {
     "message": "No se pudo capturar: $REASON$",
@@ -216,7 +216,7 @@
     "message": "No se pudieron borrar esas capturas"
   },
   "optionsTitle": {
-    "message": "Opciones de Snag"
+    "message": "Configuración de Pointshot"
   },
   "sectionCapture": {
     "message": "Captura"
@@ -225,13 +225,13 @@
     "message": "Resolución"
   },
   "resolutionHelp": {
-    "message": "Pantalla conserva el detalle en las pantallas de alta densidad."
+    "message": "Nativa mantiene la nitidez en pantallas de alta densidad. Estándar genera archivos más livianos."
   },
   "resolutionDevice": {
-    "message": "Píxeles de pantalla"
+    "message": "Nativa"
   },
   "resolutionCss": {
-    "message": "Un píxel por píxel CSS"
+    "message": "Estándar (1x)"
   },
   "sectionDownloads": {
     "message": "Descargas"
@@ -258,7 +258,7 @@
     "message": "Mostrar el diálogo Guardar como en cada descarga."
   },
   "downloadsPermission": {
-    "message": "Para esto, Snag necesita permiso para administrar descargas"
+    "message": "Permitile a Pointshot administrar descargas para usar esto"
   },
   "sectionLibrary": {
     "message": "Biblioteca"
@@ -267,7 +267,7 @@
     "message": "Capturas a guardar"
   },
   "keepHelp": {
-    "message": "Las más viejas se borran cuando hay más."
+    "message": "Pasado ese número, se borran las más viejas."
   },
   "sectionAppearance": {
     "message": "Apariencia"
@@ -303,7 +303,7 @@
     "message": "Diagnóstico"
   },
   "diagnosticsHelp": {
-    "message": "Versión, navegador, opciones y errores recientes, para pegar en un reporte. Sin direcciones de páginas."
+    "message": "Versión, navegador, configuración y errores recientes, para pegar en un reporte. Sin direcciones de páginas."
   },
   "copyDiagnostics": {
     "message": "Copiar diagnóstico"
@@ -315,7 +315,7 @@
     "message": "No se pudo copiar el diagnóstico"
   },
   "settingNotSaved": {
-    "message": "No se pudo guardar la opción"
+    "message": "No se pudo guardar la configuración"
   },
   "version": {
     "message": "versión"
@@ -333,7 +333,7 @@
     "message": "Ver todas las capturas"
   },
   "settingsTitle": {
-    "message": "Ajustes"
+    "message": "Configuración"
   },
   "libraryTitle": {
     "message": "Biblioteca"
@@ -350,13 +350,13 @@
     "message": "1 captura"
   },
   "libraryEmptyBody": {
-    "message": "Abrí Snag desde la barra de herramientas en cualquier página y elegí un elemento."
+    "message": "Abrí Pointshot desde la barra de herramientas en cualquier página y hacé clic en lo que quieras capturar."
   },
   "couldNotOpen": {
     "message": "No se pudo abrir esa captura"
   },
   "libraryEmptyShortcut": {
-    "message": "O presioná $SHORTCUT$ para elegir uno directamente.",
+    "message": "O presioná $SHORTCUT$ para empezar directamente.",
     "placeholders": {
       "shortcut": {
         "content": "$1"
@@ -364,7 +364,7 @@
     }
   },
   "deleteManyTitle": {
-    "message": "¿Eliminar $COUNT$ capturas?",
+    "message": "¿Borrar $COUNT$ capturas?",
     "placeholders": {
       "count": {
         "content": "$1"

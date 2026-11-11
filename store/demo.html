@@ -2,84 +2,224 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Lumen: plans and pricing</title>
+    <title>Lumen</title>
     <style>
+      @font-face {
+        font-family: Outfit;
+        font-weight: 100 900;
+        src: url('/outfit.woff2') format('woff2');
+      }
+      /* Pointshot draws its Shift and arrow keys in Outfit, which has no arrows. This face joins the family for them. */
+      @font-face {
+        font-family: Outfit;
+        font-weight: 100 900;
+        src: url('/keys.ttf') format('truetype');
+        unicode-range: U+2190-21FF;
+      }
       * {
         box-sizing: border-box;
       }
       body {
         margin: 0;
         font:
-          16px/1.5 Inter,
-          'Helvetica Neue',
-          Arial,
+          15px/1.5 Outfit,
           sans-serif;
         color: #1d2433;
         background: linear-gradient(160deg, #f4f1ff, #eef7ff 60%, #fff);
         min-height: 100vh;
       }
+      .page {
+        --gutter: clamp(24px, 5vw, 64px);
+        width: min(840px, 100vw - 2 * var(--gutter));
+        margin-inline: auto;
+        padding-bottom: 48px;
+      }
+      /* The popup takes the right 440 px of a 1280 px window, so the content keeps to the left of it. */
+      .beside .page {
+        width: min(720px, 100vw - 2 * var(--gutter));
+        margin-left: var(--gutter);
+      }
       nav {
         display: flex;
         align-items: center;
-        gap: 32px;
-        padding: 24px 64px;
-        font-weight: 600;
+        gap: 28px;
+        height: 64px;
+        font-weight: 500;
+        color: #5c6478;
       }
       nav b {
-        font-size: 22px;
-        color: #5b3cf5;
         margin-right: auto;
+        font-size: 24px;
+        font-weight: 800;
+        color: #5b3cf5;
       }
+      /* The bottom padding leaves room for the label Pointshot hangs above what it highlights. */
       header {
-        padding: 24px 64px 8px;
+        padding: 4px 0 40px;
       }
       h1 {
         margin: 0;
-        font-size: 44px;
+        font-size: 34px;
+        line-height: 1.15;
         letter-spacing: -0.02em;
       }
       header p {
-        margin: 8px 0 0;
+        margin: 4px 0 0;
+        font-size: 16px;
         color: #5c6478;
-        font-size: 18px;
       }
-      .plans {
-        display: grid;
-        grid-template-columns: repeat(3, 280px);
-        gap: 24px;
-        padding: 32px 64px;
+      h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 500;
+        color: #5c6478;
       }
-      .plan {
-        padding: 28px;
+      .card {
+        padding: 22px 24px;
         border-radius: 20px;
         background: #fff;
         box-shadow: 0 12px 32px #2a1d7a14;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: minmax(0, 440fr) minmax(0, 256fr);
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      .figure {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 2px 0 14px;
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .pill {
+        padding: 2px 10px;
+        border-radius: 99px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+        color: #0f7a4d;
+        background: #dcfbea;
+      }
+      .pill.trial {
+        color: #5b3cf5;
+        background: #efeaff;
+      }
+      .pill.due {
+        color: #b4421b;
+        background: #ffe9df;
+      }
+      .bars {
+        display: block;
+        width: 100%;
+      }
+      .bars rect {
+        fill: #d9d0ff;
+      }
+      .bars rect.peak {
+        fill: #5b3cf5;
+      }
+      .bars text {
+        font-size: 12px;
+        fill: #8089a0;
+        text-anchor: middle;
+      }
+      .channels {
+        display: grid;
+        gap: 14px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 14px;
+      }
+      .channels span {
+        display: flex;
+        justify-content: space-between;
+      }
+      .channels i {
+        display: block;
+        height: 8px;
+        margin-top: 4px;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #5b3cf5 var(--share), #ece8ff 0);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th {
+        padding: 0 0 10px;
+        font-size: 13px;
+        font-weight: 500;
+        text-align: left;
+        color: #8089a0;
+      }
+      td {
+        padding: 11px 0;
+        border-top: 1px solid #eceef5;
+      }
+      th:nth-child(n + 3),
+      td:nth-child(n + 3) {
+        text-align: right;
+      }
+      .who {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      .who small {
+        display: block;
+        font-size: 13px;
+        font-weight: 400;
+        color: #8089a0;
+      }
+      .who::before {
+        content: attr(data-initials);
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        font-size: 13px;
+        color: #5b3cf5;
+        background: #efeaff;
+      }
+      .plans {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
       }
       .plan.featured {
         color: #fff;
         background: linear-gradient(150deg, #6b4cff, #3b82f6);
       }
       .plan h2 {
-        margin: 0;
-        font-size: 18px;
+        font-size: 17px;
+        font-weight: 600;
+        color: inherit;
       }
       .price {
-        margin: 12px 0;
-        font-size: 40px;
+        margin: 8px 0;
+        font-size: 34px;
         font-weight: 800;
       }
       .price small {
-        font-size: 16px;
-        font-weight: 500;
+        font-size: 15px;
+        font-weight: 400;
         opacity: 0.7;
       }
-      ul {
-        margin: 0 0 20px;
+      .plan ul {
+        margin: 0 0 18px;
         padding: 0 0 0 18px;
       }
-      button {
+      .plan button {
         width: 100%;
-        padding: 12px;
+        padding: 11px;
         border: 0;
         border-radius: 12px;
         font: inherit;
@@ -94,44 +234,225 @@
     </style>
   </head>
   <body>
-    <nav>
-      <b>lumen</b><span>Product</span><span>Pricing</span><span>Docs</span>
-    </nav>
-    <header>
-      <h1>Plans that grow with you</h1>
-      <p>Start free, upgrade when your dashboards do.</p>
-    </header>
-    <section class="plans">
-      <article class="plan">
-        <h2>Starter</h2>
-        <div class="price">$0 <small>/ month</small></div>
-        <ul>
-          <li>3 dashboards</li>
-          <li>7 days of history</li>
-          <li>Email reports</li>
-        </ul>
-        <button>Start free</button>
-      </article>
-      <article class="plan featured" id="featured">
-        <h2>Team</h2>
-        <div class="price">$24 <small>/ month</small></div>
-        <ul>
-          <li>Unlimited dashboards</li>
-          <li>1 year of history</li>
-          <li>Slack alerts</li>
-        </ul>
-        <button>Try Team</button>
-      </article>
-      <article class="plan">
-        <h2>Enterprise</h2>
-        <div class="price">Talk to us</div>
-        <ul>
-          <li>Single sign-on</li>
-          <li>Audit log</li>
-          <li>Dedicated support</li>
-        </ul>
-        <button>Contact sales</button>
-      </article>
-    </section>
+    <div class="page">
+      <nav>
+        <b>lumen</b><span>Reports</span><span>Customers</span
+        ><span>Pricing</span>
+      </nav>
+
+      <main data-view="reports" data-title="Weekly report">
+        <header>
+          <h1>Weekly report</h1>
+          <p>March 3 to 9, compared with the week before.</p>
+        </header>
+        <div class="row">
+          <section class="card" id="revenue">
+            <h2>Revenue</h2>
+            <div class="figure">$48,200 <span class="pill">+12%</span></div>
+            <svg class="bars" viewBox="0 0 392 128">
+              <rect x="12" y="58" width="32" height="52" rx="8" />
+              <rect x="68" y="46" width="32" height="64" rx="8" />
+              <rect x="124" y="62" width="32" height="48" rx="8" />
+              <rect x="180" y="30" width="32" height="80" rx="8" />
+              <rect class="peak" x="236" y="4" width="32" height="106" rx="8" />
+              <rect x="292" y="40" width="32" height="70" rx="8" />
+              <rect x="348" y="22" width="32" height="88" rx="8" />
+              <text x="28" y="126">Mon</text>
+              <text x="84" y="126">Tue</text>
+              <text x="140" y="126">Wed</text>
+              <text x="196" y="126">Thu</text>
+              <text x="252" y="126">Fri</text>
+              <text x="308" y="126">Sat</text>
+              <text x="364" y="126">Sun</text>
+            </svg>
+          </section>
+          <section class="card" id="signups">
+            <h2>Signups</h2>
+            <div class="figure">1,284 <span class="pill">+8%</span></div>
+            <ul class="channels">
+              <li>
+                <span>Organic <b>52%</b></span
+                ><i style="--share: 52%"></i>
+              </li>
+              <li>
+                <span>Referrals <b>31%</b></span
+                ><i style="--share: 31%"></i>
+              </li>
+              <li>
+                <span>Ads <b>17%</b></span
+                ><i style="--share: 17%"></i>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <section class="card" id="pages">
+          <table>
+            <thead>
+              <tr>
+                <th>Top pages</th>
+                <th></th>
+                <th>Views</th>
+                <th>Conversion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>/pricing</td>
+                <td></td>
+                <td>18,402</td>
+                <td>6.1%</td>
+              </tr>
+              <tr>
+                <td>/templates</td>
+                <td></td>
+                <td>12,077</td>
+                <td>3.4%</td>
+              </tr>
+              <tr>
+                <td>/docs/quickstart</td>
+                <td></td>
+                <td>9,318</td>
+                <td>2.2%</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+
+      <main data-view="customers" data-title="Customers">
+        <header>
+          <h1>Customers</h1>
+          <p>6 accounts, sorted by last activity.</p>
+        </header>
+        <section class="card" id="customers">
+          <table>
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th>Plan</th>
+                <th>Seats</th>
+                <th>Monthly</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="who" data-initials="AF">
+                    <span>Ana Ferrari<small>ana@northwind.example</small></span>
+                  </div>
+                </td>
+                <td>Team</td>
+                <td>12</td>
+                <td>$288</td>
+                <td><span class="pill">Active</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who" data-initials="TO">
+                    <span>Tomás Okafor<small>tomas@halden.example</small></span>
+                  </div>
+                </td>
+                <td>Enterprise</td>
+                <td>140</td>
+                <td>$4,200</td>
+                <td><span class="pill">Active</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who" data-initials="MT">
+                    <span>Mei Tanaka<small>mei@brightside.example</small></span>
+                  </div>
+                </td>
+                <td>Starter</td>
+                <td>3</td>
+                <td>$0</td>
+                <td><span class="pill trial">Trial</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who" data-initials="LM">
+                    <span>Lucas Moreau<small>lucas@fjord.example</small></span>
+                  </div>
+                </td>
+                <td>Team</td>
+                <td>24</td>
+                <td>$576</td>
+                <td><span class="pill">Active</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who" data-initials="PN">
+                    <span>Priya Nair<small>priya@quill.example</small></span>
+                  </div>
+                </td>
+                <td>Team</td>
+                <td>8</td>
+                <td>$192</td>
+                <td><span class="pill due">Past due</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="who" data-initials="SW">
+                    <span>Sam Whitlock<small>sam@orbital.example</small></span>
+                  </div>
+                </td>
+                <td>Enterprise</td>
+                <td>65</td>
+                <td>$1,950</td>
+                <td><span class="pill">Active</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+
+      <main data-view="pricing" data-title="Plans and pricing">
+        <header>
+          <h1>Plans that grow with you</h1>
+          <p>Start free, upgrade when your dashboards do.</p>
+        </header>
+        <section class="plans">
+          <article class="card plan">
+            <h2>Starter</h2>
+            <div class="price">$0 <small>/ month</small></div>
+            <ul>
+              <li>3 dashboards</li>
+              <li>7 days of history</li>
+              <li>Email reports</li>
+            </ul>
+            <button>Start free</button>
+          </article>
+          <article class="card plan featured" id="featured">
+            <h2>Team</h2>
+            <div class="price">$24 <small>/ month</small></div>
+            <ul>
+              <li>Unlimited dashboards</li>
+              <li>1 year of history</li>
+              <li>Slack alerts</li>
+            </ul>
+            <button>Try Team</button>
+          </article>
+          <article class="card plan">
+            <h2>Enterprise</h2>
+            <div class="price">Custom</div>
+            <ul>
+              <li>Single sign-on</li>
+              <li>Audit log</li>
+              <li>Dedicated support</li>
+            </ul>
+            <button>Contact sales</button>
+          </article>
+        </section>
+      </main>
+    </div>
+    <script>
+      const view = location.pathname.slice(1) || 'reports'
+      document.body.classList.toggle('beside', location.search === '?popup')
+      for (const main of document.querySelectorAll('main')) {
+        main.hidden = main.dataset.view !== view
+        if (!main.hidden) document.title = `${main.dataset.title} · Lumen`
+      }
+    </script>
   </body>
 </html>

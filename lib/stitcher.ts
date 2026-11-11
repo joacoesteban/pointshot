@@ -86,7 +86,9 @@ export class Stitcher {
           .map((png) => ({ png, downscaled: scale < density })),
       )
       .otherwise(() =>
-        errAsync(new CaptureError('Could not allocate a canvas for the snag')),
+        errAsync(
+          new CaptureError('Could not allocate a canvas for the screenshot'),
+        ),
       )
   }
 

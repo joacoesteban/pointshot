@@ -54,7 +54,7 @@ export default defineConfig({
     },
     browser_specific_settings: {
       gecko: {
-        id: 'snag@joacoesteban.com',
+        id: 'pointshot@joaco.io',
         // ClipboardItem, which copying needs, arrived in Firefox 127.
         strict_min_version: '127.0',
         data_collection_permissions: { required: ['none'] },
@@ -62,7 +62,8 @@ export default defineConfig({
     },
   }),
   zip: {
-    artifactTemplate: 'snag-{{version}}-{{browser}}-{{manifestVersion}}.zip',
+    artifactTemplate:
+      'pointshot-{{version}}-{{browser}}-{{manifestVersion}}.zip',
     zipSources: false,
   },
   vite: () => ({

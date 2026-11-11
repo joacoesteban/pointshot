@@ -7,6 +7,7 @@ import {
   type Page,
   type Worker,
 } from '@playwright/test'
+import { match } from 'ts-pattern'
 
 export const FIXTURE_URL = 'https://snag.test/boxes.html'
 export const INSECURE_FIXTURE_URL = 'http://snag.test/boxes.html'
@@ -18,24 +19,32 @@ const fixture = readFileSync(
 )
 
 type ClickEvent = { dispatch: () => void }
+type CommandEvent = { dispatch: (command: string) => void }
 
 export const test = base.extend<{
   // The browser's interface language, which picks the extension's locale.
   lang: string
+  // Classic scrollbars, which the store screenshots turn off.
+  scrollbars: boolean
   context: BrowserContext
   background: Worker
   page: Page
   togglePopup: () => Promise<void>
+  // Runs a keyboard command from the manifest, as its shortcut would.
+  runCommand: (command: string) => Promise<void>
 }>({
   lang: ['en-US', { option: true }],
-  context: async ({ lang }, use) => {
+  scrollbars: [true, { option: true }],
+  context: async ({ lang, scrollbars }, use) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       viewport: { width: 1000, height: 700 },
       deviceScaleFactor: 1,
       permissions: ['clipboard-read', 'clipboard-write'],
       // Keeps a classic scrollbar, so the crop is checked against a client width narrower than the captured window.
-      ignoreDefaultArgs: ['--hide-scrollbars'],
+      ignoreDefaultArgs: match(scrollbars)
+        .with(true, () => ['--hide-scrollbars'])
+        .otherwise(() => []),
       args: [
         `--lang=${lang}`,
         `--disable-extensions-except=${extensionPath}`,
@@ -64,6 +73,15 @@ export const test = base.extend<{
       background.evaluate(() => {
         ;(chrome.action.onClicked as unknown as ClickEvent).dispatch()
       }),
+    )
+  },
+  runCommand: async ({ background }, use) => {
+    await use((command) =>
+      background.evaluate((command) => {
+        ;(chrome.commands.onCommand as unknown as CommandEvent).dispatch(
+          command,
+        )
+      }, command),
     )
   },
 })

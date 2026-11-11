@@ -92,7 +92,7 @@
       <header class="flex items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-4">
           <img src={logo} alt="" class="w-14 h-14" />
-          <h1 class="blend font-black text-4xl m-0">{t('snag')}</h1>
+          <h1 class="blend font-black text-4xl m-0">Pointshot</h1>
         </div>
         <SymbolButton
           name="github"
