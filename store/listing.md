@@ -6,8 +6,9 @@ Copy and images for the Chrome Web Store and Firefox Add-ons.
 
 `mise run store:screenshots` renders the five store screenshots, 1280 × 800,
 into `store/screenshots/en-US` and `store/screenshots/es-419`. Upload them in
-order. Each one is a headline on a gradient, and the first four frame a
-capture of the extension on a demo site.
+order. Each one is a headline on white, with one word highlighted and a
+hand-drawn arrow or spark, and the first four frame a capture of the
+extension on a demo site over shapes in the icon's colours.
 
 | Screenshot   | Shows                | Headline                            |
 | ------------ | -------------------- | ----------------------------------- |
@@ -17,13 +18,21 @@ capture of the extension on a demo site.
 | `04-library` | The library          | Every screenshot saved              |
 | `05-local`   | The icon, on its own | No account, no uploads, no tracking |
 
+It also renders the promo images into `store/promo/en-US` and
+`store/promo/es-419`:
+
+- `tile.png`, 440 × 280: the small promo tile, with the icon, the name and
+  the first headline.
+- `marquee.png`, 1400 × 560: the marquee, the first screenshot's headline and
+  capture at the marquee's size.
+
 To change them:
 
 - The headlines are in `store/copy.ts`, with `**bold**` for the heavy words.
-- The scenes, and which capture each image shows, are in
-  `store/screenshots.spec.ts`.
-- The frame, the gradients and the layouts are in `store/slide.html`, and the
-  demo site is `store/demo.html`.
+- The scenes, which capture each image shows, which word is highlighted and
+  where its arrow or spark goes are in `store/screenshots.spec.ts`.
+- The frame, the shapes, the highlighter colours, the sketch paths and the
+  layouts are in `store/slide.html`, and the demo site is `store/demo.html`.
 
 ## English
 
@@ -63,17 +72,17 @@ open it, and your screenshots stay on your computer.
 
 **Nombre:** Pointshot: capturas de pantalla con un clic
 
-**Resumen:** Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu
+**Resumen:** Apuntá. Clickeá. Pegá. Captura de pantalla de lo que toca tu
 mouse: tablas, gráficos, hasta la página completa. Sin cuenta.
 
 **Descripción:**
 
 Todas las herramientas de captura de pantalla te hacen arrastrar un
 rectángulo y después corregirlo. Pointshot no. Apuntá a lo que querés (una
-tabla, un gráfico, un formulario, un posteo) y se ilumina. Hacé clic y ya está
+tabla, un gráfico, un formulario, un posteo) y se ilumina. Clickeá y ya está
 en tu portapapeles, recortado justo en sus bordes.
 
-- Apuntá y hacé clic para capturar cualquier cosa de la página. Sin recortar
+- Apuntá y clickeá para capturar cualquier cosa de la página. Sin recortar
   después.
 - También capturas de página completa, de lo que muestra la ventana o de un
   área que arrastrás, con captura con scroll para páginas largas.

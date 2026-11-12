@@ -13,88 +13,97 @@
         box-sizing: border-box;
         margin: 0;
       }
-      /* Chrome Web Store screenshots are 1280 × 800. */
+      :root {
+        --ink: #1a1726;
+        --ink-2: #55506a;
+        --cool: linear-gradient(150deg, #9d7cff, #6a62e6);
+        --warm: linear-gradient(120deg, #f774b6, #ff9a68 70%, #ffcb73);
+      }
       body {
         position: relative;
-        width: 1280px;
-        height: 800px;
+        width: 100vw;
+        height: 100vh;
         overflow: hidden;
         font-family: Outfit, sans-serif;
-        color: var(--tint);
-        background: var(--backdrop);
+        color: var(--ink);
+        background: #fff;
       }
-      [data-theme='lagoon'] {
-        --backdrop: linear-gradient(135deg, #14b88a, #1668d8);
-        --tint: #c9ffe9;
+
+      /* Blurred far enough that the shapes melt into a gradient across the white. */
+      .shape {
+        position: absolute;
+        filter: blur(var(--blur, 90px));
+        opacity: 0.3;
       }
-      [data-theme='tide'] {
-        --backdrop: linear-gradient(160deg, #1b8fe0, #4a35d4);
-        --tint: #cfe6ff;
+      .cool {
+        border-radius: 50%;
+        background: var(--cool);
       }
-      [data-theme='dusk'] {
-        --backdrop: linear-gradient(135deg, #6a3fe0, #1a7fd4 70%, #16b393);
-        --tint: #e2dcff;
-      }
-      [data-theme='reef'] {
-        --backdrop: linear-gradient(200deg, #12a8a0, #2452c8);
-        --tint: #cdfbf4;
-      }
-      [data-theme='deep'] {
-        --backdrop: radial-gradient(circle at 50% 30%, #1d86d8, #2a3fb8 70%);
-        --tint: #cfe6ff;
+      /* A tilted rounded card, like the one peeling off the icon. */
+      .warm {
+        border-radius: 36px;
+        background: var(--warm);
       }
 
       .copy {
         position: absolute;
         display: flex;
         flex-direction: column;
-        gap: 22px;
+        gap: 24px;
       }
       .brand {
         display: flex;
         align-items: center;
         gap: 12px;
-        font-size: 30px;
+        font-size: 28px;
         font-weight: 700;
         letter-spacing: -0.01em;
-        color: #fff;
       }
       .brand img {
-        width: 48px;
-        height: 48px;
+        width: 44px;
+        height: 44px;
         filter: drop-shadow(0 6px 14px #0003);
       }
       h1 {
-        font-size: 76px;
-        font-weight: 300;
-        line-height: 1.04;
+        font-size: 64px;
+        font-weight: 400;
+        line-height: 1.06;
         letter-spacing: -0.025em;
         text-wrap: balance;
       }
+      h1 b {
+        font-weight: 800;
+      }
+      h1 b.mark {
+        padding: 0 0.12em 0.05em;
+        margin: 0 -0.08em;
+        background: 0 0 / 100% 100% no-repeat;
+        box-decoration-break: clone;
+      }
       p {
-        font-size: 29px;
-        font-weight: 300;
-        line-height: 1.25;
+        font-size: 28px;
+        font-weight: 400;
+        line-height: 1.3;
+        color: var(--ink-2);
         text-wrap: balance;
       }
       p:empty {
         display: none;
       }
-      b {
-        font-weight: 800;
-        color: #fff;
-      }
       p b {
-        font-weight: 600;
+        font-weight: 700;
+        color: var(--ink);
       }
 
       figure {
         position: absolute;
         overflow: hidden;
-        border: 6px solid #ffffff59;
-        border-radius: 22px;
-        background-clip: padding-box;
-        box-shadow: 0 36px 90px #0a123a66;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow:
+          0 0 0 1px #1a172614,
+          0 30px 70px -24px #2a1d7a4d,
+          0 10px 24px -10px #2a1d7a2e;
       }
       figure > img {
         display: block;
@@ -107,18 +116,52 @@
         margin: -5.5px 0 0 -9.2px;
         filter: drop-shadow(0 3px 5px #0006);
       }
+      /* Stands in for the camera Pointshot will show inside what it highlights. */
+      .camera {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        width: 76px;
+        height: 76px;
+        translate: -50% -50%;
+        border-radius: 50%;
+        color: #129a52;
+        background: #ffffffe0;
+        box-shadow:
+          0 0 0 2px #8af0b8,
+          0 10px 26px #0f6a3a33;
+      }
+      .camera svg {
+        width: 38px;
+        height: 38px;
+      }
+      /* An SVG of no size is not rendered, so the marks hang off a 1 px one. */
+      .ink {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: visible;
+        fill: none;
+        stroke: var(--ink);
+        stroke-width: 3.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
 
       [data-layout='right'] .copy,
+      [data-layout='marquee'] .copy,
       [data-layout='left'] .copy {
         top: 0;
         bottom: 0;
-        width: 452px;
+        width: 490px;
         justify-content: center;
       }
-      [data-layout='right'] .copy {
-        left: 64px;
+      [data-layout='right'] .copy,
+      [data-layout='marquee'] .copy {
+        left: 72px;
       }
-      [data-layout='right'] figure {
+      [data-layout='right'] figure,
+      [data-layout='marquee'] figure {
         top: 50%;
         right: 40px;
         translate: 0 -50%;
@@ -144,7 +187,7 @@
       }
       [data-layout='top'] h1,
       [data-layout='bottom'] h1 {
-        font-size: 62px;
+        font-size: 58px;
       }
       [data-layout='top'] .copy {
         bottom: 44px;
@@ -155,7 +198,7 @@
         translate: -50% 0;
       }
       [data-layout='bottom'] .copy {
-        top: 52px;
+        top: 56px;
         align-items: center;
         text-align: center;
       }
@@ -182,11 +225,161 @@
         height: 148px;
       }
       [data-layout='center'] h1 {
-        font-size: 60px;
+        font-size: 54px;
+      }
+
+      [data-layout='tile'] .copy {
+        inset: 0;
+        padding-inline: 28px;
+        gap: 14px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      [data-layout='tile'] .brand {
+        font-size: 38px;
+      }
+      [data-layout='tile'] .brand img {
+        width: 72px;
+        height: 72px;
+      }
+      [data-layout='tile'] h1 {
+        font-size: 54px;
+      }
+
+      [data-layout='marquee'] .copy {
+        width: 520px;
+      }
+      [data-layout='marquee'] .brand {
+        gap: 16px;
+        font-size: 40px;
+      }
+      [data-layout='marquee'] .brand img {
+        width: 64px;
+        height: 64px;
+      }
+      [data-layout='marquee'] h1 {
+        font-size: 76px;
+      }
+      [data-layout='marquee'] p {
+        font-size: 34px;
+      }
+
+      /* Each layout keeps its shapes off the copy, bleeding off the edges behind the capture, and has its own highlighter. */
+      [data-layout='right'] {
+        --mark: #c9b8ff;
+      }
+      [data-layout='right'] .cool {
+        width: 760px;
+        height: 760px;
+        right: -300px;
+        top: -330px;
+      }
+      [data-layout='right'] .warm {
+        width: 560px;
+        height: 330px;
+        right: -140px;
+        bottom: -120px;
+        rotate: -14deg;
+      }
+      [data-layout='top'] {
+        --mark: #ffcfae;
+      }
+      [data-layout='top'] .warm {
+        width: 520px;
+        height: 420px;
+        left: -220px;
+        top: -60px;
+        rotate: 14deg;
+      }
+      [data-layout='top'] .cool {
+        width: 560px;
+        height: 560px;
+        right: -240px;
+        top: 120px;
+      }
+      [data-layout='bottom'] {
+        --mark: #ffd48a;
+      }
+      [data-layout='bottom'] .warm {
+        width: 520px;
+        height: 620px;
+        left: -230px;
+        top: 360px;
+        rotate: 18deg;
+      }
+      [data-layout='bottom'] .cool {
+        width: 620px;
+        height: 620px;
+        right: -260px;
+        top: 300px;
+      }
+      [data-layout='left'] {
+        --mark: #ffbfdb;
+      }
+      [data-layout='left'] .cool {
+        width: 620px;
+        height: 620px;
+        left: -260px;
+        bottom: -280px;
+      }
+      [data-layout='left'] .warm {
+        display: none;
+      }
+      [data-layout='center'] {
+        --mark: #c9b8ff;
+      }
+      [data-layout='center'] .cool {
+        width: 700px;
+        height: 700px;
+        left: -320px;
+        top: -360px;
+      }
+      [data-layout='center'] .warm {
+        width: 560px;
+        height: 360px;
+        right: -200px;
+        bottom: -180px;
+        rotate: -16deg;
+      }
+      [data-layout='tile'] {
+        --mark: #c9b8ff;
+        --blur: 36px;
+      }
+      [data-layout='tile'] .cool {
+        width: 260px;
+        height: 260px;
+        left: -120px;
+        top: -150px;
+      }
+      [data-layout='tile'] .warm {
+        width: 220px;
+        height: 150px;
+        right: -90px;
+        bottom: -100px;
+        rotate: -14deg;
+      }
+      [data-layout='marquee'] {
+        --mark: #c9b8ff;
+      }
+      [data-layout='marquee'] .cool {
+        width: 620px;
+        height: 620px;
+        right: -260px;
+        top: -320px;
+      }
+      [data-layout='marquee'] .warm {
+        width: 520px;
+        height: 300px;
+        right: -150px;
+        bottom: -120px;
+        rotate: -12deg;
       }
     </style>
   </head>
   <body>
+    <div class="shape cool"></div>
+    <div class="shape warm"></div>
     <figure>
       <img class="shot" alt="" />
       <svg class="cursor" viewBox="0 0 24 24">
@@ -210,8 +403,30 @@
       const cursor = document.querySelector('.cursor')
       const [x, y] = (params.get('cursor') ?? '').split(',')
 
+      // Hand-drawn marks, each with its anchor at the origin. Arrows end at the origin heading right, so a rotation is the way they travel.
+      const MARKS = {
+        loop: [
+          'M -150 -70 C -138 -50 -120 -36 -104 -46 C -92 -54 -100 -72 -114 -66 C -130 -58 -118 -32 -92 -22 C -62 -10 -36 -8 -8 -2',
+          'M -28 -16 C -21 -12 -13 -6 -7 -2 C -12 2 -16 8 -18 14',
+        ],
+        plain: [
+          'M -148 -46 C -110 -62 -70 -40 -34 -14 S -14 -4 -8 -2',
+          'M -27 -17 C -20 -13 -13 -7 -7 -2 C -12 2 -15 8 -17 13',
+        ],
+        // Three ticks fanning up and right from a corner.
+        spark: [
+          'M 8 -8 C 12 -14 16 -20 21 -27',
+          'M 14 -1 C 22 -4 29 -7 38 -12',
+          'M 1 -13 C 3 -20 4 -27 6 -35',
+        ],
+      }
+      // The highlighter's edges are a little off square, so stretched over any word it reads as a marker stroke.
+      const marker = (fill) =>
+        `url("data:image/svg+xml,${encodeURIComponent(
+          `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'><path d='M3 9 C 30 5 70 4 98 7 C 100 18 99 28 97 35 C 70 38 30 37 2 34 C 0 24 1 15 3 9 Z' fill='${fill}'/></svg>`,
+        )}")`
+
       document.body.dataset.layout = params.get('layout') ?? 'center'
-      document.body.dataset.theme = params.get('theme') ?? 'lagoon'
       document.querySelector('h1').innerHTML = bold(params.get('title') ?? '')
       document.querySelector('p').innerHTML = bold(params.get('body') ?? '')
       figure.hidden = !params.has('shot')
@@ -220,6 +435,83 @@
       cursor.style.display = params.has('cursor') ? '' : 'none'
       cursor.style.left = `${x}px`
       cursor.style.top = `${y}px`
+
+      const highlight = () => {
+        const word = document.querySelectorAll('h1 b')[params.get('mark')]
+        word.classList.add('mark')
+        word.style.backgroundImage = marker(
+          getComputedStyle(document.body).getPropertyValue('--mark').trim(),
+        )
+      }
+
+      const draw = (paths, at, transform) => {
+        const svg = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'svg',
+        )
+        svg.classList.add('ink')
+        svg.style.left = `${at.x}px`
+        svg.style.top = `${at.y}px`
+        svg.innerHTML = `<g transform="${transform}">${paths
+          .map((d) => `<path d="${d}" />`)
+          .join('')}</g>`
+        document.body.append(svg)
+      }
+
+      // Points given in the capture's coordinates.
+      const onShot = (x, y) => {
+        const { left, top } = document
+          .querySelector('.shot')
+          .getBoundingClientRect()
+        return { x: left + Number(x), y: top + Number(y) }
+      }
+
+      // `arrow` is the tip, the direction it travels in degrees and its kind.
+      const arrow = () => {
+        const [x, y, angle, kind] = params.get('arrow').split(',')
+        draw(MARKS[kind], onShot(x, y), `rotate(${angle})`)
+      }
+
+      // `spark` is a corner of the capture and a rotation, or `icon` for the top right corner of the icon.
+      const spark = () => {
+        const value = params.get('spark')
+        if (value === 'icon') {
+          const { right, top, width } = document
+            .querySelector('.brand img')
+            .getBoundingClientRect()
+          const scale = Math.max(1, width / 96)
+          return draw(
+            MARKS.spark,
+            { x: right + 2, y: top - 2 },
+            `scale(${scale})`,
+          )
+        }
+        const [x, y, angle = 0] = value.split(',')
+        draw(MARKS.spark, onShot(x, y), `rotate(${angle})`)
+      }
+
+      // `camera` is the middle of what is highlighted, in the capture's coordinates.
+      const camera = async () => {
+        const [x, y] = params.get('camera').split(',')
+        const { path, geometry } = await (await fetch('/camera.json')).json()
+        const badge = document.createElement('div')
+        badge.classList.add('camera')
+        cursor.before(badge)
+        badge.style.left = `${x}px`
+        badge.style.top = `${y}px`
+        badge.innerHTML = `<svg viewBox="0 0 ${geometry.width} ${geometry.height}"><path fill="currentColor" d="${path}" /></svg>`
+      }
+
+      Promise.all([
+        document.fonts.ready,
+        new Promise((resolve) => addEventListener('load', resolve)),
+        params.has('camera') && camera(),
+      ]).then(() => {
+        if (params.has('mark')) highlight()
+        if (params.has('arrow')) arrow()
+        if (params.has('spark')) spark()
+        document.body.dataset.ready = ''
+      })
     </script>
   </body>
 </html>

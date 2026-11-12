@@ -17,5 +17,5 @@ run = [
 ]
 
 [tasks."store:screenshots"]
-description = "Render the store screenshots, in English and Spanish, into store/screenshots"
+description = "Render the store screenshots and promo images, in English and Spanish, into store/"
 run = ["bun run build:e2e", "bunx playwright test --config store/playwright.config.ts"]

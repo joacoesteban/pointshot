@@ -20,13 +20,12 @@ export const COPY = {
     },
     local: {
       title: '**No account.** No uploads. No tracking.',
-      body: 'Your screenshots stay on your computer.',
     },
     note: 'Best day',
   },
   'es-419': {
     point: {
-      title: 'Apuntá. Hacé clic. **Pegá.**',
+      title: 'Apuntá. Clickeá. **Pegá.**',
       body: 'Capturá **cualquier parte de una página**, recortada justo en sus bordes.',
     },
     modes: {
@@ -43,7 +42,6 @@ export const COPY = {
     },
     local: {
       title: '**Sin cuenta.** Sin subir nada. Sin rastreo.',
-      body: 'Tus capturas quedan en tu computadora.',
     },
     note: 'El mejor día',
   },

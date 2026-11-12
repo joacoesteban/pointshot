@@ -86,7 +86,7 @@ bun run bundle:all # zips for Chrome and Firefox
 
 mise run firefox:lint       # lint the Firefox build with web-ext
 mise run firefox:run        # try the Firefox build in a temporary profile
-mise run store:screenshots  # store images in store/screenshots
+mise run store:screenshots  # store images in store/screenshots and store/promo
 ```
 
 Playwright cannot load extensions into Firefox, so

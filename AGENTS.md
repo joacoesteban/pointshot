@@ -69,7 +69,8 @@ already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
   `lumen.example` and `app.lumen.example`. Window captures go to
   `build/store/<language>`, and each store image is `slide.html` rendering
   one of them framed under a headline from `copy.ts`, into the tracked
-  `store/screenshots/<language>`. `listing.md` lists the images.
+  `store/screenshots/<language>`. The promo tile and marquee are rendered
+  the same way into `store/promo/<language>`. `listing.md` lists the images.
 
 ## How it fits together
 

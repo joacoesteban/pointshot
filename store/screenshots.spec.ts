@@ -6,6 +6,8 @@ import { LOCALES, Studio, type Lang, type Size } from './studio'
 const SIDE: Size = { width: 680, height: 600 }
 const BAND: Size = { width: 1040, height: 540 }
 const DESK: Size = { width: 1040, height: 600 }
+// Short enough to fit the marquee, and scrolled past the navigation so the toast clears the chart.
+const STRIP: Size = { width: 760, height: 490 }
 
 // Over the chart, between two bars.
 const CHART = { x: 300, y: 150 }
@@ -37,6 +39,21 @@ for (const lang of Object.keys(LOCALES) as Lang[]) {
       await studio.visit('reports', SIDE)
       await studio.point('#revenue', CHART)
       const pointing = await studio.shoot('pick-side', SIDE)
+      const card = await studio.spot(page.locator('#revenue'), 1, 0)
+      const cardMiddle = await studio.spot(page.locator('#revenue'), 0.5, 0.5)
+
+      await studio.visit('reports', STRIP)
+      await page.evaluate(() => {
+        scrollTo(0, 64)
+      })
+      await studio.point('#revenue', CHART)
+      const pointingStrip = await studio.shoot('pick-strip', STRIP)
+      const cardStrip = await studio.spot(page.locator('#revenue'), 1, 0)
+      const cardStripMiddle = await studio.spot(
+        page.locator('#revenue'),
+        0.5,
+        0.5,
+      )
 
       await studio.visit('reports', BAND)
       // Past the navigation, so the toast at the bottom clears the area.
@@ -45,6 +62,11 @@ for (const lang of Object.keys(LOCALES) as Lang[]) {
       })
       await studio.drag('.row')
       const dragging = await studio.shoot('area-band', BAND)
+      const modes = await studio.spot(
+        page.getByTestId('snag-mode-area'),
+        0.5,
+        1.15,
+      )
       await studio.release()
 
       await studio.visit('reports')
@@ -95,41 +117,77 @@ for (const lang of Object.keys(LOCALES) as Lang[]) {
       await page.mouse.move(...at(1.2, 1.2))
       await togglePopup()
       await studio.shoot('editor-desk', DESK)
+      const tools = await studio.spot(
+        editor.getByRole('button', { name: studio.t('toolArrow') }),
+        -0.05,
+        -0.05,
+      )
       await editor.getByTestId('snag-save-edit').click()
       await expect(page.getByTestId('snag-shot')).toHaveCount(8)
 
       await studio.library()
       await studio.shoot('library-side', SIDE)
+      const search = await studio.spot(
+        page.getByRole('searchbox', { name: studio.t('searchSnags') }),
+        1,
+        0,
+      )
 
-      await studio.render('01-point', {
+      await studio.render('screenshots', '01-point', {
         ...copy.point,
         ...pointing,
         layout: 'right',
-        theme: 'lagoon',
+        camera: cardMiddle,
+        mark: '0',
+        spark: card,
       })
-      await studio.render('02-modes', {
+      await studio.render('screenshots', '02-modes', {
         ...copy.modes,
         ...dragging,
         layout: 'top',
-        theme: 'tide',
+        mark: '0',
+        arrow: `${modes},-60,loop`,
       })
-      await studio.render('03-editor', {
+      await studio.render('screenshots', '03-editor', {
         ...copy.editor,
         shot: 'editor-desk',
         layout: 'bottom',
-        theme: 'dusk',
+        mark: '0',
+        arrow: `${tools},40,plain`,
       })
-      await studio.render('04-library', {
+      await studio.render('screenshots', '04-library', {
         ...copy.library,
         shot: 'library-side',
         layout: 'left',
-        theme: 'reef',
+        mark: '1',
+        spark: search,
       })
-      await studio.render('05-local', {
+      await studio.render('screenshots', '05-local', {
         ...copy.local,
         layout: 'center',
-        theme: 'deep',
+        mark: '0',
+        spark: 'icon',
       })
+
+      await studio.render(
+        'promo',
+        'tile',
+        { title: copy.point.title, layout: 'tile', mark: '0', spark: 'icon' },
+        Studio.TILE,
+      )
+      await studio.render(
+        'promo',
+        'marquee',
+        {
+          ...copy.point,
+          ...pointingStrip,
+          layout: 'marquee',
+          camera: cardStripMiddle,
+          mark: '0',
+          spark: cardStrip,
+        },
+        Studio.MARQUEE,
+      )
     })
   })
 }
