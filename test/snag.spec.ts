@@ -1360,7 +1360,7 @@ test.describe('in Spanish', () => {
     await expect(popup).toContainText('Todavía no hay capturas')
     await expect(popup).toContainText('Presioná Capturar')
     await page.getByRole('button', { name: 'Capturar', exact: true }).click()
-    await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
+    await expect(page.getByText('Clickeá o presioná Enter')).toBeVisible()
     await expect(page.getByTestId('snag-toast')).toContainText('Página entera')
     await hover(page, '#target')
     await page.mouse.down()

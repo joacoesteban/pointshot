@@ -6,7 +6,7 @@
     "message": "Pointshot: capturas de pantalla con un clic"
   },
   "description": {
-    "message": "Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu mouse: tablas, gráficos, hasta la página completa. Sin cuenta."
+    "message": "Apuntá. Clickeá. Pegá. Captura de pantalla de lo que toca tu mouse: tablas, gráficos, hasta la página completa. Sin cuenta."
   },
   "commandToggle": {
     "message": "Mostrar u ocultar Pointshot en la página actual"
@@ -62,7 +62,7 @@
     "message": "Todavía no hay capturas"
   },
   "emptyBody": {
-    "message": "Presioná Capturar y hacé clic en lo que quieras de la página. Va directo a tu portapapeles."
+    "message": "Presioná Capturar y clickeá lo que quieras de la página. Va directo a tu portapapeles."
   },
   "deletedOne": {
     "message": "Se borró 1 captura"
@@ -97,7 +97,7 @@
     "message": "Modo de captura"
   },
   "hintElement": {
-    "message": "Hacé clic o presioná Enter para capturar esto"
+    "message": "Clickeá o presioná Enter para capturar esto"
   },
   "hintArea": {
     "message": "Arrastrá sobre el área que querés capturar"
@@ -106,10 +106,10 @@
     "message": "Soltá para capturar"
   },
   "hintVisible": {
-    "message": "Hacé clic o presioná Enter para capturar lo que muestra la ventana"
+    "message": "Clickeá o presioná Enter para capturar lo que muestra la ventana"
   },
   "hintPage": {
-    "message": "Hacé clic o presioná Enter para capturar la página entera"
+    "message": "Clickeá o presioná Enter para capturar la página entera"
   },
   "hintArrows": {
     "message": "Las flechas cambian la selección"
@@ -350,7 +350,7 @@
     "message": "1 captura"
   },
   "libraryEmptyBody": {
-    "message": "Abrí Pointshot desde la barra de herramientas en cualquier página y hacé clic en lo que quieras capturar."
+    "message": "Abrí Pointshot desde la barra de herramientas en cualquier página y clickeá lo que quieras capturar."
   },
   "couldNotOpen": {
     "message": "No se pudo abrir esa captura"
