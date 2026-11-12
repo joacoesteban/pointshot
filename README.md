@@ -6,7 +6,7 @@ it, open it full size, mark it up, copy it again or download it.
 
 ![Pointshot highlighting a chart on a page, ready to capture it](store/screenshots/en-US/01-point.png)
 
-Pointshot speaks English and Argentinian Spanish, follows the browser's
+Pointshot speaks English and Spanish, follows the browser's
 language, and runs on Chrome and on Firefox 127 or later.
 
 ## Use
@@ -86,7 +86,7 @@ bun run bundle:all # zips for Chrome and Firefox
 
 mise run firefox:lint       # lint the Firefox build with web-ext
 mise run firefox:run        # try the Firefox build in a temporary profile
-mise run store:screenshots  # store images in store/screenshots
+mise run store:screenshots  # store images in store/screenshots and store/promo
 ```
 
 Playwright cannot load extensions into Firefox, so

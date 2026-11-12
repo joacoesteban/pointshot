@@ -1,12 +1,12 @@
 {
   "locale": {
-    "message": "es-419"
+    "message": "es"
   },
   "name": {
     "message": "Pointshot: capturas de pantalla con un clic"
   },
   "description": {
-    "message": "Apuntá. Hacé clic. Pegá. Captura de pantalla de lo que toca tu mouse: tablas, gráficos, hasta la página completa. Sin cuenta."
+    "message": "Apunta. Clickea. Pega. Captura de pantalla de lo que toca tu cursor: tablas, gráficos, hasta la página completa. Sin cuenta."
   },
   "commandToggle": {
     "message": "Mostrar u ocultar Pointshot en la página actual"
@@ -56,13 +56,13 @@
     "message": "Ninguna captura coincide"
   },
   "noMatchBody": {
-    "message": "Probá con otra búsqueda u otro sitio."
+    "message": "Prueba con otra búsqueda u otro sitio."
   },
   "emptyTitle": {
     "message": "Todavía no hay capturas"
   },
   "emptyBody": {
-    "message": "Presioná Capturar y hacé clic en lo que quieras de la página. Va directo a tu portapapeles."
+    "message": "Pulsa Capturar y clickea lo que quieras de la página. Va directo a tu portapapeles."
   },
   "deletedOne": {
     "message": "Se borró 1 captura"
@@ -97,19 +97,19 @@
     "message": "Modo de captura"
   },
   "hintElement": {
-    "message": "Hacé clic o presioná Enter para capturar esto"
+    "message": "Clickea o pulsa Enter para capturar esto"
   },
   "hintArea": {
-    "message": "Arrastrá sobre el área que querés capturar"
+    "message": "Arrastra sobre el área que quieres capturar"
   },
   "hintRelease": {
-    "message": "Soltá para capturar"
+    "message": "Suelta para capturar"
   },
   "hintVisible": {
-    "message": "Hacé clic o presioná Enter para capturar lo que muestra la ventana"
+    "message": "Clickea o pulsa Enter para capturar lo que muestra la ventana"
   },
   "hintPage": {
-    "message": "Hacé clic o presioná Enter para capturar la página entera"
+    "message": "Clickea o pulsa Enter para capturar la página entera"
   },
   "hintArrows": {
     "message": "Las flechas cambian la selección"
@@ -178,13 +178,13 @@
     "message": "Guardar como captura nueva"
   },
   "typeThenEnter": {
-    "message": "Escribí y presioná Enter"
+    "message": "Escribe y pulsa Enter"
   },
   "copied": {
     "message": "Copiado al portapapeles"
   },
   "copiedScaled": {
-    "message": "Copiado al portapapeles, achicado para que entre"
+    "message": "Copiado al portapapeles, reducido para que quepa"
   },
   "savedAndCopied": {
     "message": "Guardado y copiado al portapapeles"
@@ -196,7 +196,7 @@
     "message": "No hay nada visible para capturar"
   },
   "storageFull": {
-    "message": "Copiado, pero el almacenamiento está lleno. Borrá algunas capturas para guardar más"
+    "message": "Copiado, pero el almacenamiento está lleno. Borra algunas capturas para guardar más"
   },
   "notSaved": {
     "message": "Copiado, pero no se pudo guardar"
@@ -225,7 +225,7 @@
     "message": "Resolución"
   },
   "resolutionHelp": {
-    "message": "Nativa mantiene la nitidez en pantallas de alta densidad. Estándar genera archivos más livianos."
+    "message": "Nativa mantiene la nitidez en pantallas de alta densidad. Estándar genera archivos más ligeros."
   },
   "resolutionDevice": {
     "message": "Nativa"
@@ -240,7 +240,7 @@
     "message": "Formato"
   },
   "formatHelp": {
-    "message": "Lo que copiás sigue en PNG, el único formato que acepta el portapapeles."
+    "message": "Lo que copias sigue en PNG, el único formato que acepta el portapapeles."
   },
   "quality": {
     "message": "Calidad"
@@ -249,7 +249,7 @@
     "message": "Carpeta"
   },
   "folderHelp": {
-    "message": "Dentro de tu carpeta de descargas. Dejala vacía para guardar ahí."
+    "message": "Dentro de tu carpeta de descargas. Déjala vacía para guardar ahí."
   },
   "saveAs": {
     "message": "Preguntar dónde guardar"
@@ -258,7 +258,7 @@
     "message": "Mostrar el diálogo Guardar como en cada descarga."
   },
   "downloadsPermission": {
-    "message": "Permitile a Pointshot administrar descargas para usar esto"
+    "message": "Permite que Pointshot gestione las descargas para usar esto"
   },
   "sectionLibrary": {
     "message": "Biblioteca"
@@ -267,7 +267,7 @@
     "message": "Capturas a guardar"
   },
   "keepHelp": {
-    "message": "Pasado ese número, se borran las más viejas."
+    "message": "Pasado ese número, se borran las más antiguas."
   },
   "sectionAppearance": {
     "message": "Apariencia"
@@ -294,7 +294,7 @@
     "message": "Cambiar atajos"
   },
   "firefoxShortcuts": {
-    "message": "Cambialos en Complementos y temas, desde el engranaje, en Administrar atajos de extensiones."
+    "message": "Cámbialos en Complementos y temas, desde el engranaje, en Administrar atajos de extensiones."
   },
   "sectionHelp": {
     "message": "Ayuda"
@@ -303,7 +303,7 @@
     "message": "Diagnóstico"
   },
   "diagnosticsHelp": {
-    "message": "Versión, navegador, configuración y errores recientes, para pegar en un reporte. Sin direcciones de páginas."
+    "message": "Versión, navegador, configuración y errores recientes, para pegar en un informe. Sin direcciones de páginas."
   },
   "copyDiagnostics": {
     "message": "Copiar diagnóstico"
@@ -350,13 +350,13 @@
     "message": "1 captura"
   },
   "libraryEmptyBody": {
-    "message": "Abrí Pointshot desde la barra de herramientas en cualquier página y hacé clic en lo que quieras capturar."
+    "message": "Abre Pointshot desde la barra de herramientas en cualquier página y clickea lo que quieras capturar."
   },
   "couldNotOpen": {
     "message": "No se pudo abrir esa captura"
   },
   "libraryEmptyShortcut": {
-    "message": "O presioná $SHORTCUT$ para empezar directamente.",
+    "message": "O pulsa $SHORTCUT$ para empezar directamente.",
     "placeholders": {
       "shortcut": {
         "content": "$1"
@@ -372,7 +372,7 @@
     }
   },
   "deleteManyBody": {
-    "message": "Vas a poder deshacerlo durante unos segundos."
+    "message": "Podrás deshacerlo durante unos segundos."
   },
   "moreSites": {
     "message": "$COUNT$ sitios más",

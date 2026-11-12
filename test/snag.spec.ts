@@ -1350,17 +1350,17 @@ test('opens the options from the popup', async ({
 })
 
 test.describe('in Spanish', () => {
-  test.use({ lang: 'es-419' })
+  test.use({ lang: 'es' })
 
-  test('speaks Argentinian Spanish', async ({ page, togglePopup }) => {
+  test('speaks Spanish', async ({ page, togglePopup }) => {
     // Chromium on macOS ignores --lang and keeps the system language, so the extension stays in English there.
     test.skip(process.platform === 'darwin', 'Chromium ignores --lang on macOS')
     await togglePopup()
     const popup = page.getByTestId('snag-popup')
     await expect(popup).toContainText('Todavía no hay capturas')
-    await expect(popup).toContainText('Presioná Capturar')
+    await expect(popup).toContainText('Pulsa Capturar')
     await page.getByRole('button', { name: 'Capturar', exact: true }).click()
-    await expect(page.getByText('Hacé clic o presioná Enter')).toBeVisible()
+    await expect(page.getByText('Clickea o pulsa Enter')).toBeVisible()
     await expect(page.getByTestId('snag-toast')).toContainText('Página entera')
     await hover(page, '#target')
     await page.mouse.down()

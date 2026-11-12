@@ -28,6 +28,6 @@ describe('age', () => {
 describe('age in Spanish', () => {
   it('follows the interface language', () => {
     const now = Date.UTC(2026, 0, 2)
-    expect(age(now - 2 * 60_000, now, 'es-419')).toBe('hace 2 minutos')
+    expect(age(now - 2 * 60_000, now, 'es')).toBe('hace 2 minutos')
   })
 })

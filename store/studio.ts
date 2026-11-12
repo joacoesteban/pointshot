@@ -31,7 +31,7 @@ const FROZEN_AT = 1200
 
 const MessagesSchema = z.record(z.string(), z.object({ message: z.string() }))
 
-export const LOCALES = { 'en-US': 'en', 'es-419': 'es_419' } as const
+export const LOCALES = { 'en-US': 'en', es: 'es' } as const
 
 export type Lang = keyof typeof LOCALES
 export type View = keyof typeof VIEWS
@@ -40,7 +40,18 @@ export type Point = { readonly x: number; readonly y: number }
 
 // What store/slide.html reads from its query string. `shot` names a window capture, and `cursor` is drawn over it.
 export type Slide = Partial<
-  Record<'layout' | 'theme' | 'title' | 'body' | 'shot' | 'cursor', string>
+  Record<
+    | 'layout'
+    | 'title'
+    | 'body'
+    | 'shot'
+    | 'cursor'
+    | 'camera'
+    | 'mark'
+    | 'arrow'
+    | 'spark',
+    string
+  >
 >
 
 type Stage = {
@@ -57,6 +68,9 @@ export class Studio {
   static readonly ORIGIN = 'https://studio.test'
   // Chrome Web Store screenshots are 1280 × 800.
   static readonly SIZE: Size = { width: 1280, height: 800 }
+  // The store's small promo tile and marquee.
+  static readonly TILE: Size = { width: 440, height: 280 }
+  static readonly MARQUEE: Size = { width: 1400, height: 560 }
 
   private cursor: Point = { x: 0, y: 0 }
 
@@ -87,6 +101,11 @@ export class Studio {
         )
         .with({ pathname: '/icon.png' }, () =>
           route.fulfill({ path: path.join(ROOT, 'assets/icon.png') }),
+        )
+        .with({ pathname: '/camera.json' }, () =>
+          route.fulfill({
+            path: path.join(ROOT, 'assets/symbols/camera.viewfinder.json'),
+          }),
         )
         .otherwise(({ pathname }) =>
           route.fulfill({
@@ -194,6 +213,13 @@ export class Studio {
     await expect.poll(() => this.revision()).not.toBe(before)
   }
 
+  // A point at the given fractions of the target's box, in the window's coordinates, for a slide to hang a mark on.
+  async spot(target: Locator, x: number, y: number) {
+    const box = await target.boundingBox()
+    if (!box) throw new Error('The target is not visible')
+    return `${String(box.x + box.width * x)},${String(box.y + box.height * y)}`
+  }
+
   // Saves the window as it is, after its transitions, and returns what a slide needs to show it with the cursor.
   async shoot(shot: string, size: Size = Studio.SIZE) {
     const { lang } = this.stage
@@ -205,16 +231,21 @@ export class Studio {
     return { shot, cursor: `${String(x)},${String(y)}` }
   }
 
-  async render(name: string, slide: Slide) {
+  async render(
+    set: 'screenshots' | 'promo',
+    name: string,
+    slide: Slide,
+    size: Size = Studio.SIZE,
+  ) {
     const { context, lang } = this.stage
     const page = await context.newPage()
-    await page.setViewportSize(Studio.SIZE)
+    await page.setViewportSize(size)
     await page.goto(
       `${Studio.ORIGIN}/?${new URLSearchParams(slide).toString()}`,
     )
-    await page.evaluate(() => document.fonts.ready)
+    await page.locator('body[data-ready]').waitFor({ state: 'attached' })
     await page.screenshot({
-      path: path.join(ROOT, 'store/screenshots', lang, `${name}.png`),
+      path: path.join(ROOT, 'store', set, lang, `${name}.png`),
     })
     await page.close()
   }
