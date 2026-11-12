@@ -6,7 +6,7 @@ it, open it full size, mark it up, copy it again or download it.
 
 ![Pointshot highlighting a chart on a page, ready to capture it](store/screenshots/en-US/01-point.png)
 
-Pointshot speaks English and Argentinian Spanish, follows the browser's
+Pointshot speaks English and Spanish, follows the browser's
 language, and runs on Chrome and on Firefox 127 or later.
 
 ## Use

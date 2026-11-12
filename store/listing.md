@@ -5,7 +5,7 @@ Copy and images for the Chrome Web Store and Firefox Add-ons.
 ## Images
 
 `mise run store:screenshots` renders the five store screenshots, 1280 × 800,
-into `store/screenshots/en-US` and `store/screenshots/es-419`. Upload them in
+into `store/screenshots/en-US` and `store/screenshots/es`. Upload them in
 order. Each one is a headline on white, with one word highlighted and a
 hand-drawn arrow or spark, and the first four frame a capture of the
 extension on a demo site over shapes in the icon's colours.
@@ -19,7 +19,7 @@ extension on a demo site over shapes in the icon's colours.
 | `05-local`   | The icon, on its own | No account, no uploads, no tracking |
 
 It also renders the promo images into `store/promo/en-US` and
-`store/promo/es-419`:
+`store/promo/es`:
 
 - `tile.png`, 440 × 280: the small promo tile, with the icon, the name and
   the first headline.
@@ -68,37 +68,37 @@ open it, and your screenshots stay on your computer.
 - _downloads_, optional: save into a folder or ask where to save, only if you
   turn that on.
 
-## Español (Argentina)
+## Español
 
 **Nombre:** Pointshot: capturas de pantalla con un clic
 
-**Resumen:** Apuntá. Clickeá. Pegá. Captura de pantalla de lo que toca tu
-mouse: tablas, gráficos, hasta la página completa. Sin cuenta.
+**Resumen:** Apunta. Clickea. Pega. Captura de pantalla de lo que toca tu
+cursor: tablas, gráficos, hasta la página completa. Sin cuenta.
 
 **Descripción:**
 
 Todas las herramientas de captura de pantalla te hacen arrastrar un
-rectángulo y después corregirlo. Pointshot no. Apuntá a lo que querés (una
-tabla, un gráfico, un formulario, un posteo) y se ilumina. Clickeá y ya está
-en tu portapapeles, recortado justo en sus bordes.
+rectángulo y después corregirlo. Pointshot no. Apunta a lo que quieras (una
+tabla, un gráfico, un formulario, una publicación) y se ilumina. Clickea y ya
+está en tu portapapeles, recortado justo por sus bordes.
 
-- Apuntá y clickeá para capturar cualquier cosa de la página. Sin recortar
+- Apunta y clickea para capturar cualquier cosa de la página. Sin recortar
   después.
 - También capturas de página completa, de lo que muestra la ventana o de un
-  área que arrastrás, con captura con scroll para páginas largas.
+  área que arrastras, con captura con desplazamiento para páginas largas.
 - Cada captura se copia al portapapeles como PNG, lista para pegar.
-- Cada captura queda en una biblioteca: buscala, filtrala por sitio, abrila
-  en tamaño completo, copiala de nuevo o descargala como PNG, JPEG o WebP.
+- Cada captura queda en una biblioteca: búscala, fíltrala por sitio, ábrela
+  a tamaño completo, cópiala de nuevo o descárgala como PNG, JPEG o WebP.
 - Editor incluido: flechas, recuadros, texto, desenfoque y recorte.
 
 Sin cuenta, sin subir nada, sin rastreo. Pointshot solo funciona en la
-pestaña donde lo abrís, y tus capturas quedan en tu computadora.
+pestaña donde lo abres, y tus capturas se quedan en tu dispositivo.
 
 **Permisos:**
 
-- _activeTab_ y _scripting_: funcionar en la pestaña actual cuando abrís
+- _activeTab_ y _scripting_: funcionar en la pestaña actual cuando abres
   Pointshot.
-- _storage_ y _unlimitedStorage_: guardar tus capturas y configuración en tu
-  computadora.
+- _storage_ y _unlimitedStorage_: guardar tus capturas y tu configuración en
+  tu dispositivo.
 - _downloads_, opcional: guardar en una carpeta o preguntar dónde guardar,
-  solo si lo activás.
+  solo si lo activas.

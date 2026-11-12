@@ -31,7 +31,7 @@ const FROZEN_AT = 1200
 
 const MessagesSchema = z.record(z.string(), z.object({ message: z.string() }))
 
-export const LOCALES = { 'en-US': 'en', 'es-419': 'es_419' } as const
+export const LOCALES = { 'en-US': 'en', es: 'es' } as const
 
 export type Lang = keyof typeof LOCALES
 export type View = keyof typeof VIEWS

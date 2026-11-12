@@ -23,22 +23,22 @@ export const COPY = {
     },
     note: 'Best day',
   },
-  'es-419': {
+  es: {
     point: {
-      title: 'Apuntá. Clickeá. **Pegá.**',
-      body: 'Capturá **cualquier parte de una página**, recortada justo en sus bordes.',
+      title: 'Apunta. Clickea. **Pega.**',
+      body: 'Captura **cualquier parte de una página**, recortada justo por sus bordes.',
     },
     modes: {
       title:
-        'O arrastrá un **área**, capturá la **ventana** o la **página completa**',
+        'O arrastra un **área**, captura la **ventana** o la **página completa**',
     },
     editor: {
       title:
-        'Marcá lo importante con **flechas**, **recuadros**, **texto** y **desenfoque**',
+        'Destaca lo importante con **flechas**, **recuadros**, **texto** y **desenfoque**',
     },
     library: {
       title: 'Todas tus capturas **guardadas** y **fáciles de encontrar**',
-      body: 'Buscalas, filtralas por sitio, copialas de nuevo.',
+      body: 'Búscalas, fíltralas por sitio, cópialas de nuevo.',
     },
     local: {
       title: '**Sin cuenta.** Sin subir nada. Sin rastreo.',
