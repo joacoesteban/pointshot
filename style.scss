@@ -76,6 +76,10 @@
   background-color: #fff4 !important;
   box-shadow: inset 0 0 16px var(--_field-glow);
   color: var(--_blur-text-color);
+  &::placeholder {
+    color: currentColor;
+    opacity: 0.5;
+  }
   option {
     background: oklch(var(--b1));
     color: oklch(var(--bc));
