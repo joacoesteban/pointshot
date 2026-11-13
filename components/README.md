@@ -284,6 +284,10 @@ Outlines the picker's target, and morphs to frame the window in the `visible`
 and `page` modes. It recomputes on scroll (captured, so nested scrollers count)
 and resize. It reads `target$` and `mode` and has no callbacks.
 
+In the `element` mode a 56px camera badge sits in the middle of the target. The
+highlight is a size container, and the badge hides when either side is 80px or
+less, so it never covers a small target.
+
 ### `Selection` (`selection.svelte`)
 
 The drag-to-select overlay, mounted while the mode is `area`. Uses pointer

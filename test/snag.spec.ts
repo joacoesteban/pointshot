@@ -107,6 +107,28 @@ test('picks an element, copies it to the clipboard and stores it', async ({
   await expect(page.getByTestId('snag-shot')).toHaveCount(1)
 })
 
+test('shows a camera in the middle of the element, unless it is too small', async ({
+  page,
+  togglePopup,
+}) => {
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#target')
+  const camera = page.getByTestId('snag-camera')
+  await expect(camera).toBeVisible()
+  const target = await center(page, '#target')
+  await expect
+    .poll(async () => {
+      const box = await camera.boundingBox()
+      return box && { x: box.x + box.width / 2, y: box.y + box.height / 2 }
+    })
+    .toEqual(target)
+
+  await hover(page, '#pill')
+  await expect(page.getByTestId('snag-highlight')).toContainText('div#pill')
+  await expect(camera).toBeHidden()
+})
+
 test('walks siblings and children and snags with Enter', async ({
   page,
   togglePopup,
