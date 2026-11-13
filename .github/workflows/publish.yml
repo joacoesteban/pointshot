@@ -1,0 +1,52 @@
+name: publish
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      - name: Tag matches the package version
+        run: |
+          version=$(jq -r .version package.json)
+          if [ "$GITHUB_REF" != "refs/tags/v$version" ]; then
+            echo "Publish the v$version tag: $GITHUB_REF does not match package.json" >&2
+            exit 1
+          fi
+      - run: bun run bundle:all
+      # WXT zips sources by importing the entrypoints a second time, and
+      # @extend-chrome/messages throws when a message name is declared twice.
+      - run: git archive --format zip --output build/sources.zip HEAD
+      - uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+        with:
+          install_args: fnox
+      - name: Mask store credentials
+        env:
+          FNOX_AGE_KEY: ${{ secrets.FNOX_AGE_KEY }}
+        run: |
+          for key in $(yq -p toml -o yaml '.profiles.ci.secrets | to_entries | .[] | select(.value.provider == "age") | .key' fnox.toml); do
+            fnox -P ci get "$key" | jq -Rr 'select(length > 0) | "::add-mask::" + .'
+          done
+      - name: Submit to the Chrome Web Store and Firefox Add-ons
+        env:
+          FNOX_AGE_KEY: ${{ secrets.FNOX_AGE_KEY }}
+        run: >
+          fnox -P ci exec -- bun wxt submit
+          --chrome-zip build/*-chrome-mv3.zip
+          --firefox-zip build/*-firefox-mv2.zip
+          --firefox-sources-zip build/sources.zip

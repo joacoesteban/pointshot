@@ -38,6 +38,37 @@ CI (`.github/workflows/ci.yml`) runs typecheck, lint, `bundle:all` and the
 tests on every PR to `main`. Once they pass on `main`, it runs
 `bun pm version patch` and pushes the commit and tag, unless that commit is
 already tagged. A `v*.*.*` tag publishes the zips as a GitHub release.
+Store releases are manual: `gh workflow run publish.yml --ref vX.Y.Z` runs
+`.github/workflows/publish.yml`, which refuses a ref that is not the tag of
+the version in `package.json` and submits the zips to the Chrome Web Store and
+Firefox Add-ons with `wxt submit`. `CHROME_CANCEL_PENDING` makes a submission
+cancel a Chrome review still pending, so the newest version is the one
+reviewed. Firefox gets the sources as a `git archive` of the tag, because
+WXT's own sources zip imports the entrypoints twice and
+`@extend-chrome/messages` throws on the repeated message names.
+
+The store credentials live in `fnox.toml` under the `ci` profile,
+age-encrypted to two recipients: the publish workflow's own key, whose
+identity is the `FNOX_AGE_KEY` repository secret, and the maintainer's Mac.
+Only the submit step, under `fnox -P ci exec`, sees them: the Chrome Web Store
+API v2 service account (`CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`,
+`CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`) and the AMO API key
+(`FIREFOX_JWT_ISSUER`, `FIREFOX_JWT_SECRET`). The rest of what `wxt submit`
+reads, such as the store IDs, `CHROME_API_VERSION` and `FIREFOX_CHANNEL`, is
+not secret, so the profile keeps it in plain text through its `plain` provider
+(`fnox -P ci set KEY VALUE -p plain`), and the workflow masks only the
+age-encrypted values. `mise run store:dry-run` checks the credentials against
+both stores without uploading.
+`mise run ci:secret:add KEY...` encrypts one value per key, from stdin lines
+or hidden prompts, and commits `fnox.toml`; encrypting needs no identity.
+`mise run chrome:service-account FILE` does the same for the service account's
+email and multi-line private key, from the JSON key file Google Cloud
+downloads.
+`mise run ci:key` replaces the workflow's key and `FNOX_AGE_KEY`, so land its
+commit on `main` before the next release. `mise run ci:mac-key` replaces the
+Mac's Secure Enclave key in `age-se.txt`, which is committed because only that
+Mac can unwrap it. The tasks live in `mise-tasks/` and commit with jj. Agents
+cannot decrypt the profile; never run these tasks unless asked.
 
 ## Layout
 

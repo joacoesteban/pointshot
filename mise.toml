@@ -1,6 +1,7 @@
 [tools]
 bun = "1.4.2"
 node = "24"
+fnox = "1.39.0"
 
 [tasks."firefox:lint"]
 description = "Build for Firefox and lint the build with web-ext"
@@ -19,3 +20,12 @@ run = [
 [tasks."store:screenshots"]
 description = "Render the store screenshots and promo images, in English and Spanish, into store/"
 run = ["bun run build:e2e", "bunx playwright test --config store/playwright.config.ts"]
+
+[tasks."store:dry-run"]
+description = "Build the store zips and check the ci profile's credentials against both stores, uploading nothing"
+run = [
+  "rm -f build/*.zip",
+  "bun run bundle:all",
+  "git archive --format zip --output build/sources.zip HEAD",
+  "fnox -P ci exec -- bun wxt submit --dry-run --chrome-zip build/*-chrome-mv3.zip --firefox-zip build/*-firefox-mv2.zip --firefox-sources-zip build/sources.zip",
+]
