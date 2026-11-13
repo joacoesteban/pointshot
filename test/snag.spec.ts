@@ -1062,6 +1062,51 @@ test('annotates and crops a snag into a new one', async ({
   })
 })
 
+test('fits a snag wider than the editor inside it', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 })
+  await page.evaluate(() => {
+    const wide = document.createElement('div')
+    wide.id = 'wide'
+    wide.style.cssText =
+      'position: absolute; top: 20px; left: 20px; width: 1500px; height: 200px; background: #3366ff'
+    document.body.append(wide)
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#wide')
+  await page.mouse.down()
+  await page.mouse.up()
+  const shots = page.getByTestId('snag-shot')
+  await expect(shots).toHaveCount(1)
+  await shots.hover()
+  await shots.getByRole('button', { name: 'Open' }).click()
+  await page
+    .getByTestId('snag-preview')
+    .getByRole('button', { name: 'Edit' })
+    .click()
+  const editor = page.getByTestId('snag-editor')
+  const canvas = editor.locator('canvas')
+  const stage = editor.locator('.stage')
+  // The canvas is 300 × 150 until the snag loads into it. The editor's scale-in transform keeps both the ratio and the containment.
+  await expect
+    .poll(async () => {
+      const { width, height } = (await canvas.boundingBox()) ?? {
+        width: 0,
+        height: 1,
+      }
+      return width / height
+    })
+    .toBeCloseTo(1500 / 200, 1)
+  const fitted = await canvas.boundingBox()
+  const bounds = await stage.boundingBox()
+  if (!fitted || !bounds) throw new Error('The editor canvas is not visible')
+  expect(fitted.x).toBeGreaterThanOrEqual(bounds.x)
+  expect(fitted.x + fitted.width).toBeLessThanOrEqual(bounds.x + bounds.width)
+})
+
 test('keeps text still being typed when the edit is saved', async ({
   page,
   togglePopup,

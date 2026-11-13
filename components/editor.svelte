@@ -391,11 +391,12 @@
   }
   .frame {
     position: relative;
+    min-width: 0;
     line-height: 0;
   }
   canvas {
     display: block;
-    max-width: calc(100vw - 80px);
+    max-width: 100%;
     max-height: calc(100vh - 280px);
     touch-action: none;
     &.crosshair {
