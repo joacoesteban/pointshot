@@ -2,6 +2,7 @@ import { z } from 'zod'
 import arrow from '~/assets/symbols/arrow.json'
 import blur from '~/assets/symbols/blur.json'
 import booksVerticalFill from '~/assets/symbols/books.vertical.fill.json'
+import cameraFill from '~/assets/symbols/camera.fill.json'
 import cameraViewfinder from '~/assets/symbols/camera.viewfinder.json'
 import checkmark from '~/assets/symbols/checkmark.json'
 import crop from '~/assets/symbols/crop.json'
@@ -48,6 +49,7 @@ const raw = {
   arrow,
   blur,
   booksVerticalFill,
+  cameraFill,
   cameraViewfinder,
   checkmark,
   crop,

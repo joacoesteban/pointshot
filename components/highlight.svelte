@@ -12,6 +12,7 @@
   import { Dom } from '~/lib/dom'
   import { t } from '~/lib/i18n'
   import { Region } from '~/lib/region'
+  import Symbol from './symbol.svelte'
   import { transitionIn, transitionOut } from '~/lib/transitions'
 
   type Props = {
@@ -98,6 +99,11 @@
         {Math.round($frame$.size.width)} × {Math.round($frame$.size.height)}
       </span>
     </span>
+    {#if $frame$.scope === null}
+      <span class="camera" data-testid="snag-camera">
+        <Symbol name="cameraFill" size="28px" />
+      </span>
+    {/if}
   </div>
 {/if}
 
@@ -109,6 +115,7 @@
     $border-color: hsla($base-hue + 15 100% 80%);
     $glow-color: hsla($base-hue + 30 100% 60% / 0.2);
 
+    container-type: size;
     transition: 0.2s var(--bezier);
     transition-property: top, left, width, height;
 
@@ -148,6 +155,25 @@
     &.continues {
       border-bottom-color: transparent;
       mask-image: linear-gradient(#000 70%, #0003);
+    }
+  }
+  .camera {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    width: 56px;
+    height: 56px;
+    margin: auto;
+    border-radius: 50%;
+    color: #129a52;
+    background-color: #ffffffe0;
+    box-shadow:
+      0 0 0 2px hsla(145 100% 80%),
+      0 10px 26px #0f6a3a33;
+
+    /* The query measures inside the 2px border, so this hides it at 80px and under. */
+    @container (max-width: 76px) or (max-height: 76px) {
+      display: none;
     }
   }
   .tag {
