@@ -2,7 +2,12 @@
   import { filter, fromEvent } from 'rxjs'
   import type { Snippet } from 'svelte'
   import { t } from '~/lib/i18n'
-  import { transitionIn, transitionOut } from '~/lib/transitions'
+  import {
+    fadeIn,
+    fadeOut,
+    transitionIn,
+    transitionOut,
+  } from '~/lib/transitions'
   import SymbolButton from './symbol-button.svelte'
 
   type Props = {
@@ -42,19 +47,21 @@
   })
 </script>
 
-<div
-  class="backdrop"
-  data-testid={testId}
-  role="presentation"
-  in:transitionIn
-  out:transitionOut>
+<div class="backdrop" data-testid={testId} role="presentation">
   <button
     type="button"
     class="scrim"
     tabindex="-1"
     aria-hidden="true"
-    onclick={onclose}></button>
-  <div class="panel bg-blur" role="dialog" aria-label={title}>
+    onclick={onclose}
+    in:fadeIn
+    out:fadeOut></button>
+  <div
+    class="panel bg-blur"
+    role="dialog"
+    aria-label={title}
+    in:transitionIn
+    out:transitionOut>
     <header class="flex items-start justify-between gap-4 mb-3">
       <div class="min-w-0">
         <h2 class="font-bold text-lg leading-tight truncate m-0">{title}</h2>

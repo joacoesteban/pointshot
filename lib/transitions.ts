@@ -1,5 +1,5 @@
 import { circIn, circOut } from 'svelte/easing'
-import type { TransitionConfig } from 'svelte/transition'
+import { fade, type TransitionConfig } from 'svelte/transition'
 
 const popIn =
   ({ easing = circOut, duration = 200, scaleStart = 0.8 }) =>
@@ -15,3 +15,6 @@ const popIn =
 
 export const transitionIn = popIn({})
 export const transitionOut = popIn({ easing: circIn, duration: 100 })
+
+export const fadeIn = (node: Element) => fade(node, { duration: 200 })
+export const fadeOut = (node: Element) => fade(node, { duration: 100 })

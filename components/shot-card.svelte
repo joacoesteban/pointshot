@@ -28,34 +28,36 @@
     <canvas use:paint={{ dataUrl: thumbnail, maxWidth: THUMBNAIL_WIDTH }}
     ></canvas>
     <div class="actions">
-      <SymbolButton
-        name="expand"
-        title={t('open')}
-        size="sm"
-        opaque
-        {disabled}
-        onclick={() => {
-          onopen(shot)
-        }} />
-      <SymbolButton
-        name="docOnDoc"
-        title={t('copy')}
-        size="sm"
-        opaque
-        {disabled}
-        onclick={() => {
-          oncopy(shot)
-        }} />
-      <SymbolButton
-        name="trashFill"
-        title={t('delete')}
-        size="sm"
-        opaque
-        colorSeed={COLOR_SEEDS.cancel}
-        {disabled}
-        onclick={() => {
-          onremove(shot)
-        }} />
+      <div class="buttons">
+        <SymbolButton
+          name="expand"
+          title={t('open')}
+          size="sm"
+          opaque
+          {disabled}
+          onclick={() => {
+            onopen(shot)
+          }} />
+        <SymbolButton
+          name="docOnDoc"
+          title={t('copy')}
+          size="sm"
+          opaque
+          {disabled}
+          onclick={() => {
+            oncopy(shot)
+          }} />
+        <SymbolButton
+          name="trashFill"
+          title={t('delete')}
+          size="sm"
+          opaque
+          colorSeed={COLOR_SEEDS.cancel}
+          {disabled}
+          onclick={() => {
+            onremove(shot)
+          }} />
+      </div>
     </div>
   </div>
   <footer class="flex flex-col px-3 py-2 text-xs leading-tight">
@@ -94,20 +96,33 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     opacity: 0;
-    transform: scale(0.9);
-    transition-property: opacity, transform;
-    transition-duration: 0.15s;
-    transition-timing-function: var(--bezier-round-inverted);
     background: var(--_blur-bg-soft);
     backdrop-filter: blur(4px);
   }
-  .card:hover .actions,
-  .card:focus-within .actions {
-    opacity: 1;
-    transform: scale(1);
-    transition-duration: 0.3s;
-    transition-timing-function: var(--bezier-chill);
+  .buttons {
+    display: flex;
+    gap: 8px;
+    transform: scale(0.9);
+  }
+  .actions,
+  .buttons {
+    transition-property: opacity, transform;
+    transition-duration: 0.15s;
+    transition-timing-function: var(--bezier-round-inverted);
+  }
+  .card:hover,
+  .card:focus-within {
+    .actions {
+      opacity: 1;
+    }
+    .buttons {
+      transform: scale(1);
+    }
+    .actions,
+    .buttons {
+      transition-duration: 0.3s;
+      transition-timing-function: var(--bezier-chill);
+    }
   }
 </style>
