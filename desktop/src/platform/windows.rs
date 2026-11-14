@@ -1,5 +1,5 @@
 use crate::tree::Tree;
-use gpui::{Bounds, Pixels, Point, point, px, size};
+use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
@@ -108,18 +108,17 @@ impl Accessibility {
     }
 
     fn deepest(&self, node: Node, at: POINT) -> Node {
-        let inside = self
-            .children(&node)
-            .into_iter()
-            .filter(|child| {
-                unsafe { child.element.CurrentBoundingRectangle() }
-                    .is_ok_and(|rect| contains(rect, at))
-            })
-            .last();
+        let inside = self.children(&node).into_iter().rev().find(|child| {
+            unsafe { child.element.CurrentBoundingRectangle() }.is_ok_and(|rect| contains(rect, at))
+        });
         match inside {
             Some(child) => self.deepest(child, at),
             None => node,
         }
+    }
+
+    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
+        display.bounds().origin
     }
 
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {

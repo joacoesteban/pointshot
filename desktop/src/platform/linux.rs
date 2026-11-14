@@ -1,6 +1,6 @@
 use crate::tree::Tree;
 use anyhow::Context as _;
-use gpui::{Bounds, Pixels, Point, point, px, size};
+use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
 use serde::de::DeserializeOwned;
 use x11rb::connection::Connection as _;
@@ -119,6 +119,10 @@ impl Accessibility {
             }
             _ => node,
         }
+    }
+
+    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
+        display.bounds().origin
     }
 
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {

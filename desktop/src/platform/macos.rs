@@ -6,12 +6,13 @@ use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef};
 use core_foundation::{declare_TCFType, impl_TCFType};
+use core_graphics::display::CGDisplay;
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use core_graphics::window::{
     kCGNullWindowID, kCGWindowBounds, kCGWindowListExcludeDesktopElements,
     kCGWindowListOptionOnScreenOnly, kCGWindowOwnerPID,
 };
-use gpui::{Bounds, Pixels, Point, point, px, size};
+use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
 use std::ffi::c_void;
 use std::mem::MaybeUninit;
@@ -52,8 +53,6 @@ unsafe extern "C" {
 unsafe extern "C" {
     fn CGWindowListCopyWindowInfo(options: u32, relative_to: u32) -> CFArrayRef;
 }
-
-pub type Node = Element;
 
 pub struct Accessibility {
     pid: i32,
@@ -123,6 +122,12 @@ impl Accessibility {
             .and_then(|value| value.downcast::<CFString>())
             .map(|value| value.to_string())
             .unwrap_or_default()
+    }
+
+    // gpui places every macOS display at the origin, so its place on the desktop comes from CoreGraphics.
+    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
+        let CGRect { origin, .. } = CGDisplay::new(u64::from(display.id()) as u32).bounds();
+        point(px(origin.x as f32), px(origin.y as f32))
     }
 
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {

@@ -58,6 +58,7 @@ impl Shots {
             .into_iter()
             .filter_map(|display| {
                 let bounds = display.bounds();
+                let origin = Accessibility::origin(display.as_ref());
                 cx.open_window(
                     WindowOptions {
                         window_bounds: Some(WindowBounds::Windowed(bounds)),
@@ -71,9 +72,7 @@ impl Shots {
                         ..Default::default()
                     },
                     |window, cx| {
-                        cx.new(|cx| {
-                            Overlay::new(tree.clone(), bounds.origin, on_pick.clone(), window, cx)
-                        })
+                        cx.new(|cx| Overlay::new(tree.clone(), origin, on_pick.clone(), window, cx))
                     },
                 )
                 .ok()
