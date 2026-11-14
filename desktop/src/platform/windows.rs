@@ -1,6 +1,7 @@
 use crate::tree::Tree;
 use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
+use std::cell::Cell;
 use windows::Win32::Foundation::{HWND, POINT, RECT};
 use windows::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
 use windows::Win32::System::Com::{
@@ -32,12 +33,12 @@ impl PartialEq for Node {
 pub struct Accessibility {
     automation: IUIAutomation,
     walker: IUIAutomationTreeWalker,
-    scale: f32,
+    scale: Cell<f32>,
     pid: u32,
 }
 
 impl Accessibility {
-    pub fn connect(scale: f32) -> anyhow::Result<Self> {
+    pub fn connect() -> anyhow::Result<Self> {
         let _ = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
         let automation: IUIAutomation =
             unsafe { CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)? };
@@ -45,7 +46,7 @@ impl Accessibility {
         Ok(Self {
             automation,
             walker,
-            scale,
+            scale: Cell::new(1.),
             pid: std::process::id(),
         })
     }
@@ -59,8 +60,8 @@ impl Accessibility {
 
     fn physical(&self, point: Point<Pixels>) -> POINT {
         POINT {
-            x: (f32::from(point.x) * self.scale) as i32,
-            y: (f32::from(point.y) * self.scale) as i32,
+            x: (f32::from(point.x) * self.scale.get()) as i32,
+            y: (f32::from(point.y) * self.scale.get()) as i32,
         }
     }
 
@@ -73,7 +74,7 @@ impl Accessibility {
             bottom,
         }: RECT,
     ) -> Bounds<Pixels> {
-        let logical = |value: i32| px(value as f32 / self.scale);
+        let logical = |value: i32| px(value as f32 / self.scale.get());
         Bounds::new(
             point(logical(left), logical(top)),
             size(logical(right - left), logical(bottom - top)),
@@ -121,10 +122,14 @@ impl Accessibility {
         display.bounds().origin
     }
 
+    pub fn rescale(&self, scale: f32) {
+        self.scale.set(scale);
+    }
+
     pub fn focus(&self, _: &gpui::Window) {}
 
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
-        crate::platform::xcap_capture(frame, self.scale)
+        crate::platform::xcap_capture(frame, self.scale.get())
     }
 }
 

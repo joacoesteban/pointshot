@@ -60,8 +60,9 @@ impl Overlay {
         (self.on_pick)(frame, cx)
     }
 
-    // With an overlay on each display, the keys follow the one under the pointer.
+    // With an overlay on each display, the keys and the pixel scale follow the one under the pointer.
     fn on_move(&mut self, event: &MouseMoveEvent, window: &mut Window, cx: &mut Context<Self>) {
+        self.tree.rescale(window.scale_factor());
         if !window.is_window_active() {
             window.activate_window();
             self.tree.focus(window);

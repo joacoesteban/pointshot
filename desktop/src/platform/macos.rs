@@ -59,7 +59,7 @@ pub struct Accessibility {
 }
 
 impl Accessibility {
-    pub fn connect(_scale: f32) -> anyhow::Result<Self> {
+    pub fn connect() -> anyhow::Result<Self> {
         let prompt = unsafe { CFString::wrap_under_get_rule(kAXTrustedCheckOptionPrompt) };
         let options = CFDictionary::from_CFType_pairs(&[(prompt, CFBoolean::true_value())]);
         match unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) } {
@@ -129,6 +129,8 @@ impl Accessibility {
         let CGRect { origin, .. } = CGDisplay::new(u64::from(display.id()) as u32).bounds();
         point(px(origin.x as f32), px(origin.y as f32))
     }
+
+    pub fn rescale(&self, _: f32) {}
 
     pub fn focus(&self, _: &gpui::Window) {}
 

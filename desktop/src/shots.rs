@@ -32,11 +32,11 @@ impl Shots {
         }
     }
 
-    fn tree(&mut self, scale: f32) -> anyhow::Result<Rc<Accessibility>> {
+    fn tree(&mut self) -> anyhow::Result<Rc<Accessibility>> {
         match &self.tree {
             Some(tree) => Ok(tree.clone()),
             None => {
-                let tree = Rc::new(Accessibility::connect(scale)?);
+                let tree = Rc::new(Accessibility::connect()?);
                 self.tree = Some(tree.clone());
                 Ok(tree)
             }
@@ -44,7 +44,7 @@ impl Shots {
     }
 
     fn capture(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        match self.tree(window.scale_factor()) {
+        match self.tree() {
             Ok(tree) => {
                 window.minimize_window();
                 self.open_overlays(tree, cx)

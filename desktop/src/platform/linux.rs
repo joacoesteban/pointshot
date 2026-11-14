@@ -4,6 +4,7 @@ use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use serde::de::DeserializeOwned;
+use std::cell::Cell;
 use x11rb::CURRENT_TIME;
 use x11rb::connection::Connection as _;
 use x11rb::protocol::xproto::{
@@ -35,12 +36,12 @@ pub struct Accessibility {
     root: Window,
     stacking: Atom,
     owner: Atom,
-    scale: f32,
+    scale: Cell<f32>,
     pid: u32,
 }
 
 impl Accessibility {
-    pub fn connect(scale: f32) -> anyhow::Result<Self> {
+    pub fn connect() -> anyhow::Result<Self> {
         let address: String = Connection::session()?
             .call_method(
                 Some("org.a11y.Bus"),
@@ -64,7 +65,7 @@ impl Accessibility {
             root,
             stacking,
             owner,
-            scale,
+            scale: Cell::new(1.),
             pid: std::process::id(),
         })
     }
@@ -137,6 +138,10 @@ impl Accessibility {
     }
 
     // gpui opens pop-ups as override-redirect windows, which the window manager never focuses.
+    pub fn rescale(&self, scale: f32) {
+        self.scale.set(scale);
+    }
+
     pub fn focus(&self, window: &gpui::Window) {
         let target = match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
             Ok(RawWindowHandle::Xcb(handle)) => Some(handle.window.get()),
@@ -208,8 +213,8 @@ impl Accessibility {
 
     fn physical(&self, point: Point<Pixels>) -> (i32, i32) {
         (
-            (f32::from(point.x) * self.scale) as i32,
-            (f32::from(point.y) * self.scale) as i32,
+            (f32::from(point.x) * self.scale.get()) as i32,
+            (f32::from(point.y) * self.scale.get()) as i32,
         )
     }
 
@@ -313,7 +318,7 @@ impl Tree for Accessibility {
     fn frame(&self, node: &Node) -> Option<Bounds<Pixels>> {
         let (x, y, width, height): (i32, i32, i32, i32) =
             self.call(node, COMPONENT, "GetExtents", &SCREEN)?;
-        let logical = |value: i32| px(value as f32 / self.scale);
+        let logical = |value: i32| px(value as f32 / self.scale.get());
         Some(Bounds::new(
             point(logical(x), logical(y)),
             size(logical(width), logical(height)),
