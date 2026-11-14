@@ -7,7 +7,7 @@ publish = false
 [dependencies]
 anyhow = "1"
 gpui = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6" }
-gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6", default-features = false, features = ["x11", "wayland", "runtime_shaders"] }
+gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6", default-features = false, features = ["font-kit", "x11", "wayland", "runtime_shaders"] }
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
