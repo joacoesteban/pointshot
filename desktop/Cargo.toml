@@ -19,6 +19,8 @@ zbus = { version = "5", default-features = false, features = ["blocking-api", "a
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
 core-graphics = "0.24"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSResponder", "NSScreen", "NSView", "NSWindow", "objc2-core-foundation"] }
+raw-window-handle = "0.6"
 xcap = "0.9"
 
 [target.'cfg(target_os = "windows")'.dependencies]

@@ -3954,6 +3954,7 @@ dependencies = [
  "gpui",
  "gpui_platform",
  "image",
+ "objc2-app-kit 0.3.2",
  "raw-window-handle",
  "serde",
  "windows 0.62.2",

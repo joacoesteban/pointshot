@@ -142,6 +142,8 @@ impl Accessibility {
         self.scale.set(scale);
     }
 
+    pub fn place(&self, _: &gpui::Window) {}
+
     pub fn focus(&self, window: &gpui::Window) {
         let target = match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
             Ok(RawWindowHandle::Xcb(handle)) => Some(handle.window.get()),

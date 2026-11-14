@@ -14,6 +14,10 @@ use core_graphics::window::{
 };
 use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
+use objc2_app_kit::{NSView, NSWindowStyleMask};
+use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use std::cell::RefCell;
+use std::collections::HashSet;
 use std::ffi::c_void;
 use std::mem::MaybeUninit;
 
@@ -44,6 +48,11 @@ unsafe extern "C" {
         attribute: CFStringRef,
         value: *mut CFTypeRef,
     ) -> i32;
+    fn AXUIElementSetAttributeValue(
+        element: ElementRef,
+        attribute: CFStringRef,
+        value: CFTypeRef,
+    ) -> i32;
     fn AXValueGetValue(value: CFTypeRef, kind: u32, out: *mut c_void) -> bool;
     fn AXIsProcessTrustedWithOptions(options: CFDictionaryRef) -> bool;
     static kAXTrustedCheckOptionPrompt: CFStringRef;
@@ -56,6 +65,7 @@ unsafe extern "C" {
 
 pub struct Accessibility {
     pid: i32,
+    exposed: RefCell<HashSet<i32>>,
 }
 
 impl Accessibility {
@@ -65,6 +75,7 @@ impl Accessibility {
         match unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) } {
             true => Ok(Self {
                 pid: std::process::id() as i32,
+                exposed: RefCell::default(),
             }),
             false => anyhow::bail!(
                 "Pointshot needs the Accessibility permission. Allow it in System Settings, Privacy & Security, Accessibility, then try again."
@@ -91,6 +102,20 @@ impl Accessibility {
                 _ => None,
             }
         })
+    }
+
+    // Electron builds its accessibility tree only for a client that sets this on the application, about a second after it does.
+    fn expose(&self, application: &Element, pid: i32) {
+        if self.exposed.borrow_mut().insert(pid) {
+            let name = CFString::from_static_string("AXManualAccessibility");
+            unsafe {
+                AXUIElementSetAttributeValue(
+                    application.as_concrete_TypeRef(),
+                    name.as_concrete_TypeRef(),
+                    CFBoolean::true_value().as_CFTypeRef(),
+                )
+            };
+        }
     }
 
     fn attribute(&self, node: &Element, name: &'static str) -> Option<CFType> {
@@ -134,8 +159,30 @@ impl Accessibility {
 
     pub fn focus(&self, _: &gpui::Window) {}
 
+    // AppKit keeps titled windows below the menu bar, and gpui opens every window titled.
+    // Changing the style mask drops the key focus, so it goes back to gpui's view.
+    pub fn place(&self, window: &gpui::Window) {
+        if let Some(view) = view(window)
+            && let Some(native) = view.window()
+            && let Some(screen) = native.screen()
+        {
+            native.setStyleMask(NSWindowStyleMask::Borderless);
+            native.setFrame_display(screen.frame(), true);
+            native.makeFirstResponder(Some(view));
+        }
+    }
+
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
         crate::platform::xcap_capture(frame, 1.)
+    }
+}
+
+fn view(window: &gpui::Window) -> Option<&NSView> {
+    match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
+        Ok(RawWindowHandle::AppKit(handle)) => {
+            Some(unsafe { handle.ns_view.cast::<NSView>().as_ref() })
+        }
+        _ => None,
     }
 }
 
@@ -155,9 +202,10 @@ impl Tree for Accessibility {
     type Node = Element;
 
     fn at(&self, point: Point<Pixels>) -> Option<Element> {
-        let application = unsafe {
-            Element::wrap_under_create_rule(AXUIElementCreateApplication(self.owner_at(point)?))
-        };
+        let pid = self.owner_at(point)?;
+        let application =
+            unsafe { Element::wrap_under_create_rule(AXUIElementCreateApplication(pid)) };
+        self.expose(&application, pid);
         let mut element: ElementRef = std::ptr::null();
         match unsafe {
             AXUIElementCopyElementAtPosition(

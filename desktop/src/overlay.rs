@@ -34,7 +34,10 @@ impl Overlay {
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
         let native = tree.clone();
-        window.on_next_frame(move |window, _| native.focus(window));
+        window.on_next_frame(move |window, _| {
+            native.place(window);
+            native.focus(window);
+        });
         Self {
             tree,
             aim: Aim::default(),
