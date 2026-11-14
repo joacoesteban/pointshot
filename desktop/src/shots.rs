@@ -1,9 +1,9 @@
 use crate::overlay::{OnPick, Overlay};
 use crate::platform::Accessibility;
 use gpui::{
-    App, AppContext as _, Bounds, ClipboardItem, Context, Image, ImageFormat, Pixels, SharedString,
-    WeakEntity, Window, WindowBackgroundAppearance, WindowBounds, WindowHandle, WindowKind,
-    WindowOptions, div, hsla, img, prelude::*, px,
+    AnyWindowHandle, App, AppContext as _, Bounds, ClipboardItem, Context, Image, ImageFormat,
+    Pixels, SharedString, WeakEntity, Window, WindowBackgroundAppearance, WindowBounds,
+    WindowHandle, WindowKind, WindowOptions, div, hsla, img, prelude::*, px,
 };
 use std::io::Cursor;
 use std::rc::Rc;
@@ -14,6 +14,7 @@ use std::time::Duration;
 const OFFSTAGE: Duration = Duration::from_millis(200);
 
 pub struct Shots {
+    main: AnyWindowHandle,
     tree: Option<Rc<Accessibility>>,
     overlays: Vec<WindowHandle<Overlay>>,
     shots: Vec<Arc<Image>>,
@@ -21,8 +22,9 @@ pub struct Shots {
 }
 
 impl Shots {
-    pub fn new() -> Self {
+    pub fn new(main: AnyWindowHandle) -> Self {
         Self {
+            main,
             tree: None,
             overlays: Vec::new(),
             shots: Vec::new(),
@@ -43,7 +45,10 @@ impl Shots {
 
     fn capture(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         match self.tree(window.scale_factor()) {
-            Ok(tree) => self.open_overlays(tree, cx),
+            Ok(tree) => {
+                window.minimize_window();
+                self.open_overlays(tree, cx)
+            }
             Err(error) => self.report(error, cx),
         }
     }
@@ -88,13 +93,26 @@ impl Shots {
                     .update(cx, |_, window, _| window.remove_window())
                     .ok();
             });
-        if let Some(frame) = frame {
-            cx.spawn(async move |shots: WeakEntity<Self>, cx| {
-                cx.background_executor().timer(OFFSTAGE).await;
-                shots.update(cx, |shots, cx| shots.shoot(frame, cx)).ok();
-            })
-            .detach();
+        match frame {
+            Some(frame) => cx
+                .spawn(async move |shots: WeakEntity<Self>, cx| {
+                    cx.background_executor().timer(OFFSTAGE).await;
+                    shots
+                        .update(cx, |shots, cx| {
+                            shots.shoot(frame, cx);
+                            shots.restore(cx);
+                        })
+                        .ok();
+                })
+                .detach(),
+            None => self.restore(cx),
         }
+    }
+
+    fn restore(&self, cx: &mut Context<Self>) {
+        self.main
+            .update(cx, |_, window, _| window.activate_window())
+            .ok();
     }
 
     fn shoot(&mut self, frame: Bounds<Pixels>, cx: &mut Context<Self>) {
@@ -216,6 +234,9 @@ pub fn open(cx: &mut App) -> anyhow::Result<WindowHandle<Shots>> {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
             ..Default::default()
         },
-        |_, cx| cx.new(|_| Shots::new()),
+        |window, cx| {
+            let main = window.window_handle();
+            cx.new(|_| Shots::new(main))
+        },
     )
 }
