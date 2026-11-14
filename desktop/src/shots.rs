@@ -22,7 +22,12 @@ pub struct Shots {
 }
 
 impl Shots {
-    pub fn new(main: AnyWindowHandle) -> Self {
+    pub fn new(main: AnyWindowHandle, cx: &mut Context<Self>) -> Self {
+        cx.on_app_quit(|shots, _| {
+            shots.release();
+            async {}
+        })
+        .detach();
         Self {
             main,
             tree: None,
@@ -97,6 +102,7 @@ impl Shots {
                     .update(cx, |_, window, _| window.remove_window())
                     .ok();
             });
+        self.release();
         match frame {
             Some(frame) => cx
                 .spawn(async move |shots: WeakEntity<Self>, cx| {
@@ -111,6 +117,10 @@ impl Shots {
                 .detach(),
             None => self.restore(cx),
         }
+    }
+
+    fn release(&self) {
+        self.tree.iter().for_each(|tree| tree.release());
     }
 
     fn restore(&self, cx: &mut Context<Self>) {
@@ -240,7 +250,7 @@ pub fn open(cx: &mut App) -> anyhow::Result<WindowHandle<Shots>> {
         },
         |window, cx| {
             let main = window.window_handle();
-            cx.new(|_| Shots::new(main))
+            cx.new(|cx| Shots::new(main, cx))
         },
     )
 }

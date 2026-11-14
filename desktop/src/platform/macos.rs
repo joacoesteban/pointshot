@@ -107,15 +107,17 @@ impl Accessibility {
     // Electron builds its accessibility tree only for a client that sets this on the application, about a second after it does.
     fn expose(&self, application: &Element, pid: i32) {
         if self.exposed.borrow_mut().insert(pid) {
-            let name = CFString::from_static_string("AXManualAccessibility");
-            unsafe {
-                AXUIElementSetAttributeValue(
-                    application.as_concrete_TypeRef(),
-                    name.as_concrete_TypeRef(),
-                    CFBoolean::true_value().as_CFTypeRef(),
-                )
-            };
+            manual(application, CFBoolean::true_value());
         }
+    }
+
+    // Electron's getter does not report the flag, so an app that had it on before the pick loses it too.
+    pub fn release(&self) {
+        self.exposed.take().into_iter().for_each(|pid| {
+            let application =
+                unsafe { Element::wrap_under_create_rule(AXUIElementCreateApplication(pid)) };
+            manual(&application, CFBoolean::false_value());
+        });
     }
 
     fn attribute(&self, node: &Element, name: &'static str) -> Option<CFType> {
@@ -175,6 +177,17 @@ impl Accessibility {
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
         crate::platform::xcap_capture(frame, 1.)
     }
+}
+
+fn manual(application: &Element, value: CFBoolean) {
+    let name = CFString::from_static_string("AXManualAccessibility");
+    unsafe {
+        AXUIElementSetAttributeValue(
+            application.as_concrete_TypeRef(),
+            name.as_concrete_TypeRef(),
+            value.as_CFTypeRef(),
+        )
+    };
 }
 
 fn view(window: &gpui::Window) -> Option<&NSView> {
