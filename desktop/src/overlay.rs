@@ -60,7 +60,12 @@ impl Overlay {
         (self.on_pick)(frame, cx)
     }
 
-    fn on_move(&mut self, event: &MouseMoveEvent, _: &mut Window, cx: &mut Context<Self>) {
+    // With an overlay on each display, the keys follow the one under the pointer.
+    fn on_move(&mut self, event: &MouseMoveEvent, window: &mut Window, cx: &mut Context<Self>) {
+        if !window.is_window_active() {
+            window.activate_window();
+            self.tree.focus(window);
+        }
         self.step(Step::Point(self.origin + event.position), cx);
     }
 
