@@ -96,6 +96,14 @@ cannot decrypt the profile; never run these tasks unless asked.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
+- `desktop/`: a proof of concept of Pointshot as a desktop app, in Rust with
+  gpui, apart from the extension. It picks elements of any app from the
+  platform's accessibility tree (`AXUIElement` on macOS, UI Automation on
+  Windows, AT-SPI on Linux under X11; Wayland is not supported) through the
+  `Tree` trait in `src/tree.rs`, whose arrow-key walk mirrors
+  `lib/picker.ts`. CI does not check it: `mise run desktop:check` runs
+  rustfmt, clippy and its tests. Run it with `mise run desktop`; Linux needs
+  `libfontconfig-dev libwayland-dev libx11-xcb-dev libxkbcommon-x11-dev`.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a
   Playwright spec, with its own config, that plays the scenes through
   `Studio` (`studio.ts`) over `demo.html`, a made-up site served at

@@ -3,6 +3,20 @@ bun = "1.4.2"
 node = "24"
 fnox = "1.39.0"
 
+[tasks.desktop]
+description = "Run the desktop app"
+dir = "desktop"
+run = "cargo run"
+
+[tasks."desktop:check"]
+description = "Format check, lint and test the desktop app"
+dir = "desktop"
+run = [
+  "cargo fmt --check",
+  "cargo clippy --all-targets --locked -- -D warnings",
+  "cargo test --locked",
+]
+
 [tasks."firefox:lint"]
 description = "Build for Firefox and lint the build with web-ext"
 run = [
