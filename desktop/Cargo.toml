@@ -7,7 +7,28 @@ publish = false
 [dependencies]
 anyhow = "1"
 gpui = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6" }
-gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6", default-features = false, features = ["x11", "wayland"] }
+gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6", default-features = false, features = ["x11", "wayland", "runtime_shaders"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+serde = { version = "1", features = ["derive"] }
+x11rb = "0.13"
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+core-graphics = "0.24"
+xcap = "0.9"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_System_Com",
+    "Win32_UI_Accessibility",
+    "Win32_UI_WindowsAndMessaging",
+] }
+xcap = "0.9"
 
 [patch.crates-io]
 async-task = { git = "https://github.com/smol-rs/async-task", rev = "41fd3359c75e221bd8b187a8ee361aa309c1714c" }
