@@ -55,8 +55,12 @@ impl Shots {
 
     fn open_overlays(&mut self, tree: Rc<Accessibility>, cx: &mut Context<Self>) {
         let shots = cx.weak_entity();
+        // gpui cannot update the overlay that is still handling the pick, so closing it waits for the event to finish.
         let on_pick: OnPick = Rc::new(move |frame, cx| {
-            shots.update(cx, |shots, cx| shots.picked(frame, cx)).ok();
+            let shots = shots.clone();
+            cx.defer(move |cx| {
+                shots.update(cx, |shots, cx| shots.picked(frame, cx)).ok();
+            });
         });
         self.overlays = cx
             .displays()
