@@ -1,12 +1,37 @@
-use gpui::{Bounds, Pixels, Point, px};
+use serde::{Deserialize, Serialize};
+
+// In the platform's screen units, from the top-left corner of the main display: points on macOS, physical pixels elsewhere.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Frame {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Frame {
+    pub fn contains(&self, Point { x, y }: Point) -> bool {
+        (self.x..self.x + self.width).contains(&x) && (self.y..self.y + self.height).contains(&y)
+    }
+
+    fn rendered(&self) -> bool {
+        self.width > 0. && self.height > 0.
+    }
+}
 
 pub trait Tree {
     type Node: Clone + PartialEq;
 
-    fn at(&self, point: Point<Pixels>) -> Option<Self::Node>;
+    fn at(&self, point: Point) -> Option<Self::Node>;
     fn parent(&self, node: &Self::Node) -> Option<Self::Node>;
     fn children(&self, node: &Self::Node) -> Vec<Self::Node>;
-    fn frame(&self, node: &Self::Node) -> Option<Bounds<Pixels>>;
+    fn frame(&self, node: &Self::Node) -> Option<Frame>;
     fn label(&self, node: &Self::Node) -> String;
 }
 
@@ -27,7 +52,7 @@ impl<N> Default for Aim<N> {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Step {
-    Point(Point<Pixels>),
+    Point(Point),
     Up,
     Down,
     Previous,
@@ -103,17 +128,13 @@ impl<N: Clone + PartialEq> Aim<N> {
 fn rendered<T: Tree>(tree: &T, nodes: Vec<T::Node>) -> Vec<T::Node> {
     nodes
         .into_iter()
-        .filter(|node| {
-            tree.frame(node)
-                .is_some_and(|frame| frame.size.width > px(0.) && frame.size.height > px(0.))
-        })
+        .filter(|node| tree.frame(node).is_some_and(|frame| frame.rendered()))
         .collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use gpui::{point, size};
 
     struct Fixture;
 
@@ -121,10 +142,10 @@ mod tests {
     impl Tree for Fixture {
         type Node = u8;
 
-        fn at(&self, point: Point<Pixels>) -> Option<u8> {
+        fn at(&self, point: Point) -> Option<u8> {
             [4, 1, 2, 3, 0]
                 .into_iter()
-                .find(|node| self.frame(node).is_some_and(|frame| frame.contains(&point)))
+                .find(|node| self.frame(node).is_some_and(|frame| frame.contains(point)))
         }
 
         fn parent(&self, node: &u8) -> Option<u8> {
@@ -145,7 +166,7 @@ mod tests {
             }
         }
 
-        fn frame(&self, node: &u8) -> Option<Bounds<Pixels>> {
+        fn frame(&self, node: &u8) -> Option<Frame> {
             let (x, width) = match node {
                 0 => (0., 300.),
                 1 | 5 => (0., 100.),
@@ -157,10 +178,12 @@ mod tests {
                 5 => 0.,
                 _ => 100.,
             };
-            Some(Bounds::new(
-                point(px(x), px(0.)),
-                size(px(width), px(height)),
-            ))
+            Some(Frame {
+                x,
+                y: 0.,
+                width,
+                height,
+            })
         }
 
         fn label(&self, node: &u8) -> String {
@@ -174,7 +197,7 @@ mod tests {
             .fold(Aim::default(), |aim, step| aim.step(&Fixture, *step))
     }
 
-    const ON_4: Step = Step::Point(point(px(125.), px(10.)));
+    const ON_4: Step = Step::Point(Point { x: 125., y: 10. });
 
     #[test]
     fn pointing_picks_the_deepest_node() {

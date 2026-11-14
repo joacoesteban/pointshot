@@ -96,14 +96,20 @@ cannot decrypt the profile; never run these tasks unless asked.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
-- `desktop/`: a proof of concept of Pointshot as a desktop app, in Rust with
-  gpui, apart from the extension. It picks elements of any app from the
-  platform's accessibility tree (`AXUIElement` on macOS, UI Automation on
-  Windows, AT-SPI on Linux under X11; Wayland is not supported) through the
-  `Tree` trait in `src/tree.rs`, whose arrow-key walk mirrors
-  `lib/picker.ts`. CI does not check it: `mise run desktop:check` runs
-  rustfmt, clippy and its tests. Run it with `mise run desktop`; Linux needs
-  `libfontconfig-dev libwayland-dev libx11-xcb-dev libxkbcommon-x11-dev`.
+- `desktop/`: a proof of concept of Pointshot as a desktop app, on Tauri 2.
+  It picks elements of any app from the platform's accessibility tree
+  (`AXUIElement` on macOS, UI Automation on Windows, AT-SPI on Linux under
+  X11; Wayland is not supported) through the `Tree` trait in `src/tree.rs`,
+  whose arrow-key walk mirrors `lib/picker.ts`. The tree lives on one thread
+  in `src/picker.rs`; `src/stage.rs` opens a transparent overlay on each
+  display and converts its CSS pixels to the platform's units. The UI in
+  `desktop/ui` is Svelte built by `desktop/vite.config.ts`, which resolves
+  `~/` to the repository and swaps `wxt/browser` for `ui/browser.ts`, so the
+  overlay renders the extension's `Outline` and `SnagToast` and reads the
+  extension's copy, with `ui/locales` overriding the lines that speak of
+  pages. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
+  clippy and its tests, while `bun run check` covers `desktop/ui`. Run it
+  with `mise run desktop`; Linux needs `libwebkit2gtk-4.1-dev`.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a
   Playwright spec, with its own config, that plays the scenes through
   `Studio` (`studio.ts`) over `demo.html`, a made-up site served at

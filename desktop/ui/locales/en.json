@@ -1,0 +1,8 @@
+{
+  "emptyBody": {
+    "message": "Press Capture and click anything on screen. It lands in your clipboard."
+  },
+  "hintVisible": {
+    "message": "Click or press Enter to capture this display"
+  }
+}

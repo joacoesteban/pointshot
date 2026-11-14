@@ -4,23 +4,26 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
 [dependencies]
 anyhow = "1"
-gpui = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6" }
-gpui_platform = { git = "https://github.com/zed-industries/zed", rev = "56a157e5b01b62afd5c50a014ed15b379de8dfd6", default-features = false, features = ["font-kit", "x11", "wayland", "runtime_shaders"] }
+base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png"] }
+serde = { version = "1", features = ["derive"] }
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-clipboard-manager = "2"
+tokio = { version = "1", features = ["sync", "time"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-raw-window-handle = "0.6"
-serde = { version = "1", features = ["derive"] }
 x11rb = "0.13"
 zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
 core-graphics = "0.24"
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSResponder", "NSScreen", "NSView", "NSWindow", "objc2-core-foundation"] }
-raw-window-handle = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "libc", "NSResponder", "NSRunningApplication", "NSWindow", "objc2-core-foundation"] }
 xcap = "0.9"
 
 [target.'cfg(target_os = "windows")'.dependencies]
@@ -32,7 +35,3 @@ windows = { version = "0.62", features = [
     "Win32_UI_WindowsAndMessaging",
 ] }
 xcap = "0.9"
-
-[patch.crates-io]
-async-task = { git = "https://github.com/smol-rs/async-task", rev = "41fd3359c75e221bd8b187a8ee361aa309c1714c" }
-calloop = { git = "https://github.com/zed-industries/calloop", rev = "3759371fee14c40066d64777e2a36b6ffcc22590" }

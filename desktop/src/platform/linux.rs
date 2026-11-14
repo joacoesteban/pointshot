@@ -1,15 +1,9 @@
-use crate::tree::Tree;
+use crate::tree::{Frame, Point, Tree};
 use anyhow::Context as _;
-use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
-use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use serde::de::DeserializeOwned;
-use std::cell::Cell;
-use x11rb::CURRENT_TIME;
 use x11rb::connection::Connection as _;
-use x11rb::protocol::xproto::{
-    Atom, AtomEnum, ConnectionExt as _, ImageFormat, InputFocus, MapState, Window,
-};
+use x11rb::protocol::xproto::{Atom, AtomEnum, ConnectionExt as _, ImageFormat, MapState, Window};
 use x11rb::rust_connection::RustConnection;
 use zbus::blocking::Connection;
 use zbus::zvariant::{DynamicType, OwnedObjectPath, OwnedValue};
@@ -36,7 +30,6 @@ pub struct Accessibility {
     root: Window,
     stacking: Atom,
     owner: Atom,
-    scale: Cell<f32>,
     pid: u32,
 }
 
@@ -65,7 +58,6 @@ impl Accessibility {
             root,
             stacking,
             owner,
-            scale: Cell::new(1.),
             pid: std::process::id(),
         })
     }
@@ -137,29 +129,6 @@ impl Accessibility {
         }
     }
 
-    // gpui opens pop-ups as override-redirect windows, which the window manager never focuses.
-    pub fn rescale(&self, scale: f32) {
-        self.scale.set(scale);
-    }
-
-    pub fn place(&self, _: &gpui::Window) {}
-
-    pub fn release(&self) {}
-
-    pub fn focus(&self, window: &gpui::Window) {
-        let target = match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
-            Ok(RawWindowHandle::Xcb(handle)) => Some(handle.window.get()),
-            Ok(RawWindowHandle::Xlib(handle)) => u32::try_from(handle.window).ok(),
-            _ => None,
-        };
-        if let Some(target) = target {
-            self.x11
-                .set_input_focus(InputFocus::PARENT, target, CURRENT_TIME)
-                .ok();
-            self.x11.flush().ok();
-        }
-    }
-
     fn call<B, R>(&self, node: &Node, interface: &str, method: &str, body: &B) -> Option<R>
     where
         B: serde::Serialize + DynamicType,
@@ -215,13 +184,6 @@ impl Accessibility {
             .ok()
     }
 
-    fn physical(&self, point: Point<Pixels>) -> (i32, i32) {
-        (
-            (f32::from(point.x) * self.scale.get()) as i32,
-            (f32::from(point.y) * self.scale.get()) as i32,
-        )
-    }
-
     fn deepest(&self, node: Node, (x, y): (i32, i32)) -> Node {
         match self.call::<_, Node>(&node, COMPONENT, "GetAccessibleAtPoint", &(x, y, SCREEN)) {
             Some(child) if child.path.as_str() != NULL && child != node => {
@@ -231,11 +193,11 @@ impl Accessibility {
         }
     }
 
-    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
-        display.bounds().origin
-    }
+    pub fn raise(&self, _: &Node) {}
 
-    pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
+    pub fn release(&self) {}
+
+    pub fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
         let root = self
             .x11
             .setup()
@@ -243,8 +205,8 @@ impl Accessibility {
             .iter()
             .find(|screen| screen.root == self.root)
             .context("the X server lost its root window")?;
-        let (x, y) = self.physical(frame.origin);
-        let (width, height) = self.physical(point(frame.size.width, frame.size.height));
+        let [x, y, width, height] =
+            [frame.x, frame.y, frame.width, frame.height].map(|value| value.round() as i32);
         let (left, top) = (x.max(0), y.max(0));
         let right = (x + width).min(i32::from(root.width_in_pixels));
         let bottom = (y + height).min(i32::from(root.height_in_pixels));
@@ -276,8 +238,8 @@ impl Accessibility {
 impl Tree for Accessibility {
     type Node = Node;
 
-    fn at(&self, point: Point<Pixels>) -> Option<Node> {
-        let physical = self.physical(point);
+    fn at(&self, point: Point) -> Option<Node> {
+        let physical = (point.x.round() as i32, point.y.round() as i32);
         let desktop = Node {
             bus: REGISTRY.into(),
             path: OwnedObjectPath::try_from(ROOT).ok()?,
@@ -290,7 +252,7 @@ impl Tree for Accessibility {
             .flat_map(|app| self.children(&app))
             .filter(|window| {
                 self.frame(window)
-                    .is_some_and(|frame| frame.contains(&point))
+                    .is_some_and(|frame| frame.contains(point))
             })
             .map(|window| {
                 let states = self.states(&window);
@@ -319,14 +281,15 @@ impl Tree for Accessibility {
             .unwrap_or_default()
     }
 
-    fn frame(&self, node: &Node) -> Option<Bounds<Pixels>> {
+    fn frame(&self, node: &Node) -> Option<Frame> {
         let (x, y, width, height): (i32, i32, i32, i32) =
             self.call(node, COMPONENT, "GetExtents", &SCREEN)?;
-        let logical = |value: i32| px(value as f32 / self.scale.get());
-        Some(Bounds::new(
-            point(logical(x), logical(y)),
-            size(logical(width), logical(height)),
-        ))
+        Some(Frame {
+            x: x.into(),
+            y: y.into(),
+            width: width.into(),
+            height: height.into(),
+        })
     }
 
     fn label(&self, node: &Node) -> String {

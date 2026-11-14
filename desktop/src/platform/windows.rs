@@ -1,11 +1,9 @@
-use crate::tree::Tree;
-use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
+use crate::tree::{Frame, Point, Tree};
 use image::RgbaImage;
-use std::cell::Cell;
-use windows::Win32::Foundation::{HWND, POINT, RECT};
+use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
 use windows::Win32::System::Com::{
-    CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, CoCreateInstance, CoInitializeEx,
+    CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx,
 };
 use windows::Win32::UI::Accessibility::{
     CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationTreeWalker,
@@ -33,20 +31,18 @@ impl PartialEq for Node {
 pub struct Accessibility {
     automation: IUIAutomation,
     walker: IUIAutomationTreeWalker,
-    scale: Cell<f32>,
     pid: u32,
 }
 
 impl Accessibility {
     pub fn connect() -> anyhow::Result<Self> {
-        let _ = unsafe { CoInitializeEx(None, COINIT_APARTMENTTHREADED) };
+        let _ = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) };
         let automation: IUIAutomation =
             unsafe { CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)? };
         let walker = unsafe { automation.ControlViewWalker()? };
         Ok(Self {
             automation,
             walker,
-            scale: Cell::new(1.),
             pid: std::process::id(),
         })
     }
@@ -58,30 +54,7 @@ impl Accessibility {
         }
     }
 
-    fn physical(&self, point: Point<Pixels>) -> POINT {
-        POINT {
-            x: (f32::from(point.x) * self.scale.get()) as i32,
-            y: (f32::from(point.y) * self.scale.get()) as i32,
-        }
-    }
-
-    fn logical(
-        &self,
-        RECT {
-            left,
-            top,
-            right,
-            bottom,
-        }: RECT,
-    ) -> Bounds<Pixels> {
-        let logical = |value: i32| px(value as f32 / self.scale.get());
-        Bounds::new(
-            point(logical(left), logical(top)),
-            size(logical(right - left), logical(bottom - top)),
-        )
-    }
-
-    fn foreign(&self, window: HWND, at: POINT) -> bool {
+    fn foreign(&self, window: HWND, point: Point) -> bool {
         let mut pid = 0;
         let mut rect = RECT::default();
         let mut cloaked = 0u32;
@@ -98,65 +71,60 @@ impl Accessibility {
         unsafe { IsWindowVisible(window) }.as_bool()
             && cloaked == 0
             && pid != self.pid
-            && contains(rect, at)
+            && frame_of(rect).contains(point)
     }
 
-    fn window_at(&self, at: POINT) -> Option<HWND> {
+    fn window_at(&self, point: Point) -> Option<HWND> {
         std::iter::successors(unsafe { GetTopWindow(None) }.ok(), |window| unsafe {
             GetWindow(*window, GW_HWNDNEXT).ok()
         })
-        .find(|window| self.foreign(*window, at))
+        .find(|window| self.foreign(*window, point))
     }
 
-    fn deepest(&self, node: Node, at: POINT) -> Node {
-        let inside = self.children(&node).into_iter().rev().find(|child| {
-            unsafe { child.element.CurrentBoundingRectangle() }.is_ok_and(|rect| contains(rect, at))
-        });
+    fn deepest(&self, node: Node, point: Point) -> Node {
+        let inside = self
+            .children(&node)
+            .into_iter()
+            .rev()
+            .find(|child| self.frame(child).is_some_and(|frame| frame.contains(point)));
         match inside {
-            Some(child) => self.deepest(child, at),
+            Some(child) => self.deepest(child, point),
             None => node,
         }
     }
 
-    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
-        display.bounds().origin
-    }
-
-    pub fn rescale(&self, scale: f32) {
-        self.scale.set(scale);
-    }
-
-    pub fn focus(&self, _: &gpui::Window) {}
-
-    pub fn place(&self, _: &gpui::Window) {}
+    pub fn raise(&self, _: &Node) {}
 
     pub fn release(&self) {}
 
-    pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
-        crate::platform::xcap_capture(frame, self.scale.get())
+    pub fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
+        crate::platform::xcap_capture(frame)
     }
 }
 
-fn contains(
+fn frame_of(
     RECT {
         left,
         top,
         right,
         bottom,
     }: RECT,
-    POINT { x, y }: POINT,
-) -> bool {
-    (left..right).contains(&x) && (top..bottom).contains(&y)
+) -> Frame {
+    Frame {
+        x: left.into(),
+        y: top.into(),
+        width: (right - left).into(),
+        height: (bottom - top).into(),
+    }
 }
 
 impl Tree for Accessibility {
     type Node = Node;
 
-    fn at(&self, point: Point<Pixels>) -> Option<Node> {
-        let at = self.physical(point);
-        let window = self.window_at(at)?;
+    fn at(&self, point: Point) -> Option<Node> {
+        let window = self.window_at(point)?;
         let root = unsafe { self.automation.ElementFromHandle(window) }.ok()?;
-        Some(self.deepest(self.node(root), at))
+        Some(self.deepest(self.node(root), point))
     }
 
     fn parent(&self, node: &Node) -> Option<Node> {
@@ -179,10 +147,10 @@ impl Tree for Accessibility {
         .collect()
     }
 
-    fn frame(&self, node: &Node) -> Option<Bounds<Pixels>> {
+    fn frame(&self, node: &Node) -> Option<Frame> {
         unsafe { node.element.CurrentBoundingRectangle() }
             .ok()
-            .map(|rect| self.logical(rect))
+            .map(frame_of)
     }
 
     fn label(&self, node: &Node) -> String {

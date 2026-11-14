@@ -8,23 +8,32 @@ mod windows;
 #[cfg(target_os = "linux")]
 pub use linux::Accessibility;
 #[cfg(target_os = "macos")]
-pub use macos::Accessibility;
+pub use macos::{Accessibility, pixels_per_unit, place};
 #[cfg(target_os = "windows")]
 pub use windows::Accessibility;
 
+#[cfg(not(target_os = "macos"))]
+pub fn pixels_per_unit(_: f64) -> f64 {
+    1.
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn place(window: &tauri::WebviewWindow, screen: &crate::stage::Screen) -> tauri::Result<()> {
+    window.set_position(screen.origin)?;
+    window.set_size(screen.size)
+}
+
 #[cfg(any(target_os = "macos", target_os = "windows"))]
-fn xcap_capture(frame: gpui::Bounds<gpui::Pixels>, scale: f32) -> anyhow::Result<image::RgbaImage> {
-    // xcap measures macOS displays in points and Windows displays in physical pixels.
-    let native = |value: gpui::Pixels| (f32::from(value) * scale).round() as i32;
-    let center = frame.center();
-    let monitor = xcap::Monitor::from_point(native(center.x), native(center.y))?;
-    let (x, y) = (
-        native(frame.origin.x) - monitor.x()?,
-        native(frame.origin.y) - monitor.y()?,
-    );
+fn xcap_capture(frame: crate::tree::Frame) -> anyhow::Result<image::RgbaImage> {
+    let round = |value: f64| value.round() as i32;
+    let monitor = xcap::Monitor::from_point(
+        round(frame.x + frame.width / 2.),
+        round(frame.y + frame.height / 2.),
+    )?;
+    let (x, y) = (round(frame.x) - monitor.x()?, round(frame.y) - monitor.y()?);
     let (left, top) = (x.max(0), y.max(0));
-    let right = (x + native(frame.size.width)).min(monitor.width()? as i32);
-    let bottom = (y + native(frame.size.height)).min(monitor.height()? as i32);
+    let right = (x + round(frame.width)).min(monitor.width()? as i32);
+    let bottom = (y + round(frame.height)).min(monitor.height()? as i32);
     Ok(monitor.capture_region(
         u32::try_from(left)?,
         u32::try_from(top)?,

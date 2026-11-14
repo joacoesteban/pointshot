@@ -4,9 +4,14 @@ node = "24"
 fnox = "1.39.0"
 
 [tasks.desktop]
-description = "Run the desktop app"
+description = "Run the desktop app with its UI hot reloading"
 dir = "desktop"
-run = "cargo run"
+run = "bunx tauri dev"
+
+[tasks."desktop:build"]
+description = "Build and bundle the desktop app for this platform"
+dir = "desktop"
+run = "bunx tauri build"
 
 [tasks."desktop:check"]
 description = "Format check, lint and test the desktop app"

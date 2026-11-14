@@ -1,4 +1,5 @@
-use crate::tree::Tree;
+use crate::stage::Screen;
+use crate::tree::{Frame, Point, Tree};
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::base::{CFType, CFTypeRef, TCFType};
 use core_foundation::boolean::CFBoolean;
@@ -6,20 +7,18 @@ use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use core_foundation::number::CFNumber;
 use core_foundation::string::{CFString, CFStringRef};
 use core_foundation::{declare_TCFType, impl_TCFType};
-use core_graphics::display::CGDisplay;
 use core_graphics::geometry::{CGPoint, CGRect, CGSize};
 use core_graphics::window::{
     kCGNullWindowID, kCGWindowBounds, kCGWindowListExcludeDesktopElements,
     kCGWindowListOptionOnScreenOnly, kCGWindowOwnerPID,
 };
-use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
-use objc2_app_kit::{NSView, NSWindowStyleMask};
-use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication, NSWindow};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::ffi::c_void;
 use std::mem::MaybeUninit;
+use tauri::{LogicalPosition, WebviewWindow};
 
 #[repr(C)]
 pub struct OpaqueElement(c_void);
@@ -32,11 +31,14 @@ impl_TCFType!(Element, ElementRef, AXUIElementGetTypeID);
 const CG_POINT: u32 = 1;
 const CG_SIZE: u32 = 2;
 const SUCCESS: i32 = 0;
+// The menu bar sits at kCGMainMenuWindowLevel (24), above Tauri's always-on-top level, so the overlay takes the pop-up menu level.
+const OVER_MENU_BAR: isize = 101;
 
 #[link(name = "ApplicationServices", kind = "framework")]
 unsafe extern "C" {
     fn AXUIElementGetTypeID() -> core_foundation::base::CFTypeID;
     fn AXUIElementCreateApplication(pid: i32) -> ElementRef;
+    fn AXUIElementGetPid(element: ElementRef, pid: *mut i32) -> i32;
     fn AXUIElementCopyElementAtPosition(
         application: ElementRef,
         x: f32,
@@ -83,7 +85,7 @@ impl Accessibility {
         }
     }
 
-    fn owner_at(&self, point: Point<Pixels>) -> Option<i32> {
+    fn owner_at(&self, point: Point) -> Option<i32> {
         let windows: CFArray<CFDictionary<CFString, CFType>> = unsafe {
             CFArray::wrap_under_create_rule(CGWindowListCopyWindowInfo(
                 kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
@@ -97,7 +99,7 @@ impl Accessibility {
             let bounds = CGRect::from_dict_representation(
                 &window.find(&bounds_key)?.downcast::<CFDictionary>()?,
             )?;
-            match (pid == self.pid, frame_of(bounds).contains(&point)) {
+            match (pid == self.pid, frame_of(bounds).contains(point)) {
                 (false, true) => Some(pid),
                 _ => None,
             }
@@ -151,31 +153,20 @@ impl Accessibility {
             .unwrap_or_default()
     }
 
-    // gpui places every macOS display at the origin, so its place on the desktop comes from CoreGraphics.
-    pub fn origin(display: &dyn PlatformDisplay) -> Point<Pixels> {
-        let CGRect { origin, .. } = CGDisplay::new(u64::from(display.id()) as u32).bounds();
-        point(px(origin.x as f32), px(origin.y as f32))
-    }
-
-    pub fn rescale(&self, _: f32) {}
-
-    pub fn focus(&self, _: &gpui::Window) {}
-
-    // AppKit keeps titled windows below the menu bar, and gpui opens every window titled.
-    // Changing the style mask drops the key focus, so it goes back to gpui's view.
-    pub fn place(&self, window: &gpui::Window) {
-        if let Some(view) = view(window)
-            && let Some(native) = view.window()
-            && let Some(screen) = native.screen()
+    // The overlay activates Pointshot, so the picked app is activated again before the capture shows it inactive.
+    #[allow(deprecated)]
+    pub fn raise(&self, node: &Element) {
+        let mut pid = 0;
+        if unsafe { AXUIElementGetPid(node.as_concrete_TypeRef(), &mut pid) } == SUCCESS
+            && let Some(application) =
+                NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
         {
-            native.setStyleMask(NSWindowStyleMask::Borderless);
-            native.setFrame_display(screen.frame(), true);
-            native.makeFirstResponder(Some(view));
+            application.activateWithOptions(NSApplicationActivationOptions::empty());
         }
     }
 
-    pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
-        crate::platform::xcap_capture(frame, 1.)
+    pub fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
+        crate::platform::xcap_capture(frame)
     }
 }
 
@@ -190,13 +181,22 @@ fn manual(application: &Element, value: CFBoolean) {
     };
 }
 
-fn view(window: &gpui::Window) -> Option<&NSView> {
-    match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
-        Ok(RawWindowHandle::AppKit(handle)) => {
-            Some(unsafe { handle.ns_view.cast::<NSView>().as_ref() })
+pub fn pixels_per_unit(scale: f64) -> f64 {
+    scale
+}
+
+pub fn place(window: &WebviewWindow, screen: &Screen) -> tauri::Result<()> {
+    window.set_position(LogicalPosition::new(
+        f64::from(screen.origin.x) / screen.scale,
+        f64::from(screen.origin.y) / screen.scale,
+    ))?;
+    window.set_size(screen.size.to_logical::<f64>(screen.scale))?;
+    let target = window.clone();
+    window.run_on_main_thread(move || {
+        if let Ok(native) = target.ns_window() {
+            unsafe { &*native.cast::<NSWindow>() }.setLevel(OVER_MENU_BAR);
         }
-        _ => None,
-    }
+    })
 }
 
 fn frame_of(
@@ -204,17 +204,19 @@ fn frame_of(
         origin,
         size: extent,
     }: CGRect,
-) -> Bounds<Pixels> {
-    Bounds::new(
-        point(px(origin.x as f32), px(origin.y as f32)),
-        size(px(extent.width as f32), px(extent.height as f32)),
-    )
+) -> Frame {
+    Frame {
+        x: origin.x,
+        y: origin.y,
+        width: extent.width,
+        height: extent.height,
+    }
 }
 
 impl Tree for Accessibility {
     type Node = Element;
 
-    fn at(&self, point: Point<Pixels>) -> Option<Element> {
+    fn at(&self, point: Point) -> Option<Element> {
         let pid = self.owner_at(point)?;
         let application =
             unsafe { Element::wrap_under_create_rule(AXUIElementCreateApplication(pid)) };
@@ -223,8 +225,8 @@ impl Tree for Accessibility {
         match unsafe {
             AXUIElementCopyElementAtPosition(
                 application.as_concrete_TypeRef(),
-                f32::from(point.x),
-                f32::from(point.y),
+                point.x as f32,
+                point.y as f32,
                 &mut element,
             )
         } {
@@ -255,7 +257,7 @@ impl Tree for Accessibility {
             .unwrap_or_default()
     }
 
-    fn frame(&self, node: &Element) -> Option<Bounds<Pixels>> {
+    fn frame(&self, node: &Element) -> Option<Frame> {
         let origin: CGPoint = self.value(node, "AXPosition", CG_POINT)?;
         let extent: CGSize = self.value(node, "AXSize", CG_SIZE)?;
         Some(frame_of(CGRect::new(&origin, &extent)))
