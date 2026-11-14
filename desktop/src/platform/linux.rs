@@ -2,9 +2,14 @@ use crate::tree::Tree;
 use anyhow::Context as _;
 use gpui::{Bounds, Pixels, PlatformDisplay, Point, point, px, size};
 use image::RgbaImage;
+use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use serde::de::DeserializeOwned;
+use x11rb::CURRENT_TIME;
 use x11rb::connection::Connection as _;
-use x11rb::protocol::xproto::{ConnectionExt as _, ImageFormat};
+use x11rb::protocol::xproto::{
+    Atom, AtomEnum, ConnectionExt as _, ImageFormat, InputFocus, MapState, Window,
+};
+use x11rb::rust_connection::RustConnection;
 use zbus::blocking::Connection;
 use zbus::zvariant::{DynamicType, OwnedObjectPath, OwnedValue};
 
@@ -26,6 +31,10 @@ pub struct Node {
 
 pub struct Accessibility {
     bus: Connection,
+    x11: RustConnection,
+    root: Window,
+    stacking: Atom,
+    owner: Atom,
     scale: f32,
     pid: u32,
 }
@@ -43,11 +52,103 @@ impl Accessibility {
             .body()
             .deserialize()?;
         let bus = zbus::blocking::connection::Builder::address(address.as_str())?.build()?;
+        let (x11, screen) = x11rb::connect(None).context("Pointshot needs an X11 session")?;
+        let root = x11.setup().roots[screen].root;
+        let atom = |name: &[u8]| -> anyhow::Result<Atom> {
+            Ok(x11.intern_atom(false, name)?.reply()?.atom)
+        };
+        let (stacking, owner) = (atom(b"_NET_CLIENT_LIST_STACKING")?, atom(b"_NET_WM_PID")?);
         Ok(Self {
             bus,
+            x11,
+            root,
+            stacking,
+            owner,
             scale,
             pid: std::process::id(),
         })
+    }
+
+    // The X server knows the stacking order, which AT-SPI does not expose.
+    fn owner_at(&self, at: (i32, i32)) -> Option<u32> {
+        let windows: Vec<Window> = self
+            .x11
+            .get_property(
+                false,
+                self.root,
+                self.stacking,
+                AtomEnum::WINDOW,
+                0,
+                u32::MAX,
+            )
+            .ok()?
+            .reply()
+            .ok()?
+            .value32()?
+            .collect();
+        windows.into_iter().rev().find_map(|window| {
+            let pid = self.window_pid(window)?;
+            (pid != self.pid && self.covers(window, at)).then_some(pid)
+        })
+    }
+
+    fn window_pid(&self, window: Window) -> Option<u32> {
+        self.x11
+            .get_property(false, window, self.owner, AtomEnum::CARDINAL, 0, 1)
+            .ok()?
+            .reply()
+            .ok()?
+            .value32()?
+            .next()
+    }
+
+    fn covers(&self, window: Window, (x, y): (i32, i32)) -> bool {
+        let viewable = || {
+            Some(
+                self.x11
+                    .get_window_attributes(window)
+                    .ok()?
+                    .reply()
+                    .ok()?
+                    .map_state,
+            )
+        };
+        let extent = || {
+            let geometry = self.x11.get_geometry(window).ok()?.reply().ok()?;
+            let origin = self
+                .x11
+                .translate_coordinates(window, self.root, 0, 0)
+                .ok()?
+                .reply()
+                .ok()?;
+            Some((
+                i32::from(origin.dst_x),
+                i32::from(origin.dst_y),
+                i32::from(geometry.width),
+                i32::from(geometry.height),
+            ))
+        };
+        match (viewable(), extent()) {
+            (Some(MapState::VIEWABLE), Some((left, top, width, height))) => {
+                (left..left + width).contains(&x) && (top..top + height).contains(&y)
+            }
+            _ => false,
+        }
+    }
+
+    // gpui opens pop-ups as override-redirect windows, which the window manager never focuses.
+    pub fn focus(&self, window: &gpui::Window) {
+        let target = match HasWindowHandle::window_handle(window).map(|handle| handle.as_raw()) {
+            Ok(RawWindowHandle::Xcb(handle)) => Some(handle.window.get()),
+            Ok(RawWindowHandle::Xlib(handle)) => u32::try_from(handle.window).ok(),
+            _ => None,
+        };
+        if let Some(target) = target {
+            self.x11
+                .set_input_focus(InputFocus::PARENT, target, CURRENT_TIME)
+                .ok();
+            self.x11.flush().ok();
+        }
     }
 
     fn call<B, R>(&self, node: &Node, interface: &str, method: &str, body: &B) -> Option<R>
@@ -126,15 +227,21 @@ impl Accessibility {
     }
 
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
-        let (connection, screen) = x11rb::connect(None)?;
-        let root = &connection.setup().roots[screen];
+        let root = self
+            .x11
+            .setup()
+            .roots
+            .iter()
+            .find(|screen| screen.root == self.root)
+            .context("the X server lost its root window")?;
         let (x, y) = self.physical(frame.origin);
         let (width, height) = self.physical(point(frame.size.width, frame.size.height));
         let (left, top) = (x.max(0), y.max(0));
         let right = (x + width).min(i32::from(root.width_in_pixels));
         let bottom = (y + height).min(i32::from(root.height_in_pixels));
         let (width, height) = (u16::try_from(right - left)?, u16::try_from(bottom - top)?);
-        let reply = connection
+        let reply = self
+            .x11
             .get_image(
                 ImageFormat::Z_PIXMAP,
                 root.root,
@@ -166,10 +273,11 @@ impl Tree for Accessibility {
             bus: REGISTRY.into(),
             path: OwnedObjectPath::try_from(ROOT).ok()?,
         };
+        let owner = self.owner_at(physical)?;
         let windows: Vec<(Node, u64)> = self
             .children(&desktop)
             .into_iter()
-            .filter(|app| self.pid(&app.bus) != Some(self.pid))
+            .filter(|app| self.pid(&app.bus) == Some(owner))
             .flat_map(|app| self.children(&app))
             .filter(|window| {
                 self.frame(window)

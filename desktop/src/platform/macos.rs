@@ -130,6 +130,8 @@ impl Accessibility {
         point(px(origin.x as f32), px(origin.y as f32))
     }
 
+    pub fn focus(&self, _: &gpui::Window) {}
+
     pub fn capture(&self, frame: Bounds<Pixels>) -> anyhow::Result<RgbaImage> {
         crate::platform::xcap_capture(frame, 1.)
     }

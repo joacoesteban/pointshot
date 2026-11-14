@@ -3954,6 +3954,7 @@ dependencies = [
  "gpui",
  "gpui_platform",
  "image",
+ "raw-window-handle",
  "serde",
  "windows 0.62.2",
  "x11rb",
