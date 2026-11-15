@@ -9,6 +9,12 @@ describe('siteOf', () => {
   it('names a file page after its scheme', () => {
     expect(siteOf('file:///x.html')).toBe('file')
   })
+
+  it('names a desktop app by its name', () => {
+    expect(siteOf(`app:${encodeURIComponent('Google Chrome')}`)).toBe(
+      'Google Chrome',
+    )
+  })
 })
 
 const shotOf = (url: string, title: string): Shot => ({

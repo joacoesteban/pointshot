@@ -3215,6 +3215,7 @@ dependencies = [
  "core-foundation",
  "core-graphics 0.24.0",
  "image",
+ "objc2",
  "objc2-app-kit",
  "serde",
  "tauri",

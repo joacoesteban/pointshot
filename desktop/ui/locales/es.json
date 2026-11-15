@@ -4,5 +4,31 @@
   },
   "hintVisible": {
     "message": "Clickea o pulsa Enter para capturar esta pantalla"
+  },
+  "libraryEmptyBody": {
+    "message": "Pulsa Capturar y clickea lo que quieras de la pantalla."
+  },
+  "site": {
+    "message": "App"
+  },
+  "allSites": {
+    "message": "Todas las apps"
+  },
+  "moreSites": {
+    "message": "$COUNT$ apps más",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchBody": {
+    "message": "Prueba con otra búsqueda u otra app."
+  },
+  "clipboardBlocked": {
+    "message": "El portapapeles no tomó la captura"
+  },
+  "savedClipboardBlocked": {
+    "message": "Guardado, pero el portapapeles no lo tomó"
   }
 }

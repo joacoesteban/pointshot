@@ -15,6 +15,13 @@ pub struct Aimed {
     pub label: String,
 }
 
+// Where a capture came from: the library files it under the app, titled by the window, as the extension does with sites and pages.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct Source {
+    pub app: String,
+    pub title: String,
+}
+
 #[derive(Default)]
 struct Session {
     tree: Option<Accessibility>,
@@ -40,12 +47,17 @@ impl Session {
         })
     }
 
-    fn finish(&mut self) {
-        if let Some(tree) = &self.tree {
-            self.aim.node.iter().for_each(|node| tree.raise(node));
-            tree.release();
-        }
+    fn finish(&mut self) -> Source {
+        let source = match (&self.tree, &self.aim.node) {
+            (Some(tree), Some(node)) => {
+                tree.raise(node);
+                tree.source(node)
+            }
+            _ => Source::default(),
+        };
+        self.tree.iter().for_each(Accessibility::release);
         self.aim = Aim::default();
+        source
     }
 
     fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
@@ -92,7 +104,7 @@ impl Picker {
         self.run(move |session| session.step(step)).await
     }
 
-    pub async fn finish(&self) {
+    pub async fn finish(&self) -> Source {
         self.run(Session::finish).await
     }
 

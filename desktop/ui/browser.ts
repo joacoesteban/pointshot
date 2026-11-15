@@ -35,11 +35,66 @@ const fill = (
       (whole, index: string) => substitutions[Number(index) - 1] ?? whole,
     )
 
+type Changes = Record<string, { oldValue: unknown; newValue: unknown }>
+
+type Listener = (changes: Changes, area: string) => void
+
+const listeners = new Set<Listener>()
+
+const parse = (raw: string | null): unknown =>
+  match(raw)
+    .with(P.string, (raw) => JSON.parse(raw) as unknown)
+    .otherwise(() => undefined)
+
+const notify = (changes: Changes) => {
+  listeners.forEach((listener) => {
+    listener(changes, 'local')
+  })
+}
+
+// localStorage tells the origin's other windows about a write, which is what storage.onChanged tells extension pages.
+addEventListener('storage', ({ key, oldValue, newValue }) => {
+  match(key)
+    .with(P.string, (key) => {
+      notify({
+        [key]: { oldValue: parse(oldValue), newValue: parse(newValue) },
+      })
+    })
+    .otherwise(() => undefined)
+})
+
 export const browser = {
   i18n: {
     getMessage: (key: string, substitutions: readonly string[] = []) =>
       match(catalog[key])
         .with(P.nonNullable, (message) => fill(message, substitutions))
         .otherwise(() => ''),
+  },
+  storage: {
+    local: {
+      get: (key: string) =>
+        Promise.resolve({ [key]: parse(localStorage.getItem(key)) }),
+      // A full localStorage throws, which the promise turns into a rejection.
+      set: (items: Readonly<Record<string, unknown>>) =>
+        new Promise<void>((resolve) => {
+          const changes = Object.fromEntries(
+            Object.entries(items).map(([key, newValue]) => {
+              const oldValue = parse(localStorage.getItem(key))
+              localStorage.setItem(key, JSON.stringify(newValue))
+              return [key, { oldValue, newValue }]
+            }),
+          )
+          notify(changes)
+          resolve()
+        }),
+    },
+    onChanged: {
+      addListener: (listener: Listener) => {
+        listeners.add(listener)
+      },
+      removeListener: (listener: Listener) => {
+        listeners.delete(listener)
+      },
+    },
   },
 }

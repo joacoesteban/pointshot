@@ -4,5 +4,31 @@
   },
   "hintVisible": {
     "message": "Click or press Enter to capture this display"
+  },
+  "libraryEmptyBody": {
+    "message": "Press Capture and click anything on screen."
+  },
+  "site": {
+    "message": "App"
+  },
+  "allSites": {
+    "message": "All apps"
+  },
+  "moreSites": {
+    "message": "$COUNT$ more apps",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchBody": {
+    "message": "Try another search or app."
+  },
+  "clipboardBlocked": {
+    "message": "The clipboard did not take the screenshot"
+  },
+  "savedClipboardBlocked": {
+    "message": "Saved, but the clipboard did not take it"
   }
 }

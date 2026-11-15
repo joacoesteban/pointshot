@@ -16,9 +16,12 @@
         "label": "main",
         "title": "Pointshot",
         "url": "index.html",
-        "width": 720,
-        "height": 480,
-        "center": true
+        "width": 960,
+        "height": 680,
+        "center": true,
+        "create": false,
+        "minWidth": 480,
+        "minHeight": 360
       }
     ]
   },

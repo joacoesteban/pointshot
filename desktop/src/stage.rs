@@ -1,4 +1,4 @@
-use crate::picker::{Aimed, Picker};
+use crate::picker::{Aimed, Picker, Source};
 use crate::platform;
 use crate::tree::{Frame, Point, Step};
 use base64::Engine as _;
@@ -19,7 +19,7 @@ use tokio::sync::oneshot;
 
 // Long enough for the window server to take the overlays off screen, and the picked app to come back to the front, before the capture.
 const OFFSTAGE: Duration = Duration::from_millis(200);
-const MAIN: &str = "main";
+pub const MAIN: &str = "main";
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Screen {
@@ -78,11 +78,12 @@ impl Screen {
 }
 
 #[derive(Clone, Debug, Serialize)]
-pub struct Shot {
-    id: usize,
-    url: String,
+pub struct Captured {
+    image: String,
     width: u32,
     height: u32,
+    #[serde(flatten)]
+    source: Source,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize)]
@@ -98,7 +99,7 @@ pub enum Walk {
 pub struct Stage {
     screens: Mutex<HashMap<String, Screen>>,
     ending: Mutex<Option<oneshot::Sender<Option<Frame>>>>,
-    shots: Mutex<Vec<RgbaImage>>,
+    running: tokio::sync::Mutex<()>,
 }
 
 fn locked<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -171,65 +172,83 @@ impl Stage {
             })
     }
 
-    fn keep(&self, app: &AppHandle, image: RgbaImage) -> anyhow::Result<Shot> {
-        let (width, height) = image.dimensions();
-        app.clipboard()
-            .write_image(&Image::new(image.as_raw(), width, height))?;
-        let mut png = Vec::new();
-        image.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)?;
-        let mut shots = locked(&self.shots);
-        shots.push(image);
-        Ok(Shot {
-            id: shots.len() - 1,
-            url: format!("data:image/png;base64,{}", STANDARD.encode(png)),
-            width,
-            height,
-        })
-    }
-
-    async fn session(
-        &self,
-        app: &AppHandle,
-        picker: &Picker,
-        main: Option<&WebviewWindow>,
-    ) -> anyhow::Result<Option<Shot>> {
+    async fn session(&self, app: &AppHandle, picker: &Picker) -> anyhow::Result<Option<Captured>> {
         picker.connect().await?;
         let (ending, ended) = oneshot::channel();
         *locked(&self.ending) = Some(ending);
-        let home = main
-            .and_then(|main| main.current_monitor().ok().flatten())
-            .map(|monitor| Screen::of(&monitor));
-        main.iter().try_for_each(|main| main.hide())?;
-        self.open(app, home)?;
+        self.open(app, home(app))?;
         let frame = ended.await.ok().flatten();
         self.close(app);
-        picker.finish().await;
+        let source = picker.finish().await;
         match frame {
             Some(frame) => {
                 tokio::time::sleep(OFFSTAGE).await;
-                Ok(Some(self.keep(app, picker.capture(frame).await?)?))
+                Ok(Some(keep(app, picker.capture(frame).await?, source)?))
             }
             None => Ok(None),
         }
     }
 }
 
-#[tauri::command]
-pub async fn capture(
-    app: AppHandle,
-    picker: State<'_, Picker>,
-    stage: State<'_, Stage>,
-) -> Result<Option<Shot>, String> {
+// The overlay under the pointer takes the keys first.
+fn home(app: &AppHandle) -> Option<Screen> {
+    let PhysicalPosition { x, y } = app.cursor_position().ok()?;
+    app.monitor_from_point(x, y)
+        .ok()
+        .flatten()
+        .map(|monitor| Screen::of(&monitor))
+}
+
+fn keep(app: &AppHandle, image: RgbaImage, source: Source) -> anyhow::Result<Captured> {
+    let (width, height) = image.dimensions();
+    app.clipboard()
+        .write_image(&Image::new(image.as_raw(), width, height))?;
+    let mut png = Vec::new();
+    image.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)?;
+    Ok(Captured {
+        image: format!("data:image/png;base64,{}", STANDARD.encode(png)),
+        width,
+        height,
+        source,
+    })
+}
+
+// The library files what this sends, so the main window lives on hidden while the app runs.
+pub async fn start(app: AppHandle) {
+    let stage = app.state::<Stage>();
+    let picker = app.state::<Picker>();
+    let Ok(_running) = stage.running.try_lock() else {
+        return;
+    };
     let main = app.get_webview_window(MAIN);
-    let shot = stage.session(&app, &picker, main.as_ref()).await;
-    if shot.is_err() {
-        stage.close(&app);
-    }
+    let shown = main
+        .as_ref()
+        .is_some_and(|main| main.is_visible().unwrap_or(false));
     main.iter().for_each(|main| {
-        main.show().ok();
-        main.set_focus().ok();
+        main.hide().ok();
     });
-    shot.map_err(|error| format!("{error:#}"))
+    let captured = stage.session(&app, &picker).await;
+    if captured.is_err() {
+        stage.close(&app);
+        picker.finish().await;
+    }
+    match &captured {
+        Ok(Some(captured)) => app.emit_to(MAIN, "captured", captured),
+        Ok(None) => Ok(()),
+        Err(error) => app.emit_to(MAIN, "failed", format!("{error:#}")),
+    }
+    .ok();
+    if shown || captured.is_err() {
+        main.iter().for_each(|main| {
+            main.show().ok();
+            main.set_focus().ok();
+        });
+    }
+}
+
+#[tauri::command]
+pub fn capture(app: AppHandle) {
+    tauri::async_runtime::spawn(start(app));
 }
 
 #[tauri::command]
@@ -275,14 +294,4 @@ pub fn pick(window: WebviewWindow, stage: State<'_, Stage>, frame: Frame) -> Res
 #[tauri::command]
 pub fn cancel(stage: State<'_, Stage>) {
     stage.end(None);
-}
-
-#[tauri::command]
-pub fn copy(app: AppHandle, stage: State<'_, Stage>, id: usize) -> Result<(), String> {
-    let shots = locked(&stage.shots);
-    let image = shots.get(id).ok_or("that screenshot is gone")?;
-    let (width, height) = image.dimensions();
-    app.clipboard()
-        .write_image(&Image::new(image.as_raw(), width, height))
-        .map_err(|error| error.to_string())
 }

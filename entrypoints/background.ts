@@ -115,13 +115,6 @@ const download = ({ url, filename, saveAs }: FileDownload) =>
       .exhaustive(),
   )
 
-// The revision write is awaited before replying, since the worker may be suspended right after the reply.
-// A failed write only costs other pages their refresh, so it never fails the save or removal itself.
-const announced = <T>(value: T): ResultAsync<T, never> =>
-  ShotRevision.bump()
-    .orElse(() => okAsync(undefined))
-    .map(() => value)
-
 export default defineBackground(() => {
   const store = new ShotStore(new SnagDB())
 
@@ -135,11 +128,13 @@ export default defineBackground(() => {
     void ReplyCodec.encode(
       SettingsStore.load()
         .andThen(({ limit }) => store.save(shot, limit))
-        .andThen(announced),
+        .andThen(ShotRevision.announced),
     ).then(respond)
   })
   removeShotsStream.subscribe(([ids, , respond]) => {
-    void ReplyCodec.encode(store.remove(ids).andThen(announced)).then(respond)
+    void ReplyCodec.encode(
+      store.remove(ids).andThen(ShotRevision.announced),
+    ).then(respond)
   })
   // The options page opens on its library through the URL hash, which openOptionsPage cannot set.
   openOptionsStream.subscribe(([view]) => {

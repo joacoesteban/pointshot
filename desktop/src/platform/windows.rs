@@ -1,9 +1,13 @@
+use crate::picker::Source;
 use crate::tree::{Frame, Point, Tree};
 use image::RgbaImage;
-use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::Foundation::{CloseHandle, HWND, RECT};
 use windows::Win32::Graphics::Dwm::{DWMWA_CLOAKED, DwmGetWindowAttribute};
 use windows::Win32::System::Com::{
     CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED, CoCreateInstance, CoInitializeEx,
+};
+use windows::Win32::System::Threading::{
+    OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
 use windows::Win32::UI::Accessibility::{
     CUIAutomation, IUIAutomation, IUIAutomationElement, IUIAutomationTreeWalker,
@@ -95,11 +99,46 @@ impl Accessibility {
 
     pub fn raise(&self, _: &Node) {}
 
+    // The walk stops below the desktop, so the last ancestor is the top-level window.
+    pub fn source(&self, node: &Node) -> Source {
+        let window = std::iter::successors(Some(node.clone()), |node| self.parent(node)).last();
+        Source {
+            app: unsafe { node.element.CurrentProcessId() }
+                .ok()
+                .and_then(|pid| u32::try_from(pid).ok())
+                .and_then(process_name)
+                .unwrap_or_default(),
+            title: window
+                .and_then(|window| unsafe { window.element.CurrentName() }.ok())
+                .map(|name| name.to_string())
+                .unwrap_or_default(),
+        }
+    }
+
     pub fn release(&self) {}
 
     pub fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
         crate::platform::xcap_capture(frame)
     }
+}
+
+fn process_name(pid: u32) -> Option<String> {
+    let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) }.ok()?;
+    let mut path = [0u16; 1024];
+    let mut length = path.len() as u32;
+    let named = unsafe {
+        QueryFullProcessImageNameW(
+            process,
+            PROCESS_NAME_WIN32,
+            windows::core::PWSTR(path.as_mut_ptr()),
+            &mut length,
+        )
+    };
+    unsafe { CloseHandle(process) }.ok();
+    named.ok()?;
+    std::path::Path::new(&String::from_utf16_lossy(&path[..length as usize]))
+        .file_stem()
+        .map(|stem| stem.to_string_lossy().into_owned())
 }
 
 fn frame_of(

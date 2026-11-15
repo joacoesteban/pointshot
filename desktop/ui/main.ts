@@ -1,4 +1,4 @@
 import { boot } from './boot'
-import Shots from './shots.svelte'
+import App from './app.svelte'
 
-boot(Shots)
+boot(App)

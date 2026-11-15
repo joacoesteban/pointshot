@@ -107,7 +107,13 @@ cannot decrypt the profile; never run these tasks unless asked.
   `~/` to the repository and swaps `wxt/browser` for `ui/browser.ts`, so the
   overlay renders the extension's `Outline` and `SnagToast` and reads the
   extension's copy, with `ui/locales` overriding the lines that speak of
-  pages. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
+  pages or sites. The main window is the extension's `Library`: the config
+  also swaps `messages/index.ts` for `ui/messages.ts`, which answers the
+  library's messages with `ShotStore` in the window's own IndexedDB, and
+  `lib/clipboard.ts` for `ui/clipboard.ts`, which copies through the app.
+  `ui/browser.ts` keeps `storage.local` in localStorage. Each capture reaches
+  the library as a `captured` event, filed under `app:<name>`, which
+  `siteOf` reads as the app's name, and titled by its window. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
   clippy and its tests, while `bun run check` covers `desktop/ui`. Run it
   with `mise run desktop`; Linux needs `libwebkit2gtk-4.1-dev`.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a

@@ -1,3 +1,4 @@
+use crate::picker::Source;
 use crate::stage::Screen;
 use crate::tree::{Frame, Point, Tree};
 use core_foundation::array::{CFArray, CFArrayRef};
@@ -13,6 +14,7 @@ use core_graphics::window::{
     kCGWindowListOptionOnScreenOnly, kCGWindowOwnerPID,
 };
 use image::RgbaImage;
+use objc2::rc::Retained;
 use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication, NSWindow};
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -153,15 +155,34 @@ impl Accessibility {
             .unwrap_or_default()
     }
 
+    fn application(&self, node: &Element) -> Option<Retained<NSRunningApplication>> {
+        let mut pid = 0;
+        match unsafe { AXUIElementGetPid(node.as_concrete_TypeRef(), &mut pid) } {
+            SUCCESS => NSRunningApplication::runningApplicationWithProcessIdentifier(pid),
+            _ => None,
+        }
+    }
+
     // The overlay activates Pointshot, so the picked app is activated again before the capture shows it inactive.
     #[allow(deprecated)]
     pub fn raise(&self, node: &Element) {
-        let mut pid = 0;
-        if unsafe { AXUIElementGetPid(node.as_concrete_TypeRef(), &mut pid) } == SUCCESS
-            && let Some(application) =
-                NSRunningApplication::runningApplicationWithProcessIdentifier(pid)
-        {
+        if let Some(application) = self.application(node) {
             application.activateWithOptions(NSApplicationActivationOptions::empty());
+        }
+    }
+
+    pub fn source(&self, node: &Element) -> Source {
+        Source {
+            app: self
+                .application(node)
+                .and_then(|application| application.localizedName())
+                .map(|name| name.to_string())
+                .unwrap_or_default(),
+            title: self
+                .attribute(node, "AXWindow")
+                .and_then(|window| window.downcast::<Element>())
+                .map(|window| self.text(&window, "AXTitle"))
+                .unwrap_or_default(),
         }
     }
 

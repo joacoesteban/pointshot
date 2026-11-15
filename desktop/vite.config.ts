@@ -1,16 +1,41 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { match, P } from 'ts-pattern'
+import { defineConfig, type Plugin } from 'vite'
 
 const desktop = import.meta.dirname
 const root = resolve(desktop, '..')
+
+// Extension modules that talk to the background or the browser's clipboard, and their desktop stand-ins.
+// Matched after resolving, so relative imports such as lib's './clipboard' are swapped too.
+const SWAPS = new Map([
+  [resolve(root, 'messages/index.ts'), resolve(desktop, 'ui/messages.ts')],
+  [resolve(root, 'lib/clipboard.ts'), resolve(desktop, 'ui/clipboard.ts')],
+])
+
+const swap: Plugin = {
+  name: 'pointshot-desktop-swap',
+  enforce: 'pre',
+  async resolveId(source, importer, options) {
+    const resolved = await this.resolve(source, importer, {
+      ...options,
+      skipSelf: true,
+    })
+    return match(resolved)
+      .with({ id: P.string }, ({ id }) => SWAPS.get(id) ?? resolved)
+      .otherwise(() => resolved)
+  },
+}
 
 export default defineConfig({
   root: resolve(desktop, 'ui'),
   // Tauri's devUrl, a port apart from WXT's dev server.
   server: { port: 5174, strictPort: true },
   clearScreen: false,
-  plugins: [svelte({ configFile: resolve(desktop, 'svelte.config.mjs') })],
+  plugins: [
+    swap,
+    svelte({ configFile: resolve(desktop, 'svelte.config.mjs') }),
+  ],
   resolve: {
     alias: [
       { find: /^~\//, replacement: `${root}/` },
