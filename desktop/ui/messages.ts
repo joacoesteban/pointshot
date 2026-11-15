@@ -1,11 +1,13 @@
-import { errAsync } from 'neverthrow'
+import { invoke } from '@tauri-apps/api/core'
+import { ResultAsync } from 'neverthrow'
 import { SnagDB } from '~/background/db'
 import { ShotStore } from '~/background/shot-store'
-import { DownloadError } from '~/lib/errors'
+import { DownloadError, toError } from '~/lib/errors'
 import { ReplyCodec } from '~/lib/reply'
 import { SettingsStore } from '~/lib/settings'
 import type { NewShot } from '~/lib/shot'
 import { ShotRevision } from '~/lib/shot-revision'
+import type { FileDownload } from '~/messages'
 
 // The extension's library messages, answered in the window itself: the webview keeps the same Dexie database the background does.
 const store = new ShotStore(new SnagDB())
@@ -25,10 +27,11 @@ export const removeShots = (ids: readonly string[]) =>
 export const shotImageUrl = (id: string) =>
   ReplyCodec.encode(store.imageUrl(id))
 
-// ShotActions falls back to a link download, which the webview saves in the downloads folder.
-export const downloadFile = () =>
+// ShotActions sends only downloads with a folder or Save As here, and leaves the rest to a link, which the webview saves in the downloads folder.
+export const downloadFile = (file: FileDownload) =>
   ReplyCodec.encode(
-    errAsync<number, DownloadError>(
-      new DownloadError('The desktop app saves to the downloads folder'),
+    ResultAsync.fromPromise(
+      invoke<number>('download', { ...file }),
+      toError(DownloadError),
     ),
   )
