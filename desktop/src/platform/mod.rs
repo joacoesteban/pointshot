@@ -6,11 +6,16 @@ mod macos;
 mod windows;
 
 #[cfg(target_os = "linux")]
-pub use linux::Accessibility;
+pub use linux::{Accessibility, tray_supported};
 #[cfg(target_os = "macos")]
 pub use macos::{Accessibility, pixels_per_unit, place};
 #[cfg(target_os = "windows")]
 pub use windows::Accessibility;
+
+#[cfg(not(target_os = "linux"))]
+pub fn tray_supported() -> bool {
+    true
+}
 
 #[cfg(not(target_os = "macos"))]
 pub fn pixels_per_unit(_: f64) -> f64 {

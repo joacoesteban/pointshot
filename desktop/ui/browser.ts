@@ -98,3 +98,6 @@ export const browser = {
     },
   },
 }
+
+// Lines only the desktop app has, which t() does not know.
+export const say = (key: keyof typeof desktopEn) => browser.i18n.getMessage(key)

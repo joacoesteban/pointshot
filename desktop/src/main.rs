@@ -8,11 +8,34 @@ mod tree;
 
 use picker::Picker;
 use stage::{MAIN, Stage};
-use tauri::{Manager, RunEvent, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Manager, RunEvent, WebviewWindowBuilder, WindowEvent};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+
+// The extension's pick-element shortcut. The library's empty state names it too.
+const CAPTURE: &str = "Alt+Shift+S";
+
+#[tauri::command]
+fn quit(app: AppHandle) {
+    app.exit(0);
+}
+
+#[tauri::command]
+fn tray_supported() -> bool {
+    platform::tray_supported()
+}
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _, event| {
+                    if event.state == ShortcutState::Pressed {
+                        tauri::async_runtime::spawn(stage::start(app.clone()));
+                    }
+                })
+                .build(),
+        )
         .manage(Picker::spawn())
         .manage(Stage::default())
         .setup(|app| {
@@ -28,6 +51,8 @@ fn main() {
             WebviewWindowBuilder::from_config(app, &config)?
                 .on_download(|_, _| true)
                 .build()?;
+            // Another app may hold the shortcut, which leaves the Capture button and the tray.
+            app.global_shortcut().register(CAPTURE).ok();
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -43,7 +68,9 @@ fn main() {
             stage::pick,
             stage::cancel,
             clipboard::copy,
-            clipboard::copy_text
+            clipboard::copy_text,
+            quit,
+            tray_supported
         ])
         .build(tauri::generate_context!())
         .expect("the app builds")

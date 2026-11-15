@@ -30,5 +30,8 @@
   },
   "savedClipboardBlocked": {
     "message": "Saved, but the clipboard did not take it"
+  },
+  "quit": {
+    "message": "Quit Pointshot"
   }
 }

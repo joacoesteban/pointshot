@@ -319,3 +319,15 @@ impl Tree for Accessibility {
             .join(" · ")
     }
 }
+
+// libappindicator-sys panics where it cannot unwind when neither library loads, so the tray is only made when one does.
+pub fn tray_supported() -> bool {
+    [
+        "libayatana-appindicator3.so.1",
+        "libappindicator3.so.1",
+        "libayatana-appindicator3.so",
+        "libappindicator3.so",
+    ]
+    .into_iter()
+    .any(|name| unsafe { libloading::Library::new(name) }.is_ok())
+}

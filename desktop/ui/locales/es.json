@@ -30,5 +30,8 @@
   },
   "savedClipboardBlocked": {
     "message": "Guardado, pero el portapapeles no lo tomó"
+  },
+  "quit": {
+    "message": "Salir de Pointshot"
   }
 }

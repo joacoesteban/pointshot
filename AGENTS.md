@@ -96,8 +96,8 @@ cannot decrypt the profile; never run these tasks unless asked.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
-- `desktop/`: a proof of concept of Pointshot as a desktop app, on Tauri 2.
-  It picks elements of any app from the platform's accessibility tree
+- `desktop/`: a proof of concept of Pointshot as a desktop app, on Tauri 2. It
+  picks elements of any app from the platform's accessibility tree
   (`AXUIElement` on macOS, UI Automation on Windows, AT-SPI on Linux under
   X11; Wayland is not supported) through the `Tree` trait in `src/tree.rs`,
   whose arrow-key walk mirrors `lib/picker.ts`. The tree lives on one thread
@@ -106,16 +106,21 @@ cannot decrypt the profile; never run these tasks unless asked.
   `desktop/ui` is Svelte built by `desktop/vite.config.ts`, which resolves
   `~/` to the repository and swaps `wxt/browser` for `ui/browser.ts`, so the
   overlay renders the extension's `Outline` and `SnagToast` and reads the
-  extension's copy, with `ui/locales` overriding the lines that speak of
-  pages or sites. The main window is the extension's `Library`: the config
-  also swaps `messages/index.ts` for `ui/messages.ts`, which answers the
-  library's messages with `ShotStore` in the window's own IndexedDB, and
+  extension's copy, with `ui/locales` overriding the lines that speak of pages
+  or sites. The main window is the extension's `Library`: the config also
+  swaps `messages/index.ts` for `ui/messages.ts`, which answers the library's
+  messages with `ShotStore` in the window's own IndexedDB, and
   `lib/clipboard.ts` for `ui/clipboard.ts`, which copies through the app.
   `ui/browser.ts` keeps `storage.local` in localStorage. Each capture reaches
-  the library as a `captured` event, filed under `app:<name>`, which
-  `siteOf` reads as the app's name, and titled by its window. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
-  clippy and its tests, while `bun run check` covers `desktop/ui`. Run it
-  with `mise run desktop`; Linux needs `libwebkit2gtk-4.1-dev`.
+  the library as a `captured` event, filed under `app:<name>`, which `siteOf`
+  reads as the app's name, and titled by its window. Alt+Shift+S, the
+  extension's pick shortcut, starts a capture from anywhere, and the tray
+  (`ui/tray.ts`, the menu bar on macOS) starts one or reopens the library;
+  closing the window only hides it, since the hidden window still files the
+  captures. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
+  clippy and its tests, while `bun run check` covers `desktop/ui`. Run it with
+  `mise run desktop`; Linux needs `libwebkit2gtk-4.1-dev`, and
+  `libayatana-appindicator3-1` for the tray.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a
   Playwright spec, with its own config, that plays the scenes through
   `Studio` (`studio.ts`) over `demo.html`, a made-up site served at

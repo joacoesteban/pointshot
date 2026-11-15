@@ -2,7 +2,6 @@
   import { invoke } from '@tauri-apps/api/core'
   import { listen } from '@tauri-apps/api/event'
   import toast from 'svelte-french-toast'
-  import { match, P } from 'ts-pattern'
   import logo from '~/assets/icon.png'
   import Button from '~/components/button.svelte'
   import Filters from '~/components/filters.svelte'
@@ -20,6 +19,7 @@
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
   import { theme } from './theme'
+  import { SHORTCUT, tray } from './tray'
 
   type Captured = {
     readonly image: string
@@ -28,10 +28,6 @@
     readonly app: string
     readonly title: string
   }
-
-  const SHORTCUT = match(navigator.userAgent)
-    .with(P.string.includes('Mac'), () => '⌥⇧S')
-    .otherwise(() => 'Alt+Shift+S')
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
 
@@ -61,6 +57,8 @@
         .match(() => toast.success(t('copied')), Failure.report)
     },
   )
+
+  void tray()
 
   void listen<string>('failed', ({ payload }) => {
     toast.error(t('couldNotSnag', payload))
