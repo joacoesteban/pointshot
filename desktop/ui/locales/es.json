@@ -93,5 +93,8 @@
   },
   "commandPage": {
     "message": "Capturar una ventana"
+  },
+  "commandToggle": {
+    "message": "Mostrar u ocultar la biblioteca"
   }
 }

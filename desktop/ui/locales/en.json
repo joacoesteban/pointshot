@@ -93,5 +93,8 @@
   },
   "commandPage": {
     "message": "Capture a window"
+  },
+  "commandToggle": {
+    "message": "Show or hide the library"
   }
 }

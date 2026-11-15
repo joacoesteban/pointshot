@@ -1,6 +1,8 @@
 <script lang="ts">
   import { invoke } from '@tauri-apps/api/core'
   import { listen } from '@tauri-apps/api/event'
+  import { getCurrentWindow } from '@tauri-apps/api/window'
+  import { ResultAsync } from 'neverthrow'
   import toast from 'svelte-french-toast'
   import { match } from 'ts-pattern'
   import Button from '~/components/button.svelte'
@@ -13,7 +15,7 @@
   import Permissions from './permissions.svelte'
   import { Shortcut } from './shortcut'
   import ShortcutDialog from './shortcut-dialog.svelte'
-  import { tray } from './tray'
+  import { showLibrary, tray } from './tray'
 
   type Captured = {
     readonly image: string
@@ -49,6 +51,19 @@
         .match(() => toast.success(t('copied')), Failure.report)
     },
   )
+
+  // The extension's toggle-popup: the shortcut hides the window when it is in front, and shows the library otherwise.
+  void listen('library', () => {
+    const window = getCurrentWindow()
+    void ResultAsync.fromPromise(
+      Promise.all([window.isVisible(), window.isFocused()]),
+      String,
+    ).map(([visible, focused]) =>
+      match({ visible, focused })
+        .with({ visible: true, focused: true }, () => window.hide())
+        .otherwise(showLibrary),
+    )
+  })
 
   void listen<string>('failed', ({ payload }) => {
     toast.error(t('couldNotSnag', payload))

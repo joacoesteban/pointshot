@@ -3,7 +3,7 @@ use std::sync::{Mutex, MutexGuard, PoisonError};
 use tauri::{AppHandle, State};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
-// The extension's pick shortcut, keyed by the overlay mode it starts in, until the window restores the ones recorded in its settings.
+// The extension's pick shortcut, keyed by its action, until the window restores the ones recorded in its settings.
 pub const DEFAULT: (&str, &str) = ("element", "Alt+Shift+KeyS");
 
 #[derive(Default)]
@@ -14,15 +14,16 @@ impl Hotkey {
         self.0.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
-    pub fn mode(&self, fired: &Shortcut) -> Option<String> {
+    // An overlay mode to start the capture in, or "library".
+    pub fn action(&self, fired: &Shortcut) -> Option<String> {
         self.shortcuts()
             .iter()
             .find(|(_, shortcut)| *shortcut == fired)
-            .map(|(mode, _)| mode.clone())
+            .map(|(action, _)| action.clone())
     }
 
-    // An empty accelerator clears the mode's shortcut. The new one is registered before the old one goes, so one another app holds leaves the old in place.
-    pub fn set(&self, app: &AppHandle, mode: &str, accelerator: &str) -> Result<(), String> {
+    // An empty accelerator clears the action's shortcut. The new one is registered before the old one goes, so one another app holds leaves the old in place.
+    pub fn set(&self, app: &AppHandle, action: &str, accelerator: &str) -> Result<(), String> {
         let next = match accelerator {
             "" => None,
             accelerator => Some(
@@ -32,13 +33,13 @@ impl Hotkey {
             ),
         };
         let mut shortcuts = self.shortcuts();
-        let current = shortcuts.get(mode).copied();
+        let current = shortcuts.get(action).copied();
         if current == next {
             return Ok(());
         }
         if let Some(next) = next {
             if shortcuts.values().any(|shortcut| *shortcut == next) {
-                return Err(format!("{accelerator} already starts another capture"));
+                return Err(format!("{accelerator} is already taken by another command"));
             }
             app.global_shortcut()
                 .register(next)
@@ -48,8 +49,8 @@ impl Hotkey {
             app.global_shortcut().unregister(previous).ok();
         }
         match next {
-            Some(next) => shortcuts.insert(mode.into(), next),
-            None => shortcuts.remove(mode),
+            Some(next) => shortcuts.insert(action.into(), next),
+            None => shortcuts.remove(action),
         };
         Ok(())
     }
@@ -74,10 +75,10 @@ impl Hotkey {
 pub fn set_shortcut(
     app: AppHandle,
     hotkey: State<'_, Hotkey>,
-    mode: String,
+    action: String,
     accelerator: String,
 ) -> Result<(), String> {
-    hotkey.set(&app, &mode, &accelerator)
+    hotkey.set(&app, &action, &accelerator)
 }
 
 #[tauri::command]

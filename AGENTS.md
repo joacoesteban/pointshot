@@ -121,20 +121,20 @@ cannot decrypt the profile; never run these tasks unless asked.
   capture is scaled to one pixel per point before the clipboard. Each capture
   reaches the library as a `captured` event, filed under `app:<name>`, which
   `siteOf` reads as the app's name, and titled by its window. The extension's
-  four commands start captures from anywhere, each with the overlay pinned to
-  its mode: picking has Alt+Shift+S, the extension's shortcut, and the
-  settings' Change shortcuts records the others (`ui/shortcut.ts`,
-  `src/shortcut.rs`, keyed by mode), which the window keeps in localStorage
-  and registers again at launch. The tray (`ui/tray.ts`, the menu bar on
-  macOS) lists the same commands and reopens the library; closing the window
-  only hides it, since the hidden window still files the captures. On macOS a
-  capture first checks the Accessibility and Screen Recording permissions
-  (`src/permissions.rs`); with either missing it opens the library, whose
-  `ui/permissions.svelte` asks for them. CI does not check the Rust:
-  `mise run desktop:check` runs rustfmt, clippy and its tests, while
-  `bun run check` covers `desktop/ui`. Run it with `mise run desktop`; Linux
-  needs `libwebkit2gtk-4.1-dev`, and `libayatana-appindicator3-1` for the
-  tray.
+  commands work from anywhere: its four captures open the overlay pinned to
+  their mode, and its popup toggle shows or hides the library. Picking has
+  Alt+Shift+S, the extension's shortcut, and the settings' Change shortcuts
+  records the others (`ui/shortcut.ts`, `src/shortcut.rs`, keyed by action),
+  which the window keeps in localStorage and registers again at launch. The
+  tray (`ui/tray.ts`, the menu bar on macOS) lists the same commands and
+  reopens the library; closing the window only hides it, since the hidden
+  window still files the captures. On macOS a capture first checks the
+  Accessibility and Screen Recording permissions (`src/permissions.rs`); with
+  either missing it opens the library, whose `ui/permissions.svelte` asks for
+  them. CI does not check the Rust: `mise run desktop:check` runs rustfmt,
+  clippy and its tests, while `bun run check` covers `desktop/ui`. Run it with
+  `mise run desktop`; Linux needs `libwebkit2gtk-4.1-dev`, and
+  `libayatana-appindicator3-1` for the tray.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a
   Playwright spec, with its own config, that plays the scenes through
   `Studio` (`studio.ts`) over `demo.html`, a made-up site served at

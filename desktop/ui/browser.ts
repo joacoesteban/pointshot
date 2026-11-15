@@ -78,10 +78,10 @@ export const browser = {
     getAll: () => {
       const shortcuts = Shortcut.all()
       return Promise.resolve(
-        COMMANDS.map(({ command, mode, description }) => ({
+        COMMANDS.map(({ command, action, description }) => ({
           name: command,
           description: getMessage(description),
-          shortcut: Shortcut.label(shortcuts[mode]),
+          shortcut: Shortcut.label(shortcuts[action]),
         })),
       )
     },

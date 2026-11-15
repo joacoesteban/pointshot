@@ -6,7 +6,7 @@
   import SymbolButton from '~/components/symbol-button.svelte'
   import { t } from '~/lib/i18n'
   import { say } from './browser'
-  import { COMMANDS, Shortcut, type Mode } from './shortcut'
+  import { COMMANDS, Shortcut, type Action } from './shortcut'
   import { tray } from './tray'
 
   type Props = { onclose: () => void }
@@ -14,14 +14,14 @@
   const { onclose }: Props = $props()
 
   let shortcuts = $state(Shortcut.all())
-  let recording = $state<Mode | null>(null)
+  let recording = $state<Action | null>(null)
 
   const close = () => {
     void Shortcut.pause(false).match(onclose, onclose)
   }
 
-  const save = (mode: Mode, accelerator: string) => {
-    void Shortcut.save(mode, accelerator)
+  const save = (action: Action, accelerator: string) => {
+    void Shortcut.save(action, accelerator)
       .andThen(tray)
       .match(
         () => {
@@ -57,18 +57,18 @@
 <Dialog title={say('shortcutTitle')} testId="pointshot-shortcut" onclose={close}>
   <p class="body">{say('shortcutBody')}</p>
   <ul class="shortcuts">
-    {#each COMMANDS as { mode, description } (mode)}
+    {#each COMMANDS as { action, description } (action)}
       <li>
         <span class="name">{t(description)}</span>
         <button
           type="button"
           class="keys bg-theme:soft"
-          class:recording={recording === mode}
+          class:recording={recording === action}
           onclick={() => {
-            recording = mode
+            recording = action
           }}>
-          {match({ recording, shortcut: shortcuts[mode] })
-            .with({ recording: mode }, () => say('shortcutWaiting'))
+          {match({ recording, shortcut: shortcuts[action] })
+            .with({ recording: action }, () => say('shortcutWaiting'))
             .with({ shortcut: '' }, () => t('notSet'))
             .otherwise(({ shortcut }) => Shortcut.label(shortcut))}
         </button>
@@ -76,9 +76,9 @@
           name="xMark"
           title={say('clearShortcut')}
           size="sm"
-          disabled={shortcuts[mode] === ''}
+          disabled={shortcuts[action] === ''}
           onclick={() => {
-            save(mode, '')
+            save(action, '')
           }} />
       </li>
     {/each}

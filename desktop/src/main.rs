@@ -12,7 +12,7 @@ mod tree;
 use picker::Picker;
 use stage::{MAIN, Stage};
 use tauri::webview::{DownloadEvent, NewWindowResponse};
-use tauri::{AppHandle, Manager, RunEvent, WebviewWindowBuilder, WindowEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent, WebviewWindowBuilder, WindowEvent};
 use tauri_plugin_global_shortcut::ShortcutState;
 use tauri_plugin_opener::OpenerExt;
 
@@ -35,9 +35,17 @@ fn main() {
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
                     if event.state == ShortcutState::Pressed
-                        && let Some(mode) = app.state::<shortcut::Hotkey>().mode(shortcut)
+                        && let Some(action) = app.state::<shortcut::Hotkey>().action(shortcut)
                     {
-                        tauri::async_runtime::spawn(stage::start(app.clone(), mode));
+                        match action.as_str() {
+                            // The extension's toggle-popup: the window shows or hides the library.
+                            "library" => {
+                                app.emit_to(MAIN, "library", ()).ok();
+                            }
+                            _ => {
+                                tauri::async_runtime::spawn(stage::start(app.clone(), action));
+                            }
+                        }
                     }
                 })
                 .build(),

@@ -4,29 +4,35 @@ import { match, P } from 'ts-pattern'
 import { z } from 'zod'
 import type { MessageKey } from '~/lib/i18n'
 
-// The overlay mode each shortcut starts in.
-export type Mode = 'element' | 'area' | 'visible' | 'page'
+// What each shortcut does: start the overlay in one of its modes, or show or hide the library.
+export type Action = 'element' | 'area' | 'visible' | 'page' | 'library'
 
 // The extension's commands, which name the shortcuts in the settings and the tray.
 export const COMMANDS: readonly {
   readonly command: string
-  readonly mode: Mode
+  readonly action: Action
   readonly description: MessageKey
 }[] = [
-  { command: 'pick-element', mode: 'element', description: 'commandPick' },
-  { command: 'snag-selection', mode: 'area', description: 'commandSelection' },
-  { command: 'snag-visible', mode: 'visible', description: 'commandVisible' },
-  { command: 'snag-page', mode: 'page', description: 'commandPage' },
+  { command: 'pick-element', action: 'element', description: 'commandPick' },
+  {
+    command: 'snag-selection',
+    action: 'area',
+    description: 'commandSelection',
+  },
+  { command: 'snag-visible', action: 'visible', description: 'commandVisible' },
+  { command: 'snag-page', action: 'page', description: 'commandPage' },
+  { command: 'toggle-popup', action: 'library', description: 'commandToggle' },
 ]
 
 const KEY = 'shortcuts'
 
-// In the format the app registers: modifiers, then the key's KeyboardEvent.code. Empty is unset; like the extension, only picking has one by default.
+// In the format the app registers: modifiers, then the key's KeyboardEvent.code. Empty is unset; only picking has one by default, since the extension's Alt+S would take Option+S, which types ß on a Mac, from every app.
 const Shortcuts = z.object({
   element: z.string().catch('Alt+Shift+KeyS'),
   area: z.string().catch(''),
   visible: z.string().catch(''),
   page: z.string().catch(''),
+  library: z.string().catch(''),
 })
 
 type Shortcuts = z.infer<typeof Shortcuts>
@@ -97,14 +103,14 @@ export class Shortcut {
       .otherwise(({ held, code }) => [...held, code].join('+'))
   }
 
-  static save(mode: Mode, accelerator: string): ResultAsync<void, string> {
+  static save(action: Action, accelerator: string): ResultAsync<void, string> {
     return ResultAsync.fromPromise(
-      invoke('set_shortcut', { mode, accelerator }),
+      invoke('set_shortcut', { action, accelerator }),
       String,
     ).map(() => {
       localStorage.setItem(
         KEY,
-        JSON.stringify({ ...Shortcut.all(), [mode]: accelerator }),
+        JSON.stringify({ ...Shortcut.all(), [action]: accelerator }),
       )
     })
   }
@@ -113,7 +119,7 @@ export class Shortcut {
   static restore(): ResultAsync<void, string> {
     const shortcuts = Shortcut.all()
     return ResultAsync.combine(
-      COMMANDS.map(({ mode }) => Shortcut.save(mode, shortcuts[mode])),
+      COMMANDS.map(({ action }) => Shortcut.save(action, shortcuts[action])),
     ).map(() => undefined)
   }
 

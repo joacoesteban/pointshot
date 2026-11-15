@@ -11,29 +11,38 @@ import { COMMANDS, Shortcut } from './shortcut'
 
 const ID = 'pointshot'
 
-export const library = () => {
+export const showLibrary = () => {
   location.hash = 'library'
   const window = getCurrentWindow()
   void Promise.all([window.unminimize(), window.show(), window.setFocus()])
 }
 
-// Each of the extension's commands, with its shortcut where one is set.
+// Each of the extension's commands, with its shortcut where one is set; showing the library comes after the captures.
 const menu = () => {
   const shortcuts = Shortcut.all()
   return Menu.new({
     items: [
-      ...COMMANDS.map(({ mode, description }) => ({
-        id: mode,
-        text: t(description),
-        ...match(shortcuts[mode])
-          .with('', () => ({}))
-          .otherwise((accelerator) => ({ accelerator })),
-        action: () => {
-          void invoke('capture', { mode })
-        },
-      })),
-      { item: 'Separator' as const },
-      { id: 'library', text: t('libraryTitle'), action: library },
+      ...COMMANDS.flatMap(({ action, description }) => {
+        const item = {
+          id: action,
+          text: match(action)
+            .with('library', () => t('libraryTitle'))
+            .otherwise(() => t(description)),
+          ...match(shortcuts[action])
+            .with('', () => ({}))
+            .otherwise((accelerator) => ({ accelerator })),
+          action: () => {
+            match(action)
+              .with('library', showLibrary)
+              .otherwise((mode) => {
+                void invoke('capture', { mode })
+              })
+          },
+        }
+        return match(action)
+          .with('library', () => [{ item: 'Separator' as const }, item])
+          .otherwise(() => [item])
+      }),
       { item: 'Separator' as const },
       {
         id: 'quit',
