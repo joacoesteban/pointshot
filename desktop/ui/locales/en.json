@@ -60,5 +60,14 @@
   },
   "allowed": {
     "message": "Allowed"
+  },
+  "commandPick": {
+    "message": "Pick something on screen to capture"
+  },
+  "firefoxShortcuts": {
+    "message": "The desktop app's shortcut cannot be changed yet."
+  },
+  "diagnosticsHelp": {
+    "message": "Version, system, settings and recent errors, to paste in a bug report."
   }
 }

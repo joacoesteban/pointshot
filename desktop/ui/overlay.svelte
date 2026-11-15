@@ -12,7 +12,7 @@
   import type { Frame } from '~/lib/frame'
   import { t } from '~/lib/i18n'
   import type { Area } from '~/lib/region'
-  import { theme } from './theme'
+  import { themeController } from '~/lib/theme-controller'
 
   type Aimed = {
     readonly frame: Readonly<Record<'x' | 'y' | 'width' | 'height', number>>
@@ -135,7 +135,7 @@
     held = Chord.read(event)
   }} />
 
-<div use:theme>
+<div use:themeController>
   <!-- The window takes the keys, so the stage needs only the click. -->
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div class="stage" onclick={pick}></div>

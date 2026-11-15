@@ -1,8 +1,11 @@
+import { openUrl } from '@tauri-apps/plugin-opener'
 import { match, P } from 'ts-pattern'
 import en from '~/public/_locales/en/messages.json'
 import es from '~/public/_locales/es/messages.json'
 import desktopEn from './locales/en.json'
 import desktopEs from './locales/es.json'
+import tauri from '../tauri.conf.json'
+import { SHORTCUT } from './shortcut'
 
 type Message = {
   readonly message: string
@@ -63,12 +66,31 @@ addEventListener('storage', ({ key, oldValue, newValue }) => {
     .otherwise(() => undefined)
 })
 
+const getMessage = (key: string, substitutions: readonly string[] = []) =>
+  match(catalog[key])
+    .with(P.nonNullable, (message) => fill(message, substitutions))
+    .otherwise(() => '')
+
 export const browser = {
-  i18n: {
-    getMessage: (key: string, substitutions: readonly string[] = []) =>
-      match(catalog[key])
-        .with(P.nonNullable, (message) => fill(message, substitutions))
-        .otherwise(() => ''),
+  i18n: { getMessage },
+  runtime: { getManifest: () => ({ version: tauri.version }) },
+  // The app registers only the pick shortcut.
+  commands: {
+    getAll: () =>
+      Promise.resolve([
+        {
+          name: 'pick-element',
+          description: getMessage('commandPick'),
+          shortcut: SHORTCUT,
+        },
+      ]),
+  },
+  tabs: {
+    create: ({ url }: { readonly url: string }) => openUrl(url),
+  },
+  // The app saves downloads itself, so the options page's downloads permission is always granted.
+  permissions: {
+    request: () => Promise.resolve(true),
   },
   storage: {
     local: {
@@ -100,4 +122,4 @@ export const browser = {
 }
 
 // Lines only the desktop app has, which t() does not know.
-export const say = (key: keyof typeof desktopEn) => browser.i18n.getMessage(key)
+export const say = (key: keyof typeof desktopEn) => getMessage(key)

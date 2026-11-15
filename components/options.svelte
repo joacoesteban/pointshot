@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte'
   import { fromEvent, map, startWith } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { browser } from 'wxt/browser'
@@ -24,6 +25,14 @@
   import SettingsView from './options/settings.svelte'
   import SymbolButton from './symbol-button.svelte'
   import Toaster from './toaster.svelte'
+
+  type Props = {
+    // The desktop app's own header actions and notices; the extension has none.
+    toolbar?: Snippet
+    notice?: Snippet
+  }
+
+  const { toolbar, notice }: Props = $props()
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
   let commands = $state<readonly Command[]>([])
@@ -94,14 +103,17 @@
           <img src={logo} alt="" class="w-14 h-14" />
           <h1 class="blend font-black text-4xl m-0">Pointshot</h1>
         </div>
-        <SymbolButton
-          name="github"
-          title={t('sourceCode')}
-          size="lg"
-          opaque
-          onclick={() => {
-            open(REPOSITORY_URL)
-          }} />
+        <div class="flex items-center gap-3">
+          {@render toolbar?.()}
+          <SymbolButton
+            name="github"
+            title={t('sourceCode')}
+            size="lg"
+            opaque
+            onclick={() => {
+              open(REPOSITORY_URL)
+            }} />
+        </div>
       </header>
 
       <nav class="flex gap-2 mb-8" aria-label={t('optionsTitle')}>
@@ -117,6 +129,8 @@
             }}>{label}</Button>
         {/each}
       </nav>
+
+      {@render notice?.()}
 
       {#if view === 'library'}
         <Library {library} {actions} {settings} shortcut={pickShortcut} />

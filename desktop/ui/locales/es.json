@@ -60,5 +60,14 @@
   },
   "allowed": {
     "message": "Permitido"
+  },
+  "commandPick": {
+    "message": "Elegir algo de la pantalla para capturar"
+  },
+  "firefoxShortcuts": {
+    "message": "El atajo de la app de escritorio todavía no se puede cambiar."
+  },
+  "diagnosticsHelp": {
+    "message": "Versión, sistema, configuración y errores recientes, para pegar en un informe."
   }
 }

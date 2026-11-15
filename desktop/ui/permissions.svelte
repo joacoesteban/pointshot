@@ -4,7 +4,6 @@
   import { ResultAsync } from 'neverthrow'
   import { fromEvent } from 'rxjs'
   import Button from '~/components/button.svelte'
-  import Divider from '~/components/divider.svelte'
   import Row from '~/components/options/row.svelte'
   import Symbol from '~/components/symbol.svelte'
   import { say } from './browser'
@@ -71,12 +70,11 @@
       </Row>
     {/each}
   </section>
-  <Divider />
 {/if}
 
 <style lang="scss">
   .permissions {
-    margin-bottom: 8px;
+    margin-bottom: 32px;
   }
   h2 {
     margin: 0 0 4px;

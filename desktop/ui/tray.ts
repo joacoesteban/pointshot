@@ -7,16 +7,12 @@ import { ResultAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { t } from '~/lib/i18n'
 import { say } from './browser'
+import { ACCELERATOR } from './shortcut'
 
-// The shortcut the app registers, in the menus' format and as the platform spells it.
-const ACCELERATOR = 'Alt+Shift+S'
 const ID = 'pointshot'
 
-export const SHORTCUT = match(navigator.userAgent)
-  .with(P.string.includes('Mac'), () => '⌥⇧S')
-  .otherwise(() => ACCELERATOR)
-
-const library = () => {
+export const library = () => {
+  location.hash = 'library'
   const window = getCurrentWindow()
   void Promise.all([window.unminimize(), window.show(), window.setFocus()])
 }
