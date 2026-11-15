@@ -7,7 +7,7 @@ import { ResultAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { t } from '~/lib/i18n'
 import { say } from './browser'
-import { ACCELERATOR } from './shortcut'
+import { Shortcut } from './shortcut'
 
 const ID = 'pointshot'
 
@@ -23,7 +23,7 @@ const menu = () =>
       {
         id: 'capture',
         text: t('snag'),
-        accelerator: ACCELERATOR,
+        accelerator: Shortcut.current(),
         action: () => {
           void invoke('capture')
         },
@@ -64,7 +64,7 @@ const make = () =>
   )
 
 // The tray, the menu bar on macOS, starts a capture or brings back the library, which closing only hides.
-// A reload of the window finds the tray it made before, so it only takes the new menu.
+// A reload of the window, or a new shortcut, finds the tray made before, so it only takes the new menu.
 // Linux has one only with an appindicator library installed.
 export const tray = () =>
   ResultAsync.fromPromise(invoke<boolean>('tray_supported'), String).andThen(

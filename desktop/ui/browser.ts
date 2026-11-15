@@ -5,7 +5,7 @@ import es from '~/public/_locales/es/messages.json'
 import desktopEn from './locales/en.json'
 import desktopEs from './locales/es.json'
 import tauri from '../tauri.conf.json'
-import { SHORTCUT } from './shortcut'
+import { Shortcut } from './shortcut'
 
 type Message = {
   readonly message: string
@@ -81,7 +81,7 @@ export const browser = {
         {
           name: 'pick-element',
           description: getMessage('commandPick'),
-          shortcut: SHORTCUT,
+          shortcut: Shortcut.label(Shortcut.current()),
         },
       ]),
   },

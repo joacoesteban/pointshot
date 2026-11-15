@@ -27,12 +27,13 @@
   import Toaster from './toaster.svelte'
 
   type Props = {
-    // The desktop app's own header actions and notices; the extension has none.
+    // The desktop app's own header actions, notices and shortcut editor; the extension has none.
     toolbar?: Snippet
     notice?: Snippet
+    onchangeshortcuts?: () => Promise<unknown>
   }
 
-  const { toolbar, notice }: Props = $props()
+  const { toolbar, notice, onchangeshortcuts }: Props = $props()
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
   let commands = $state<readonly Command[]>([])
@@ -72,18 +73,21 @@
     settings = next
   })
 
-  void browser.commands.getAll().then((all) => {
-    commands = all.flatMap(({ name, description, shortcut }) =>
-      match({ name, description })
-        .with(
-          { name: P.string, description: P.string.minLength(1) },
-          ({ name: command, description: name }) => [
-            { command, name, shortcut: shortcut ?? '' },
-          ],
-        )
-        .otherwise(() => []),
-    )
-  })
+  const loadCommands = () =>
+    browser.commands.getAll().then((all) => {
+      commands = all.flatMap(({ name, description, shortcut }) =>
+        match({ name, description })
+          .with(
+            { name: P.string, description: P.string.minLength(1) },
+            ({ name: command, description: name }) => [
+              { command, name, shortcut: shortcut ?? '' },
+            ],
+          )
+          .otherwise(() => []),
+      )
+    })
+
+  void loadCommands()
 
   const pickShortcut = $derived(
     commands.find(({ command }) => command === 'pick-element')?.shortcut ?? '',
@@ -135,7 +139,14 @@
       {#if view === 'library'}
         <Library {library} {actions} {settings} shortcut={pickShortcut} />
       {:else}
-        <SettingsView {settings} {commands} />
+        <SettingsView
+          {settings}
+          {commands}
+          onchangeshortcuts={match(onchangeshortcuts)
+            .with(P.nonNullable, (change) => () => {
+              void change().then(loadCommands)
+            })
+            .otherwise(() => undefined)} />
       {/if}
 
       <Footer {version} />

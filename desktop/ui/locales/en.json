@@ -64,10 +64,22 @@
   "commandPick": {
     "message": "Pick something on screen to capture"
   },
-  "firefoxShortcuts": {
-    "message": "The desktop app's shortcut cannot be changed yet."
-  },
   "diagnosticsHelp": {
     "message": "Version, system, settings and recent errors, to paste in a bug report."
+  },
+  "shortcutTitle": {
+    "message": "Change the capture shortcut"
+  },
+  "shortcutBody": {
+    "message": "Hold one or more modifiers and press a key."
+  },
+  "shortcutWaiting": {
+    "message": "Waiting for keys"
+  },
+  "shortcutNotSet": {
+    "message": "Pointshot could not use that shortcut. Another app may hold it."
+  },
+  "save": {
+    "message": "Save"
   }
 }

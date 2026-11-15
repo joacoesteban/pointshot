@@ -15,9 +15,11 @@
   type Props = {
     settings: Settings
     commands: readonly Command[]
+    // Replaces the link to Chrome's shortcut page, for the desktop app.
+    onchangeshortcuts?: (() => void) | undefined
   }
 
-  const { settings, commands }: Props = $props()
+  const { settings, commands, onchangeshortcuts }: Props = $props()
 
   // The folder field and the Save As toggle hold what was typed or clicked until the permission it needs is granted or refused.
   let folder = $state('')
@@ -229,7 +231,13 @@
         opaque
         icon="keyboard"
         onclick={() => {
-          open('chrome://extensions/shortcuts')
+          match(onchangeshortcuts)
+            .with(P.nonNullable, (change) => {
+              change()
+            })
+            .otherwise(() => {
+              open('chrome://extensions/shortcuts')
+            })
         }}>{t('changeShortcuts')}</Button>
     </div>
   {/if}

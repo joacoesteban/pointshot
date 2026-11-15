@@ -64,10 +64,22 @@
   "commandPick": {
     "message": "Elegir algo de la pantalla para capturar"
   },
-  "firefoxShortcuts": {
-    "message": "El atajo de la app de escritorio todavía no se puede cambiar."
-  },
   "diagnosticsHelp": {
     "message": "Versión, sistema, configuración y errores recientes, para pegar en un informe."
+  },
+  "shortcutTitle": {
+    "message": "Cambiar el atajo de captura"
+  },
+  "shortcutBody": {
+    "message": "Mantén uno o más modificadores y pulsa una tecla."
+  },
+  "shortcutWaiting": {
+    "message": "Esperando las teclas"
+  },
+  "shortcutNotSet": {
+    "message": "Pointshot no pudo usar ese atajo. Puede que otra app lo use."
+  },
+  "save": {
+    "message": "Guardar"
   }
 }

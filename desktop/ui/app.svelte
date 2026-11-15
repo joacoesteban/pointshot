@@ -11,6 +11,8 @@
   import { ShotLibrary } from '~/lib/shot-library'
   import { say } from './browser'
   import Permissions from './permissions.svelte'
+  import { Shortcut } from './shortcut'
+  import ShortcutDialog from './shortcut-dialog.svelte'
   import { tray } from './tray'
 
   type Captured = {
@@ -52,10 +54,18 @@
     toast.error(t('couldNotSnag', payload))
   })
 
-  void tray()
+  // The options page reloads the shortcuts once the promise its button got settles.
+  let recording = $state<(() => void) | null>(null)
+
+  const changeShortcut = () =>
+    new Promise<void>((resolve) => {
+      recording = resolve
+    })
+
+  void Shortcut.restore().andThen(tray)
 </script>
 
-<Options>
+<Options onchangeshortcuts={changeShortcut}>
   {#snippet toolbar()}
     <Button
       size="lg"
@@ -69,5 +79,12 @@
   {/snippet}
   {#snippet notice()}
     <Permissions />
+    {#if recording}
+      <ShortcutDialog
+        onclose={() => {
+          recording?.()
+          recording = null
+        }} />
+    {/if}
   {/snippet}
 </Options>

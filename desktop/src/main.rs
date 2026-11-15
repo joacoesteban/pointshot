@@ -5,6 +5,7 @@ mod download;
 mod permissions;
 mod picker;
 mod platform;
+mod shortcut;
 mod stage;
 mod tree;
 
@@ -12,11 +13,8 @@ use picker::Picker;
 use stage::{MAIN, Stage};
 use tauri::webview::{DownloadEvent, NewWindowResponse};
 use tauri::{AppHandle, Manager, RunEvent, WebviewWindowBuilder, WindowEvent};
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
+use tauri_plugin_global_shortcut::ShortcutState;
 use tauri_plugin_opener::OpenerExt;
-
-// The extension's pick-element shortcut. The library's empty state names it too.
-const CAPTURE: &str = "Alt+Shift+S";
 
 #[tauri::command]
 fn quit(app: AppHandle) {
@@ -44,6 +42,7 @@ fn main() {
         )
         .manage(Picker::spawn())
         .manage(Stage::default())
+        .manage(shortcut::Hotkey::default())
         .setup(|app| {
             let config = app
                 .config()
@@ -71,7 +70,9 @@ fn main() {
                 })
                 .build()?;
             // Another app may hold the shortcut, which leaves the Capture button and the tray.
-            app.global_shortcut().register(CAPTURE).ok();
+            app.state::<shortcut::Hotkey>()
+                .set(app.handle(), shortcut::DEFAULT)
+                .ok();
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -91,6 +92,8 @@ fn main() {
             download::download,
             permissions::permissions,
             permissions::grant,
+            shortcut::set_shortcut,
+            shortcut::pause_shortcut,
             quit,
             tray_supported
         ])

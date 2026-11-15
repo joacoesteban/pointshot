@@ -120,13 +120,15 @@ cannot decrypt the profile; never run these tasks unless asked.
   pixel per point before the clipboard. Each capture reaches the library as a
   `captured` event, filed under `app:<name>`, which `siteOf` reads as the
   app's name, and titled by its window. Alt+Shift+S, the extension's pick
-  shortcut, starts a capture from anywhere, and the tray (`ui/tray.ts`, the
-  menu bar on macOS) starts one or reopens the library; closing the window
-  only hides it, since the hidden window still files the captures. On macOS a
-  capture first checks the Accessibility and Screen Recording permissions
-  (`src/permissions.rs`); with either missing it opens the library, whose
-  `ui/permissions.svelte` asks for them. CI does not check the Rust:
-  `mise run desktop:check` runs rustfmt, clippy and its tests, while
+  shortcut, starts a capture from anywhere until the settings' Change
+  shortcuts records another (`ui/shortcut.ts`, `src/shortcut.rs`), which the
+  window keeps in localStorage and registers again at launch; and the tray
+  (`ui/tray.ts`, the menu bar on macOS) starts one or reopens the library;
+  closing the window only hides it, since the hidden window still files the
+  captures. On macOS a capture first checks the Accessibility and Screen
+  Recording permissions (`src/permissions.rs`); with either missing it opens
+  the library, whose `ui/permissions.svelte` asks for them. CI does not check
+  the Rust: `mise run desktop:check` runs rustfmt, clippy and its tests, while
   `bun run check` covers `desktop/ui`. Run it with `mise run desktop`; Linux
   needs `libwebkit2gtk-4.1-dev`, and `libayatana-appindicator3-1` for the
   tray.
