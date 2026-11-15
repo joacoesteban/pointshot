@@ -12,6 +12,7 @@
   import type { Frame } from '~/lib/frame'
   import { t } from '~/lib/i18n'
   import type { Area } from '~/lib/region'
+  import { SettingsStore, type Settings } from '~/lib/settings'
   import { themeController } from '~/lib/theme-controller'
 
   type Aimed = {
@@ -27,6 +28,11 @@
   let held = $state.raw<Held>(Chord.released)
   let pinned = $state<SnagMode>('element')
   let marquee = $state.raw<Area | null>(null)
+  let density = $state<Settings['density']>('device')
+
+  SettingsStore.changes().subscribe((settings) => {
+    density = settings.density
+  })
   let width = $state(innerWidth)
   let height = $state(innerHeight)
 
@@ -65,7 +71,10 @@
   )
 
   const send = ({ left, top, width, height }: Area) => {
-    void invoke('pick', { frame: { x: left, y: top, width, height } })
+    void invoke('pick', {
+      frame: { x: left, y: top, width, height },
+      density,
+    })
   }
 
   const pick = () => {

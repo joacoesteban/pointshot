@@ -86,6 +86,21 @@ pub struct Captured {
     source: Source,
 }
 
+// The options page's resolution: the display's pixels, or one image pixel per point, as the extension's one per CSS pixel.
+#[derive(Clone, Copy, Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Density {
+    Device,
+    Css,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Picked {
+    frame: Frame,
+    scale: f64,
+    density: Density,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Walk {
@@ -98,7 +113,7 @@ pub enum Walk {
 #[derive(Default)]
 pub struct Stage {
     screens: Mutex<HashMap<String, Screen>>,
-    ending: Mutex<Option<oneshot::Sender<Option<Frame>>>>,
+    ending: Mutex<Option<oneshot::Sender<Option<Picked>>>>,
     running: tokio::sync::Mutex<()>,
 }
 
@@ -154,9 +169,9 @@ impl Stage {
         });
     }
 
-    fn end(&self, frame: Option<Frame>) {
+    fn end(&self, picked: Option<Picked>) {
         if let Some(ending) = locked(&self.ending).take() {
-            ending.send(frame).ok();
+            ending.send(picked).ok();
         }
     }
 
@@ -177,13 +192,20 @@ impl Stage {
         let (ending, ended) = oneshot::channel();
         *locked(&self.ending) = Some(ending);
         self.open(app, home(app))?;
-        let frame = ended.await.ok().flatten();
+        let picked = ended.await.ok().flatten();
         self.close(app);
-        let source = picker.finish(frame).await;
-        match frame {
-            Some(frame) => {
+        let source = picker
+            .finish(picked.map(|Picked { frame, .. }| frame))
+            .await;
+        match picked {
+            Some(Picked {
+                frame,
+                scale,
+                density,
+            }) => {
                 tokio::time::sleep(OFFSTAGE).await;
-                Ok(Some(keep(app, picker.capture(frame).await?, source)?))
+                let image = picker.capture(frame).await?;
+                Ok(Some(keep(app, image, scale, density, source)?))
             }
             None => Ok(None),
         }
@@ -199,10 +221,25 @@ fn home(app: &AppHandle) -> Option<Screen> {
         .map(|monitor| Screen::of(&monitor))
 }
 
-fn keep(app: &AppHandle, image: RgbaImage, source: Source) -> anyhow::Result<Captured> {
+// The library sizes a capture in points, the desktop's CSS pixels.
+fn keep(
+    app: &AppHandle,
+    image: RgbaImage,
+    scale: f64,
+    density: Density,
+    source: Source,
+) -> anyhow::Result<Captured> {
+    let points = |pixels: u32| (f64::from(pixels) / scale).round().max(1.) as u32;
     let (width, height) = image.dimensions();
+    let (width, height) = (points(width), points(height));
+    let image = match density {
+        Density::Device => image,
+        Density::Css => {
+            image::imageops::resize(&image, width, height, image::imageops::FilterType::Lanczos3)
+        }
+    };
     app.clipboard()
-        .write_image(&Image::new(image.as_raw(), width, height))?;
+        .write_image(&Image::new(image.as_raw(), image.width(), image.height()))?;
     let mut png = Vec::new();
     image.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png)?;
     Ok(Captured {
@@ -294,9 +331,18 @@ pub async fn walk(
 }
 
 #[tauri::command]
-pub fn pick(window: WebviewWindow, stage: State<'_, Stage>, frame: Frame) -> Result<(), String> {
+pub fn pick(
+    window: WebviewWindow,
+    stage: State<'_, Stage>,
+    frame: Frame,
+    density: Density,
+) -> Result<(), String> {
     let screen = stage.screen(window.label())?;
-    stage.end(Some(screen.reframe(frame, |point| screen.native(point))));
+    stage.end(Some(Picked {
+        frame: screen.reframe(frame, |point| screen.native(point)),
+        scale: screen.scale,
+        density,
+    }));
     Ok(())
 }
 

@@ -107,20 +107,26 @@ cannot decrypt the profile; never run these tasks unless asked.
   `~/` to the repository and swaps `wxt/browser` for `ui/browser.ts`, so the
   overlay renders the extension's `Outline` and `SnagToast` and reads the
   extension's copy, with `ui/locales` overriding the lines that speak of pages
-  or sites. The main window is the extension's `Library`: the config also
-  swaps `messages/index.ts` for `ui/messages.ts`, which answers the library's
-  messages with `ShotStore` in the window's own IndexedDB, and
+  or sites. The main window is the extension's options page, opening on its
+  library, with the desktop's Capture button and permissions panel in its
+  `toolbar` and `notice` slots; the browser shim answers what the page asks of
+  the browser, and the config sets the extension's build flags. The config
+  also swaps `messages/index.ts` for `ui/messages.ts`, which answers the
+  library's messages with `ShotStore` in the window's own IndexedDB, and
   `lib/clipboard.ts` for `ui/clipboard.ts`, which copies through the app.
-  `ui/browser.ts` keeps `storage.local` in localStorage. Each capture reaches
-  the library as a `captured` event, filed under `app:<name>`, which `siteOf`
-  reads as the app's name, and titled by its window. Alt+Shift+S, the
-  extension's pick shortcut, starts a capture from anywhere, and the tray
-  (`ui/tray.ts`, the menu bar on macOS) starts one or reopens the library;
-  closing the window only hides it, since the hidden window still files the
-  captures. On macOS a capture first checks the Accessibility and Screen
-  Recording permissions (`src/permissions.rs`); with either missing it opens
-  the library, whose `ui/permissions.svelte` asks for them. CI does not check
-  the Rust: `mise run desktop:check` runs rustfmt, clippy and its tests, while
+  `ui/browser.ts` keeps `storage.local` in localStorage. Downloads with a
+  folder or Save As go to `src/download.rs`, and the overlay sends the
+  resolution setting with each pick, so a Standard capture is scaled to one
+  pixel per point before the clipboard. Each capture reaches the library as a
+  `captured` event, filed under `app:<name>`, which `siteOf` reads as the
+  app's name, and titled by its window. Alt+Shift+S, the extension's pick
+  shortcut, starts a capture from anywhere, and the tray (`ui/tray.ts`, the
+  menu bar on macOS) starts one or reopens the library; closing the window
+  only hides it, since the hidden window still files the captures. On macOS a
+  capture first checks the Accessibility and Screen Recording permissions
+  (`src/permissions.rs`); with either missing it opens the library, whose
+  `ui/permissions.svelte` asks for them. CI does not check the Rust:
+  `mise run desktop:check` runs rustfmt, clippy and its tests, while
   `bun run check` covers `desktop/ui`. Run it with `mise run desktop`; Linux
   needs `libwebkit2gtk-4.1-dev`, and `libayatana-appindicator3-1` for the
   tray.
