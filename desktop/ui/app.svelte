@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core'
   import { listen } from '@tauri-apps/api/event'
   import toast from 'svelte-french-toast'
+  import { match } from 'ts-pattern'
   import logo from '~/assets/icon.png'
   import Button from '~/components/button.svelte'
   import Filters from '~/components/filters.svelte'
@@ -18,6 +19,7 @@
   } from '~/lib/settings'
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
+  import { say } from './browser'
   import { theme } from './theme'
   import { SHORTCUT, tray } from './tray'
 
@@ -45,7 +47,11 @@
       void Img.thumbnail(Img.dataUrlToBlob(image))
         .andThen((thumbnail) =>
           library.save({
-            url: `app:${encodeURIComponent(app)}`,
+            url: `app:${encodeURIComponent(
+              match(app)
+                .with('', () => say('screen'))
+                .otherwise((app) => app),
+            )}`,
             title,
             width,
             height,

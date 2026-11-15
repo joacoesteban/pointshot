@@ -20,6 +20,13 @@ impl Frame {
         (self.x..self.x + self.width).contains(&x) && (self.y..self.y + self.height).contains(&y)
     }
 
+    pub fn center(&self) -> Point {
+        Point {
+            x: self.x + self.width / 2.,
+            y: self.y + self.height / 2.,
+        }
+    }
+
     fn rendered(&self) -> bool {
         self.width > 0. && self.height > 0.
     }

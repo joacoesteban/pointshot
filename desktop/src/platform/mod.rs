@@ -31,10 +31,8 @@ pub fn place(window: &tauri::WebviewWindow, screen: &crate::stage::Screen) -> ta
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 fn xcap_capture(frame: crate::tree::Frame) -> anyhow::Result<image::RgbaImage> {
     let round = |value: f64| value.round() as i32;
-    let monitor = xcap::Monitor::from_point(
-        round(frame.x + frame.width / 2.),
-        round(frame.y + frame.height / 2.),
-    )?;
+    let center = frame.center();
+    let monitor = xcap::Monitor::from_point(round(center.x), round(center.y))?;
     let (x, y) = (round(frame.x) - monitor.x()?, round(frame.y) - monitor.y()?);
     let (left, top) = (x.max(0), y.max(0));
     let right = (x + round(frame.width)).min(monitor.width()? as i32);

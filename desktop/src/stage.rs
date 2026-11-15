@@ -179,7 +179,7 @@ impl Stage {
         self.open(app, home(app))?;
         let frame = ended.await.ok().flatten();
         self.close(app);
-        let source = picker.finish().await;
+        let source = picker.finish(frame).await;
         match frame {
             Some(frame) => {
                 tokio::time::sleep(OFFSTAGE).await;
@@ -230,7 +230,7 @@ pub async fn start(app: AppHandle) {
     let captured = stage.session(&app, &picker).await;
     if captured.is_err() {
         stage.close(&app);
-        picker.finish().await;
+        picker.finish(None).await;
     }
     match &captured {
         Ok(Some(captured)) => app.emit_to(MAIN, "captured", captured),

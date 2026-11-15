@@ -47,17 +47,16 @@ impl Session {
         })
     }
 
-    fn finish(&mut self) -> Source {
-        let source = match (&self.tree, &self.aim.node) {
-            (Some(tree), Some(node)) => {
-                tree.raise(node);
-                tree.source(node)
-            }
-            _ => Source::default(),
-        };
+    // An area or a display has no picked node, so the source is whatever shows at the frame's center.
+    fn finish(&mut self, frame: Option<Frame>) -> Source {
+        let source = self.tree.as_ref().zip(frame).and_then(|(tree, frame)| {
+            let node = tree.at(frame.center())?;
+            tree.raise(&node);
+            Some(tree.source(&node))
+        });
         self.tree.iter().for_each(Accessibility::release);
         self.aim = Aim::default();
-        source
+        source.unwrap_or_default()
     }
 
     fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {
@@ -104,8 +103,8 @@ impl Picker {
         self.run(move |session| session.step(step)).await
     }
 
-    pub async fn finish(&self) -> Source {
-        self.run(Session::finish).await
+    pub async fn finish(&self, frame: Option<Frame>) -> Source {
+        self.run(move |session| session.finish(frame)).await
     }
 
     pub async fn capture(&self, frame: Frame) -> anyhow::Result<RgbaImage> {

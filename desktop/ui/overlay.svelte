@@ -6,10 +6,12 @@
   import { match, P } from 'ts-pattern'
   import Filters from '~/components/filters.svelte'
   import Outline from '~/components/outline.svelte'
+  import Selection from '~/components/selection.svelte'
   import SnagToast from '~/components/snag-toast.svelte'
   import { Chord, type Held, type SnagMode } from '~/lib/chord'
   import type { Frame } from '~/lib/frame'
   import { t } from '~/lib/i18n'
+  import type { Area } from '~/lib/region'
   import { theme } from './theme'
 
   type Aimed = {
@@ -19,17 +21,18 @@
 
   type Direction = 'up' | 'down' | 'previous' | 'next'
 
-  const MODES: readonly SnagMode[] = ['element', 'visible']
+  const MODES: readonly SnagMode[] = ['element', 'area', 'visible']
 
   let aimed = $state.raw<Aimed | null>(null)
   let held = $state.raw<Held>(Chord.released)
   let pinned = $state<SnagMode>('element')
+  let marquee = $state.raw<Area | null>(null)
   let width = $state(innerWidth)
   let height = $state(innerHeight)
 
   const mode = $derived(
-    match(Chord.mode({ held, pinned, marquee: null }))
-      .with('element', 'visible', (mode) => mode)
+    match(Chord.mode({ held, pinned, marquee }))
+      .with('element', 'area', 'visible', (mode) => mode)
       .otherwise(() => pinned),
   )
 
@@ -46,22 +49,29 @@
           scope: mode,
         }
       })
-      .with({ aimed: P.nonNullable }, ({ aimed: { frame, label } }) => {
-        const bounds = {
-          left: frame.x,
-          top: frame.y,
-          width: frame.width,
-          height: frame.height,
-        }
-        return { bounds, size: bounds, radius: '0', label, scope: null }
-      })
+      .with(
+        { mode: 'element', aimed: P.nonNullable },
+        ({ aimed: { frame, label } }) => {
+          const bounds = {
+            left: frame.x,
+            top: frame.y,
+            width: frame.width,
+            height: frame.height,
+          }
+          return { bounds, size: bounds, radius: '0', label, scope: null }
+        },
+      )
       .otherwise(() => null),
   )
 
+  const send = ({ left, top, width, height }: Area) => {
+    void invoke('pick', { frame: { x: left, y: top, width, height } })
+  }
+
   const pick = () => {
     match(frame)
-      .with(P.nonNullable, ({ bounds: { left, top, width, height } }) => {
-        void invoke('pick', { frame: { x: left, y: top, width, height } })
+      .with(P.nonNullable, ({ bounds }) => {
+        send(bounds)
       })
       .otherwise(() => undefined)
   }
@@ -130,8 +140,16 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
   <div class="stage" onclick={pick}></div>
   <Outline {frame} />
+  {#if mode === 'area'}
+    <Selection
+      onpick={send}
+      oncancel={cancel}
+      onmarquee={(next: Area | null) => {
+        marquee = next
+      }} />
+  {/if}
   <SnagToast
-    live={{ mode, held, marquee: null }}
+    live={{ mode, held, marquee }}
     modes={MODES}
     onpin={(mode: SnagMode) => {
       pinned = mode

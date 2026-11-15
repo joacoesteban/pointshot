@@ -76,7 +76,7 @@ fn main() {
         .expect("the app builds")
         .run(|app, event| match event {
             RunEvent::Exit => {
-                tauri::async_runtime::block_on(app.state::<Picker>().finish());
+                tauri::async_runtime::block_on(app.state::<Picker>().finish(None));
             }
             #[cfg(target_os = "macos")]
             RunEvent::Reopen { .. } => {
