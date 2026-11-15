@@ -69,12 +69,12 @@
               copy(shot)
             }}>
             <img src={shot.url} alt="" />
-            <span class="size blend">{shot.width} × {shot.height}</span>
+            <span class="size">{shot.width} × {shot.height}</span>
           </button>
         {/each}
       </div>
     {:else}
-      <div class="empty blend">
+      <div class="empty">
         <h3>{t('emptyTitle')}</h3>
         <p>{t('emptyBody')}</p>
       </div>
@@ -124,6 +124,10 @@
       aspect-ratio: 4 / 3;
       object-fit: contain;
     }
+  }
+  .size,
+  .empty {
+    color: oklch(var(--bc) / 0.6);
   }
   .size {
     font-size: 0.875em;
