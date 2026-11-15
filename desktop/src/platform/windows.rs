@@ -99,17 +99,15 @@ impl Accessibility {
 
     pub fn raise(&self, _: &Node) {}
 
-    // The walk stops below the desktop, so the last ancestor is the top-level window.
     pub fn source(&self, node: &Node) -> Source {
-        let window = std::iter::successors(Some(node.clone()), |node| self.parent(node)).last();
         Source {
             app: unsafe { node.element.CurrentProcessId() }
                 .ok()
                 .and_then(|pid| u32::try_from(pid).ok())
                 .and_then(process_name)
                 .unwrap_or_default(),
-            title: window
-                .and_then(|window| unsafe { window.element.CurrentName() }.ok())
+            title: unsafe { self.window(node).element.CurrentName() }
+                .ok()
                 .map(|name| name.to_string())
                 .unwrap_or_default(),
         }

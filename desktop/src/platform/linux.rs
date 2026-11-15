@@ -196,17 +196,15 @@ impl Accessibility {
 
     pub fn raise(&self, _: &Node) {}
 
-    // A window's parent is its application's root, which parent() stops at, so the last ancestor is the window.
     pub fn source(&self, node: &Node) -> Source {
         let name = |node: Option<&Node>| {
             node.and_then(|node| self.property::<String>(node, "Name"))
                 .unwrap_or_default()
         };
         let application: Option<Node> = self.call(node, ACCESSIBLE, "GetApplication", &());
-        let window = std::iter::successors(Some(node.clone()), |node| self.parent(node)).last();
         Source {
             app: name(application.as_ref()),
-            title: name(window.as_ref()),
+            title: name(Some(&self.window(node))),
         }
     }
 

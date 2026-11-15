@@ -10,9 +10,17 @@ type Node = <Accessibility as Tree>::Node;
 type Job = Box<dyn FnOnce(&mut Session) + Send>;
 
 #[derive(Clone, Debug, Serialize)]
-pub struct Aimed {
+pub struct Target {
     pub frame: Frame,
     pub label: String,
+}
+
+// The aimed node, and the window it sits in for the overlay's Window mode.
+#[derive(Clone, Debug, Serialize)]
+pub struct Aimed {
+    #[serde(flatten)]
+    pub node: Target,
+    pub window: Option<Target>,
 }
 
 // Where a capture came from: the library files it under the app, titled by the window, as the extension does with sites and pages.
@@ -41,9 +49,15 @@ impl Session {
         let tree = self.tree.as_ref()?;
         self.aim = std::mem::take(&mut self.aim).step(tree, step);
         let node = self.aim.node.as_ref()?;
+        let target = |node: &Node| {
+            Some(Target {
+                frame: tree.frame(node)?,
+                label: tree.label(node),
+            })
+        };
         Some(Aimed {
-            frame: tree.frame(node)?,
-            label: tree.label(node),
+            node: target(node)?,
+            window: target(&tree.window(node)),
         })
     }
 

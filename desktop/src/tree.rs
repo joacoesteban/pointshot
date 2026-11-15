@@ -40,6 +40,13 @@ pub trait Tree {
     fn children(&self, node: &Self::Node) -> Vec<Self::Node>;
     fn frame(&self, node: &Self::Node) -> Option<Frame>;
     fn label(&self, node: &Self::Node) -> String;
+
+    // Every platform's parent() stops below the application or the desktop, so the last ancestor is the top-level window.
+    fn window(&self, node: &Self::Node) -> Self::Node {
+        std::iter::successors(Some(node.clone()), |node| self.parent(node))
+            .last()
+            .unwrap_or_else(|| node.clone())
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -247,5 +254,11 @@ mod tests {
     #[test]
     fn walking_from_nothing_stays_on_nothing() {
         assert_eq!(aim(&[Step::Up, Step::Down, Step::Next]), Aim::default());
+    }
+
+    #[test]
+    fn finds_the_window_above_a_node() {
+        assert_eq!(Fixture.window(&4), 0);
+        assert_eq!(Fixture.window(&0), 0);
     }
 }

@@ -81,5 +81,11 @@
   },
   "save": {
     "message": "Guardar"
+  },
+  "modePage": {
+    "message": "Ventana"
+  },
+  "hintPage": {
+    "message": "Clickea o pulsa Enter para capturar esta ventana"
   }
 }

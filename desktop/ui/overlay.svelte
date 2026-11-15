@@ -15,32 +15,43 @@
   import { SettingsStore, type Settings } from '~/lib/settings'
   import { themeController } from '~/lib/theme-controller'
 
-  type Aimed = {
+  type Target = {
     readonly frame: Readonly<Record<'x' | 'y' | 'width' | 'height', number>>
     readonly label: string
   }
 
+  // The aimed node, and the window it sits in for the Window mode, which takes the extension's page slot.
+  type Aimed = Target & { readonly window: Target | null }
+
   type Direction = 'up' | 'down' | 'previous' | 'next'
 
-  const MODES: readonly SnagMode[] = ['element', 'area', 'visible']
+  const MODES: readonly SnagMode[] = ['element', 'area', 'visible', 'page']
 
   let aimed = $state.raw<Aimed | null>(null)
   let held = $state.raw<Held>(Chord.released)
   let pinned = $state<SnagMode>('element')
   let marquee = $state.raw<Area | null>(null)
   let density = $state<Settings['density']>('device')
+  let width = $state(innerWidth)
+  let height = $state(innerHeight)
 
   SettingsStore.changes().subscribe((settings) => {
     density = settings.density
   })
-  let width = $state(innerWidth)
-  let height = $state(innerHeight)
 
   const mode = $derived(
     match(Chord.mode({ held, pinned, marquee }))
-      .with('element', 'area', 'visible', (mode) => mode)
+      .with('element', 'area', 'visible', 'page', (mode) => mode)
       .otherwise(() => pinned),
   )
+
+  const outline = ({
+    frame: { x, y, width, height },
+    label,
+  }: Target): Frame => {
+    const bounds = { left: x, top: y, width, height }
+    return { bounds, size: bounds, radius: '0', label, scope: null }
+  }
 
   const frame = $derived(
     match({ mode, aimed })
@@ -55,17 +66,12 @@
           scope: mode,
         }
       })
+      .with({ mode: 'element', aimed: P.nonNullable }, ({ aimed }) =>
+        outline(aimed),
+      )
       .with(
-        { mode: 'element', aimed: P.nonNullable },
-        ({ aimed: { frame, label } }) => {
-          const bounds = {
-            left: frame.x,
-            top: frame.y,
-            width: frame.width,
-            height: frame.height,
-          }
-          return { bounds, size: bounds, radius: '0', label, scope: null }
-        },
+        { mode: 'page', aimed: { window: P.nonNullable } },
+        ({ aimed: { window } }) => outline(window),
       )
       .otherwise(() => null),
   )

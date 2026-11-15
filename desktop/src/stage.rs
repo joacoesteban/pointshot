@@ -1,4 +1,4 @@
-use crate::picker::{Aimed, Picker, Source};
+use crate::picker::{Aimed, Picker, Source, Target};
 use crate::platform;
 use crate::tree::{Frame, Point, Step};
 use base64::Engine as _;
@@ -183,9 +183,13 @@ impl Stage {
         locked(&self.screens)
             .iter()
             .try_for_each(|(label, screen)| {
-                let local = aimed.clone().map(|Aimed { frame, label }| Aimed {
+                let local = |Target { frame, label }: Target| Target {
                     frame: screen.reframe(frame, |point| screen.client(point)),
                     label,
+                };
+                let local = aimed.clone().map(|Aimed { node, window }| Aimed {
+                    node: local(node),
+                    window: window.map(local),
                 });
                 app.emit_to(label, "aim", local)
             })
