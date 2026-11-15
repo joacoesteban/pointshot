@@ -20,6 +20,10 @@ use tokio::sync::oneshot;
 // Long enough for the window server to take the overlays off screen, and the picked app to come back to the front, before the capture.
 const OFFSTAGE: Duration = Duration::from_millis(200);
 pub const MAIN: &str = "main";
+const TOAST: &str = "toast";
+// Room for the extension's toast at the bottom of a display, in points, and how long it stays: the toast's own two seconds and its exit.
+const TOAST_SIZE: (f64, f64) = (480., 96.);
+const TOAST_FOR: Duration = Duration::from_millis(2600);
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Screen {
@@ -250,6 +254,58 @@ fn keep(
     })
 }
 
+// A capture made while the library stays hidden would end in silence, so the extension's toast shows on the display under the pointer.
+// It takes no focus and lets clicks through, so the app just captured keeps both.
+fn toast(app: &AppHandle) -> tauri::Result<()> {
+    let Some(screen) = home(app) else {
+        return Ok(());
+    };
+    if app.get_webview_window(TOAST).is_some() {
+        return Ok(());
+    }
+    let (width, height) = TOAST_SIZE;
+    let size = PhysicalSize::new(
+        (width * screen.scale).round() as u32,
+        (height * screen.scale).round() as u32,
+    );
+    let place = Screen {
+        origin: PhysicalPosition::new(
+            screen.origin.x + (screen.size.width.saturating_sub(size.width) / 2) as i32,
+            screen.origin.y + screen.size.height.saturating_sub(size.height) as i32,
+        ),
+        size,
+        scale: screen.scale,
+    };
+    // GTK keeps a fixed-size window at least as large as it was built, and places it on showing, so the builder gets both.
+    let window = WebviewWindowBuilder::new(app, TOAST, WebviewUrl::App("toast.html".into()))
+        .title("Pointshot")
+        .inner_size(width, height)
+        .position(
+            f64::from(place.origin.x) / screen.scale,
+            f64::from(place.origin.y) / screen.scale,
+        )
+        .transparent(true)
+        .decorations(false)
+        .shadow(false)
+        .always_on_top(true)
+        .visible_on_all_workspaces(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .focused(false)
+        .focusable(false)
+        .visible(false)
+        .build()?;
+    platform::place(&window, &place)?;
+    window.show()?;
+    // tao on Linux unwraps the GTK window, which a hidden window does not have yet.
+    window.set_ignore_cursor_events(true)?;
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(TOAST_FOR).await;
+        window.destroy().ok();
+    });
+    Ok(())
+}
+
 // The library files what this sends, so the main window lives on hidden while the app runs.
 pub async fn start(app: AppHandle) {
     let stage = app.state::<Stage>();
@@ -284,11 +340,15 @@ pub async fn start(app: AppHandle) {
         Err(error) => app.emit_to(MAIN, "failed", format!("{error:#}")),
     }
     .ok();
-    if shown || captured.is_err() {
-        main.iter().for_each(|main| {
+    match (shown, &captured) {
+        (false, Ok(Some(_))) => {
+            toast(&app).ok();
+        }
+        (true, _) | (_, Err(_)) => main.iter().for_each(|main| {
             main.show().ok();
             main.set_focus().ok();
-        });
+        }),
+        _ => {}
     }
 }
 

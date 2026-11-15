@@ -52,6 +52,7 @@ export default defineConfig({
       input: {
         main: resolve(desktop, 'ui/index.html'),
         overlay: resolve(desktop, 'ui/overlay.html'),
+        toast: resolve(desktop, 'ui/toast.html'),
       },
     },
   },
