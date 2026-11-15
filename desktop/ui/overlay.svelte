@@ -29,7 +29,12 @@
 
   let aimed = $state.raw<Aimed | null>(null)
   let held = $state.raw<Held>(Chord.released)
-  let pinned = $state<SnagMode>('element')
+  // A shortcut or tray item for one of the extension's other commands opens the overlay pinned to its mode.
+  let pinned = $state<SnagMode>(
+    match(new URLSearchParams(location.search).get('mode'))
+      .with('area', 'visible', 'page', (mode) => mode)
+      .otherwise(() => 'element'),
+  )
   let marquee = $state.raw<Area | null>(null)
   let density = $state<Settings['density']>('device')
   let width = $state(innerWidth)

@@ -5,7 +5,7 @@ import es from '~/public/_locales/es/messages.json'
 import desktopEn from './locales/en.json'
 import desktopEs from './locales/es.json'
 import tauri from '../tauri.conf.json'
-import { Shortcut } from './shortcut'
+import { COMMANDS, Shortcut } from './shortcut'
 
 type Message = {
   readonly message: string
@@ -74,16 +74,17 @@ const getMessage = (key: string, substitutions: readonly string[] = []) =>
 export const browser = {
   i18n: { getMessage },
   runtime: { getManifest: () => ({ version: tauri.version }) },
-  // The app registers only the pick shortcut.
   commands: {
-    getAll: () =>
-      Promise.resolve([
-        {
-          name: 'pick-element',
-          description: getMessage('commandPick'),
-          shortcut: Shortcut.label(Shortcut.current()),
-        },
-      ]),
+    getAll: () => {
+      const shortcuts = Shortcut.all()
+      return Promise.resolve(
+        COMMANDS.map(({ command, mode, description }) => ({
+          name: command,
+          description: getMessage(description),
+          shortcut: Shortcut.label(shortcuts[mode]),
+        })),
+      )
+    },
   },
   tabs: {
     create: ({ url }: { readonly url: string }) => openUrl(url),

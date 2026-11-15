@@ -68,10 +68,10 @@
     "message": "Versión, sistema, configuración y errores recientes, para pegar en un informe."
   },
   "shortcutTitle": {
-    "message": "Cambiar el atajo de captura"
+    "message": "Cambiar los atajos de captura"
   },
   "shortcutBody": {
-    "message": "Mantén uno o más modificadores y pulsa una tecla."
+    "message": "Clickea un atajo, mantén uno o más modificadores y pulsa una tecla."
   },
   "shortcutWaiting": {
     "message": "Esperando las teclas"
@@ -79,13 +79,19 @@
   "shortcutNotSet": {
     "message": "Pointshot no pudo usar ese atajo. Puede que otra app lo use."
   },
-  "save": {
-    "message": "Guardar"
-  },
   "modePage": {
     "message": "Ventana"
   },
   "hintPage": {
     "message": "Clickea o pulsa Enter para capturar esta ventana"
+  },
+  "clearShortcut": {
+    "message": "Quitar el atajo"
+  },
+  "commandVisible": {
+    "message": "Capturar lo que muestra una pantalla"
+  },
+  "commandPage": {
+    "message": "Capturar una ventana"
   }
 }

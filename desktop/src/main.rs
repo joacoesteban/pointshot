@@ -33,9 +33,11 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_handler(|app, _, event| {
-                    if event.state == ShortcutState::Pressed {
-                        tauri::async_runtime::spawn(stage::start(app.clone()));
+                .with_handler(|app, shortcut, event| {
+                    if event.state == ShortcutState::Pressed
+                        && let Some(mode) = app.state::<shortcut::Hotkey>().mode(shortcut)
+                    {
+                        tauri::async_runtime::spawn(stage::start(app.clone(), mode));
                     }
                 })
                 .build(),
@@ -70,8 +72,9 @@ fn main() {
                 })
                 .build()?;
             // Another app may hold the shortcut, which leaves the Capture button and the tray.
+            let (mode, accelerator) = shortcut::DEFAULT;
             app.state::<shortcut::Hotkey>()
-                .set(app.handle(), shortcut::DEFAULT)
+                .set(app.handle(), mode, accelerator)
                 .ok();
             Ok(())
         })

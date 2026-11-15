@@ -7,7 +7,7 @@ import { ResultAsync, okAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
 import { t } from '~/lib/i18n'
 import { say } from './browser'
-import { Shortcut } from './shortcut'
+import { COMMANDS, Shortcut } from './shortcut'
 
 const ID = 'pointshot'
 
@@ -17,19 +17,24 @@ export const library = () => {
   void Promise.all([window.unminimize(), window.show(), window.setFocus()])
 }
 
-const menu = () =>
-  Menu.new({
+// Each of the extension's commands, with its shortcut where one is set.
+const menu = () => {
+  const shortcuts = Shortcut.all()
+  return Menu.new({
     items: [
-      {
-        id: 'capture',
-        text: t('snag'),
-        accelerator: Shortcut.current(),
+      ...COMMANDS.map(({ mode, description }) => ({
+        id: mode,
+        text: t(description),
+        ...match(shortcuts[mode])
+          .with('', () => ({}))
+          .otherwise((accelerator) => ({ accelerator })),
         action: () => {
-          void invoke('capture')
+          void invoke('capture', { mode })
         },
-      },
+      })),
+      { item: 'Separator' as const },
       { id: 'library', text: t('libraryTitle'), action: library },
-      { item: 'Separator' },
+      { item: 'Separator' as const },
       {
         id: 'quit',
         text: say('quit'),
@@ -39,6 +44,7 @@ const menu = () =>
       },
     ],
   })
+}
 
 const make = () =>
   ResultAsync.fromPromise(

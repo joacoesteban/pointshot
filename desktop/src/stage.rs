@@ -135,7 +135,7 @@ impl Stage {
             .ok_or_else(|| format!("{label} is not an overlay"))
     }
 
-    fn open(&self, app: &AppHandle, home: Option<Screen>) -> tauri::Result<()> {
+    fn open(&self, app: &AppHandle, home: Option<Screen>, mode: &str) -> tauri::Result<()> {
         let screens: HashMap<String, Screen> = app
             .available_monitors()?
             .iter()
@@ -144,19 +144,22 @@ impl Stage {
             .collect();
         *locked(&self.screens) = screens.clone();
         screens.iter().try_for_each(|(label, screen)| {
-            let window =
-                WebviewWindowBuilder::new(app, label, WebviewUrl::App("overlay.html".into()))
-                    .title("Pointshot")
-                    .transparent(true)
-                    .decorations(false)
-                    .shadow(false)
-                    .always_on_top(true)
-                    .visible_on_all_workspaces(true)
-                    .skip_taskbar(true)
-                    .resizable(false)
-                    .focused(false)
-                    .visible(false)
-                    .build()?;
+            let window = WebviewWindowBuilder::new(
+                app,
+                label,
+                WebviewUrl::App(format!("overlay.html?mode={mode}").into()),
+            )
+            .title("Pointshot")
+            .transparent(true)
+            .decorations(false)
+            .shadow(false)
+            .always_on_top(true)
+            .visible_on_all_workspaces(true)
+            .skip_taskbar(true)
+            .resizable(false)
+            .focused(false)
+            .visible(false)
+            .build()?;
             platform::place(&window, screen)?;
             window.show()?;
             match home {
@@ -195,11 +198,16 @@ impl Stage {
             })
     }
 
-    async fn session(&self, app: &AppHandle, picker: &Picker) -> anyhow::Result<Option<Captured>> {
+    async fn session(
+        &self,
+        app: &AppHandle,
+        picker: &Picker,
+        mode: &str,
+    ) -> anyhow::Result<Option<Captured>> {
         picker.connect().await?;
         let (ending, ended) = oneshot::channel();
         *locked(&self.ending) = Some(ending);
-        self.open(app, home(app))?;
+        self.open(app, home(app), mode)?;
         let picked = ended.await.ok().flatten();
         self.close(app);
         let source = picker
@@ -311,7 +319,8 @@ fn toast(app: &AppHandle) -> tauri::Result<()> {
 }
 
 // The library files what this sends, so the main window lives on hidden while the app runs.
-pub async fn start(app: AppHandle) {
+// The overlay starts pinned to the mode, as the extension's commands start its picker.
+pub async fn start(app: AppHandle, mode: String) {
     let stage = app.state::<Stage>();
     let picker = app.state::<Picker>();
     let Ok(_running) = stage.running.try_lock() else {
@@ -333,7 +342,7 @@ pub async fn start(app: AppHandle) {
     main.iter().for_each(|main| {
         main.hide().ok();
     });
-    let captured = stage.session(&app, &picker).await;
+    let captured = stage.session(&app, &picker, &mode).await;
     if captured.is_err() {
         stage.close(&app);
         picker.finish(None).await;
@@ -357,8 +366,8 @@ pub async fn start(app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn capture(app: AppHandle) {
-    tauri::async_runtime::spawn(start(app));
+pub fn capture(app: AppHandle, mode: String) {
+    tauri::async_runtime::spawn(start(app, mode));
 }
 
 #[tauri::command]

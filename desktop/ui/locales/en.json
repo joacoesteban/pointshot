@@ -68,10 +68,10 @@
     "message": "Version, system, settings and recent errors, to paste in a bug report."
   },
   "shortcutTitle": {
-    "message": "Change the capture shortcut"
+    "message": "Change the capture shortcuts"
   },
   "shortcutBody": {
-    "message": "Hold one or more modifiers and press a key."
+    "message": "Click a shortcut, then hold one or more modifiers and press a key."
   },
   "shortcutWaiting": {
     "message": "Waiting for keys"
@@ -79,13 +79,19 @@
   "shortcutNotSet": {
     "message": "Pointshot could not use that shortcut. Another app may hold it."
   },
-  "save": {
-    "message": "Save"
-  },
   "modePage": {
     "message": "Window"
   },
   "hintPage": {
     "message": "Click or press Enter to capture this window"
+  },
+  "clearShortcut": {
+    "message": "Clear the shortcut"
+  },
+  "commandVisible": {
+    "message": "Capture what a display shows"
+  },
+  "commandPage": {
+    "message": "Capture a window"
   }
 }

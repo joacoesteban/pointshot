@@ -1,10 +1,37 @@
 import { invoke } from '@tauri-apps/api/core'
-import { ResultAsync, okAsync } from 'neverthrow'
+import { Result, ResultAsync } from 'neverthrow'
 import { match, P } from 'ts-pattern'
+import { z } from 'zod'
+import type { MessageKey } from '~/lib/i18n'
 
-const KEY = 'shortcut'
-// The extension's pick shortcut, in the format the app registers: modifiers, then the key's KeyboardEvent.code.
-const DEFAULT = 'Alt+Shift+KeyS'
+// The overlay mode each shortcut starts in.
+export type Mode = 'element' | 'area' | 'visible' | 'page'
+
+// The extension's commands, which name the shortcuts in the settings and the tray.
+export const COMMANDS: readonly {
+  readonly command: string
+  readonly mode: Mode
+  readonly description: MessageKey
+}[] = [
+  { command: 'pick-element', mode: 'element', description: 'commandPick' },
+  { command: 'snag-selection', mode: 'area', description: 'commandSelection' },
+  { command: 'snag-visible', mode: 'visible', description: 'commandVisible' },
+  { command: 'snag-page', mode: 'page', description: 'commandPage' },
+]
+
+const KEY = 'shortcuts'
+
+// In the format the app registers: modifiers, then the key's KeyboardEvent.code. Empty is unset; like the extension, only picking has one by default.
+const Shortcuts = z.object({
+  element: z.string().catch('Alt+Shift+KeyS'),
+  area: z.string().catch(''),
+  visible: z.string().catch(''),
+  page: z.string().catch(''),
+})
+
+type Shortcuts = z.infer<typeof Shortcuts>
+
+const parse = Result.fromThrowable((raw: string): unknown => JSON.parse(raw))
 
 type Modifier = 'Control' | 'Alt' | 'Shift' | 'Super'
 
@@ -29,8 +56,10 @@ const keyLabel = (code: string) =>
   code.replace(/^(Key|Digit|Numpad)/, '').replace(/^Arrow/, '')
 
 export class Shortcut {
-  static current(): string {
-    return localStorage.getItem(KEY) ?? DEFAULT
+  static all(): Shortcuts {
+    return Shortcuts.parse(
+      parse(localStorage.getItem(KEY) ?? '{}').unwrapOr({}),
+    )
   }
 
   static label(accelerator: string): string {
@@ -68,20 +97,24 @@ export class Shortcut {
       .otherwise(({ held, code }) => [...held, code].join('+'))
   }
 
-  static save(accelerator: string): ResultAsync<void, string> {
+  static save(mode: Mode, accelerator: string): ResultAsync<void, string> {
     return ResultAsync.fromPromise(
-      invoke('set_shortcut', { accelerator }),
+      invoke('set_shortcut', { mode, accelerator }),
       String,
     ).map(() => {
-      localStorage.setItem(KEY, accelerator)
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ ...Shortcut.all(), [mode]: accelerator }),
+      )
     })
   }
 
-  // The app registers the extension's shortcut at launch, and the window puts back the one recorded since.
+  // The app registers the extension's pick shortcut at launch, and the window puts back the ones recorded since.
   static restore(): ResultAsync<void, string> {
-    return match(Shortcut.current())
-      .with(DEFAULT, () => okAsync(undefined))
-      .otherwise((accelerator) => Shortcut.save(accelerator))
+    const shortcuts = Shortcut.all()
+    return ResultAsync.combine(
+      COMMANDS.map(({ mode }) => Shortcut.save(mode, shortcuts[mode])),
+    ).map(() => undefined)
   }
 
   static pause(paused: boolean): ResultAsync<void, string> {

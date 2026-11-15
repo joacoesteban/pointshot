@@ -72,7 +72,7 @@
       opaque
       icon="cameraViewfinder"
       onclick={() => {
-        void invoke('capture')
+        void invoke('capture', { mode: 'element' })
       }}>
       {t('snag')}
     </Button>
