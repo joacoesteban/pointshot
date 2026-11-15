@@ -96,5 +96,8 @@
   },
   "commandToggle": {
     "message": "Mostrar u ocultar la biblioteca"
+  },
+  "copiedEdit": {
+    "message": "Copiado. Clickea para editarlo"
   }
 }

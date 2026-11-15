@@ -14,6 +14,7 @@
   import { REPOSITORY_URL } from '~/lib/links'
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
+  import type { Shot } from '~/lib/shot'
   import type { SymbolName } from '~/lib/symbols'
   import { themeController } from '~/lib/theme-controller'
   import type { OptionsView } from '~/messages'
@@ -31,9 +32,12 @@
     toolbar?: Snippet
     notice?: Snippet
     onchangeshortcuts?: () => Promise<unknown>
+    editing?: Shot | null
+    oneditopened?: () => void
   }
 
-  const { toolbar, notice, onchangeshortcuts }: Props = $props()
+  const { toolbar, notice, onchangeshortcuts, editing, oneditopened }: Props =
+    $props()
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
   let commands = $state<readonly Command[]>([])
@@ -137,7 +141,13 @@
       {@render notice?.()}
 
       {#if view === 'library'}
-        <Library {library} {actions} {settings} shortcut={pickShortcut} />
+        <Library
+          {library}
+          {actions}
+          {settings}
+          shortcut={pickShortcut}
+          {editing}
+          {oneditopened} />
       {:else}
         <SettingsView
           {settings}

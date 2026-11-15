@@ -70,6 +70,18 @@ export class ShotViewer {
     )
   }
 
+  // Opens a shot straight in the editor, as the desktop app does from its toast after a capture.
+  openEditor(shot: Shot) {
+    void this.library.imageUrl(shot).match(
+      (image) => {
+        this.edit(shot, image)
+      },
+      (error) => {
+        Failure.report(error, t('couldNotOpen'))
+      },
+    )
+  }
+
   closePreview() {
     this.previewing$$.next(null)
   }

@@ -267,7 +267,7 @@ fn keep(
 }
 
 // A capture made while the library stays hidden would end in silence, so the extension's toast shows on the display under the pointer.
-// It takes no focus and lets clicks through, so the app just captured keeps both.
+// It takes no focus, so the app just captured keeps it, and a click on it opens the capture in the editor.
 fn toast(app: &AppHandle) -> tauri::Result<()> {
     let Some(screen) = home(app) else {
         return Ok(());
@@ -309,8 +309,6 @@ fn toast(app: &AppHandle) -> tauri::Result<()> {
         .build()?;
     platform::place(&window, &place)?;
     window.show()?;
-    // tao on Linux unwraps the GTK window, which a hidden window does not have yet.
-    window.set_ignore_cursor_events(true)?;
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(TOAST_FOR).await;
         window.destroy().ok();

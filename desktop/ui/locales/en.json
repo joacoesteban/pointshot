@@ -96,5 +96,8 @@
   },
   "commandToggle": {
     "message": "Show or hide the library"
+  },
+  "copiedEdit": {
+    "message": "Copied. Click to edit"
   }
 }
