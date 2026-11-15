@@ -221,6 +221,15 @@ pub async fn start(app: AppHandle) {
         return;
     };
     let main = app.get_webview_window(MAIN);
+    // Without them the overlay finds nothing and captures come out blank, so the library asks for them instead.
+    if !platform::permissions().granted() {
+        app.emit_to(MAIN, "permissions", ()).ok();
+        main.iter().for_each(|main| {
+            main.show().ok();
+            main.set_focus().ok();
+        });
+        return;
+    }
     let shown = main
         .as_ref()
         .is_some_and(|main| main.is_visible().unwrap_or(false));

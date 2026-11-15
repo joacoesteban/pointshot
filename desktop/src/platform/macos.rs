@@ -1,3 +1,4 @@
+use crate::permissions::{Permission, Permissions};
 use crate::picker::Source;
 use crate::stage::Screen;
 use crate::tree::{Frame, Point, Tree};
@@ -58,6 +59,7 @@ unsafe extern "C" {
         value: CFTypeRef,
     ) -> i32;
     fn AXValueGetValue(value: CFTypeRef, kind: u32, out: *mut c_void) -> bool;
+    fn AXIsProcessTrusted() -> bool;
     fn AXIsProcessTrustedWithOptions(options: CFDictionaryRef) -> bool;
     static kAXTrustedCheckOptionPrompt: CFStringRef;
 }
@@ -65,6 +67,8 @@ unsafe extern "C" {
 #[link(name = "CoreGraphics", kind = "framework")]
 unsafe extern "C" {
     fn CGWindowListCopyWindowInfo(options: u32, relative_to: u32) -> CFArrayRef;
+    fn CGPreflightScreenCaptureAccess() -> bool;
+    fn CGRequestScreenCaptureAccess() -> bool;
 }
 
 pub struct Accessibility {
@@ -72,11 +76,43 @@ pub struct Accessibility {
     exposed: RefCell<HashSet<i32>>,
 }
 
+// Lists Pointshot in the Accessibility pane, and prompts the first time.
+fn trusted() -> bool {
+    let prompt = unsafe { CFString::wrap_under_get_rule(kAXTrustedCheckOptionPrompt) };
+    let options = CFDictionary::from_CFType_pairs(&[(prompt, CFBoolean::true_value())]);
+    unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) }
+}
+
+pub fn permissions() -> Permissions {
+    Permissions {
+        accessibility: unsafe { AXIsProcessTrusted() },
+        screen: unsafe { CGPreflightScreenCaptureAccess() },
+    }
+}
+
+// A request prompts only the first time, so the pane opens too.
+pub fn grant(permission: Permission) {
+    let pane = match permission {
+        Permission::Accessibility => {
+            trusted();
+            "Privacy_Accessibility"
+        }
+        Permission::Screen => {
+            unsafe { CGRequestScreenCaptureAccess() };
+            "Privacy_ScreenCapture"
+        }
+    };
+    std::process::Command::new("open")
+        .arg(format!(
+            "x-apple.systempreferences:com.apple.preference.security?{pane}"
+        ))
+        .spawn()
+        .ok();
+}
+
 impl Accessibility {
     pub fn connect() -> anyhow::Result<Self> {
-        let prompt = unsafe { CFString::wrap_under_get_rule(kAXTrustedCheckOptionPrompt) };
-        let options = CFDictionary::from_CFType_pairs(&[(prompt, CFBoolean::true_value())]);
-        match unsafe { AXIsProcessTrustedWithOptions(options.as_concrete_TypeRef()) } {
+        match trusted() {
             true => Ok(Self {
                 pid: std::process::id() as i32,
                 exposed: RefCell::default(),

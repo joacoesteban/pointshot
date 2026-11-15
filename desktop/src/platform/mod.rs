@@ -8,9 +8,21 @@ mod windows;
 #[cfg(target_os = "linux")]
 pub use linux::{Accessibility, tray_supported};
 #[cfg(target_os = "macos")]
-pub use macos::{Accessibility, pixels_per_unit, place};
+pub use macos::{Accessibility, grant, permissions, pixels_per_unit, place};
 #[cfg(target_os = "windows")]
 pub use windows::Accessibility;
+
+// Only macOS asks for permissions to read other apps and the screen.
+#[cfg(not(target_os = "macos"))]
+pub fn permissions() -> crate::permissions::Permissions {
+    crate::permissions::Permissions {
+        accessibility: true,
+        screen: true,
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn grant(_: crate::permissions::Permission) {}
 
 #[cfg(not(target_os = "linux"))]
 pub fn tray_supported() -> bool {

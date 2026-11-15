@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod clipboard;
+mod permissions;
 mod picker;
 mod platform;
 mod stage;
@@ -69,6 +70,8 @@ fn main() {
             stage::cancel,
             clipboard::copy,
             clipboard::copy_text,
+            permissions::permissions,
+            permissions::grant,
             quit,
             tray_supported
         ])

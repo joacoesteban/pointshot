@@ -20,6 +20,7 @@
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
   import { say } from './browser'
+  import Permissions from './permissions.svelte'
   import { theme } from './theme'
   import { SHORTCUT, tray } from './tray'
 
@@ -90,6 +91,7 @@
           {t('snag')}
         </Button>
       </header>
+      <Permissions />
       <Library {library} {actions} {settings} shortcut={SHORTCUT} />
     </main>
   </div>

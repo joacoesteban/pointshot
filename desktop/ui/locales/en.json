@@ -36,5 +36,29 @@
   },
   "screen": {
     "message": "Screen"
+  },
+  "permissionsTitle": {
+    "message": "Pointshot needs two permissions"
+  },
+  "permissionsBody": {
+    "message": "macOS asks you to allow them once, in System Settings, Privacy & Security."
+  },
+  "accessibility": {
+    "message": "Accessibility"
+  },
+  "accessibilityHelp": {
+    "message": "To find what is under the pointer in other apps."
+  },
+  "screenRecording": {
+    "message": "Screen Recording"
+  },
+  "screenRecordingHelp": {
+    "message": "To capture what other apps show. macOS asks you to reopen Pointshot after you allow it."
+  },
+  "allow": {
+    "message": "Allow"
+  },
+  "allowed": {
+    "message": "Allowed"
   }
 }
