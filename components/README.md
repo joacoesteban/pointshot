@@ -152,8 +152,11 @@ it.
 - **Do not nest them.** An inner `bg-blur` has the outer panel as its backdrop
   root, finds nothing to blur, and renders as a flat grey. Use `bg-theme:soft`
   inside a panel.
-- **It traps fixed children.** Its `filter` and `backdrop-filter` make it the
-  containing block for `position: fixed` descendants.
+- **It traps fixed children.** Its `backdrop-filter` makes it the containing
+  block for `position: fixed` descendants.
+- **Its shadow is a `box-shadow`.** A `filter: drop-shadow` on the same
+  element makes Chrome render the blur again on every frame the page behind it
+  moves.
 
 ### `bg-theme`, `bg-theme:soft`
 

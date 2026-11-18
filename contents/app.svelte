@@ -2,7 +2,6 @@
   import '~/lib/fonts-importer'
   import { match } from 'ts-pattern'
   import toast from 'svelte-french-toast'
-  import { of, type Observable } from 'rxjs'
   import Filters from '~/components/filters.svelte'
   import Highlight from '~/components/highlight.svelte'
   import Popup from '~/components/popup.svelte'
@@ -51,12 +50,9 @@
   const shots$ = library.shots$
   const removed$ = library.removed$
 
-  const idle$: Observable<Element | null> = of(null)
-
   let visible = $state(false)
   let session = $state.raw<PickSession | null>(null)
   let live = $state.raw<SnagState>(Chord.idle)
-  let target$ = $state(idle$)
   let settings = $state(DEFAULT_SETTINGS)
   // What the popup's grid shows after its search and site filter, so the preview's arrow keys walk the same list.
   let shown = $state<readonly Shot[]>([])
@@ -127,9 +123,8 @@
 
   function begin(mode: SnagMode) {
     const current = picker.pick(mode)
-    const { target$: aimed$, state$, picked$ } = current
+    const { state$, picked$ } = current
     session = current
-    target$ = aimed$
     state$.subscribe((state) => {
       live = state
     })
@@ -138,7 +133,6 @@
       complete: () => {
         session = null
         live = Chord.idle
-        target$ = idle$
       },
     })
   }
@@ -203,9 +197,9 @@
       void openOptions(view)
     }} />
   <ShotDialogs {viewer} />
-  <Highlight {target$} mode={live.mode} />
   {#if session}
-    {@const { pin, mark, cancel } = session}
+    {@const { target$, pin, mark, cancel } = session}
+    <Highlight {target$} mode={live.mode} />
     {#if live.mode === 'area'}
       <Selection
         onpick={(rect: Area) => {
