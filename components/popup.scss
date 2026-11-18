@@ -14,7 +14,9 @@
     .popup-container {
       pointer-events: none;
     }
+    /* Transparent layers are still painted on every scroll; hidden ones are skipped. The transition holds it visible until the fade ends. */
     .popup-container {
+      visibility: hidden;
       opacity: var(--hidden-opacity);
       transform: scale(var(--hidden-scale-factor));
       transition-timing-function: var(--bezier-round-inverted);
@@ -33,7 +35,7 @@
   }
 }
 .popup-container {
-  transition-property: transform, opacity;
+  transition-property: transform, opacity, visibility;
   transition-duration: 0.3s;
   transition-timing-function: var(--bezier-chill);
   transform-origin: top right;

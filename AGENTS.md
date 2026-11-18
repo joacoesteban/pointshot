@@ -21,6 +21,8 @@ bun run test       # builds build/chrome-mv3-e2e, then runs Playwright on it
 bun run bundle:all # zips for Chrome and Firefox in build/
 
 mise run store:screenshots # builds the e2e build, then renders the store images
+mise run perf          # builds the e2e build, then benchmarks it on a heavy page and prints a table
+mise run mosaic:bake   # renders the options backdrop's blurred mosaic tiles into assets/
 ```
 
 Bun installs packages and runs scripts, while the tools themselves run on Node:
@@ -102,6 +104,14 @@ cannot decrypt the profile; never run these tasks unless asked.
   one of them framed under a headline from `copy.ts`, into the tracked
   `store/screenshots/<language>`. The promo tile and marquee are rendered
   the same way into `store/promo/<language>`. `listing.md` lists the images.
+
+`perf/` holds the performance benchmark, a Playwright spec with its own config
+like `store/`. It loads the e2e build into a persistent Chromium context with
+GPU flags, scrolls a 2500-card page through each state (page only, popup
+closed and open, picker, library) and prints frame intervals, `Performance`
+metrics deltas and, when `nvidia-smi` is present, GPU utilisation and clock.
+Software rendering (SwiftShader, llvmpipe) is flagged in the output because
+its GPU numbers mean nothing.
 
 ## How it fits together
 

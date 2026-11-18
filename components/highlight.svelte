@@ -86,10 +86,11 @@
     class:scope={$frame$.scope !== null}
     class:continues={$frame$.scope === 'page'}
     data-testid="snag-highlight"
-    in:transitionIn
-    out:transitionOut
-    style:top={`${String($frame$.bounds.top)}px`}
-    style:left={`${String($frame$.bounds.left)}px`}
+    in:transitionIn|global
+    out:transitionOut|global
+    style:translate={`${String($frame$.bounds.left)}px ${String(
+      $frame$.bounds.top,
+    )}px`}
     style:width={`${String($frame$.bounds.width)}px`}
     style:height={`${String($frame$.bounds.height)}px`}
     style:border-radius={$frame$.radius}>
@@ -116,8 +117,11 @@
     $glow-color: hsla($base-hue + 30 100% 60% / 0.2);
 
     container-type: size;
+    top: 0;
+    left: 0;
+    /* `translate` moves it on the compositor and composes with the pop transitions' `transform: scale`. */
     transition: 0.2s var(--bezier);
-    transition-property: top, left, width, height;
+    transition-property: translate, width, height;
 
     background-color: $background-color;
     border: 2px solid $border-color;

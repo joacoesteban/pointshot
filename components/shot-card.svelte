@@ -98,7 +98,10 @@
     justify-content: center;
     opacity: 0;
     background: var(--_blur-bg-soft);
-    backdrop-filter: blur(4px);
+    /* The overlay already blurs the thumbnail: a second blur under each button shifts it by a few levels, for a layer per button. */
+    :global(.outer.opaque) {
+      backdrop-filter: none;
+    }
   }
   .buttons {
     display: flex;
@@ -107,7 +110,7 @@
   }
   .actions,
   .buttons {
-    transition-property: opacity, transform;
+    transition-property: opacity, transform, backdrop-filter;
     transition-duration: 0.15s;
     transition-timing-function: var(--bezier-round-inverted);
   }
@@ -115,6 +118,7 @@
   .card:focus-within {
     .actions {
       opacity: 1;
+      backdrop-filter: blur(4px);
     }
     .buttons {
       transform: scale(1);
