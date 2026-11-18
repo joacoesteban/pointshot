@@ -353,6 +353,13 @@ until that popup's undo window closes.
 Random gradient with a hue rotation and a pulsing mosaic of the icon. It is
 fixed at `z-index: -1`.
 
+- The mosaic's pulse cross-fades two tiles baked at 23px and 3px of blur
+  (`mise run mosaic:bake`, from `assets/icon.png`) and scales them with
+  `transform`. Animating `filter: blur` and `background-size` instead repaints
+  the page every frame, which held the library at about 14 fps.
+- Its animations pause while the tab is hidden, the window is unfocused, or
+  reduced motion is asked for (`lib/animation-state.ts`).
+
 - Lightness is pinned to 0.35. Vind picks any colour, but Pointshot has small
   help text, which washes out over a pale gradient.
 - Full-page screenshots paint it over the first viewport only. Scroll and

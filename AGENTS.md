@@ -22,6 +22,7 @@ bun run bundle:all # zips for Chrome and Firefox in build/
 
 mise run store:screenshots # builds the e2e build, then renders the store images
 mise run perf          # builds the e2e build, then benchmarks it on a heavy page and prints a table
+mise run mosaic:bake   # renders the options backdrop's blurred mosaic tiles into assets/
 ```
 
 Bun installs packages and runs scripts, while the tools themselves run on Node:
