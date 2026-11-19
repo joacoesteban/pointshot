@@ -97,6 +97,8 @@ impl Accessibility {
         }
     }
 
+    pub fn hold(&self) {}
+
     pub fn raise(&self, _: &Node) {}
 
     pub fn source(&self, node: &Node) -> Source {

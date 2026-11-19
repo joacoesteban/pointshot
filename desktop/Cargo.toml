@@ -28,7 +28,7 @@ zbus = { version = "5", default-features = false, features = ["blocking-api", "a
 core-foundation = "0.10"
 core-graphics = "0.24"
 objc2 = "0.6"
-objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "libc", "NSResponder", "NSRunningApplication", "NSWindow", "objc2-core-foundation"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "libc", "NSResponder", "NSRunningApplication", "NSWindow", "NSWorkspace", "objc2-core-foundation"] }
 xcap = "0.9"
 
 [target.'cfg(target_os = "windows")'.dependencies]

@@ -16,7 +16,7 @@ use core_graphics::window::{
 };
 use image::RgbaImage;
 use objc2::rc::Retained;
-use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication, NSWindow};
+use objc2_app_kit::{NSApplicationActivationOptions, NSRunningApplication, NSWindow, NSWorkspace};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::ffi::c_void;
@@ -74,6 +74,7 @@ unsafe extern "C" {
 pub struct Accessibility {
     pid: i32,
     exposed: RefCell<HashSet<i32>>,
+    front: RefCell<Option<Retained<NSRunningApplication>>>,
 }
 
 // Lists Pointshot in the Accessibility pane, and prompts the first time.
@@ -116,6 +117,7 @@ impl Accessibility {
             true => Ok(Self {
                 pid: std::process::id() as i32,
                 exposed: RefCell::default(),
+                front: RefCell::default(),
             }),
             false => anyhow::bail!(
                 "Pointshot needs the Accessibility permission. Allow it in System Settings, Privacy & Security, Accessibility, then try again."
@@ -199,10 +201,18 @@ impl Accessibility {
         }
     }
 
-    // The overlay activates Pointshot, so the picked app is activated again before the capture shows it inactive.
+    // Pointshot itself is in front when the library's Capture button starts the pick.
+    pub fn hold(&self) {
+        let front = NSWorkspace::sharedWorkspace()
+            .frontmostApplication()
+            .filter(|application| application.processIdentifier() != self.pid);
+        self.front.replace(front);
+    }
+
+    // The overlay activates Pointshot, so the app in front before it is activated again before the capture shows it inactive. Raising the app under the frame instead would reorder windows the user never picked.
     #[allow(deprecated)]
     pub fn raise(&self, node: &Element) {
-        if let Some(application) = self.application(node) {
+        if let Some(application) = self.front.take().or_else(|| self.application(node)) {
             application.activateWithOptions(NSApplicationActivationOptions::empty());
         }
     }

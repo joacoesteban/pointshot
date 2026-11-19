@@ -41,6 +41,7 @@ impl Session {
         if self.tree.is_none() {
             self.tree = Some(Accessibility::connect()?);
         }
+        self.tree.iter().for_each(Accessibility::hold);
         self.aim = Aim::default();
         Ok(())
     }
