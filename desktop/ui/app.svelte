@@ -91,7 +91,8 @@
       recording = resolve
     })
 
-  void Shortcut.restore().andThen(tray)
+  void Shortcut.restore()
+  void tray()
 </script>
 
 <Options
