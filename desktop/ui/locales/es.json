@@ -1,0 +1,103 @@
+{
+  "emptyBody": {
+    "message": "Pulsa Capturar y clickea lo que quieras de la pantalla. Va directo a tu portapapeles."
+  },
+  "hintVisible": {
+    "message": "Clickea o pulsa Enter para capturar esta pantalla"
+  },
+  "libraryEmptyBody": {
+    "message": "Pulsa Capturar y clickea lo que quieras de la pantalla."
+  },
+  "site": {
+    "message": "App"
+  },
+  "allSites": {
+    "message": "Todas las apps"
+  },
+  "moreSites": {
+    "message": "$COUNT$ apps más",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchBody": {
+    "message": "Prueba con otra búsqueda u otra app."
+  },
+  "clipboardBlocked": {
+    "message": "El portapapeles no tomó la captura"
+  },
+  "savedClipboardBlocked": {
+    "message": "Guardado, pero el portapapeles no lo tomó"
+  },
+  "quit": {
+    "message": "Salir de Pointshot"
+  },
+  "screen": {
+    "message": "Pantalla"
+  },
+  "permissionsTitle": {
+    "message": "Pointshot necesita dos permisos"
+  },
+  "permissionsBody": {
+    "message": "macOS te pide permitirlos una vez, en Ajustes del Sistema, Privacidad y seguridad."
+  },
+  "accessibility": {
+    "message": "Accesibilidad"
+  },
+  "accessibilityHelp": {
+    "message": "Para encontrar lo que hay bajo el puntero en otras apps."
+  },
+  "screenRecording": {
+    "message": "Grabación de pantalla"
+  },
+  "screenRecordingHelp": {
+    "message": "Para capturar lo que muestran otras apps. macOS te pide volver a abrir Pointshot después de permitirlo."
+  },
+  "allow": {
+    "message": "Permitir"
+  },
+  "allowed": {
+    "message": "Permitido"
+  },
+  "commandPick": {
+    "message": "Elegir algo de la pantalla para capturar"
+  },
+  "diagnosticsHelp": {
+    "message": "Versión, sistema, configuración y errores recientes, para pegar en un informe."
+  },
+  "shortcutTitle": {
+    "message": "Cambiar los atajos de captura"
+  },
+  "shortcutBody": {
+    "message": "Clickea un atajo, mantén uno o más modificadores y pulsa una tecla."
+  },
+  "shortcutWaiting": {
+    "message": "Esperando las teclas"
+  },
+  "shortcutNotSet": {
+    "message": "Pointshot no pudo usar ese atajo. Puede que otra app lo use."
+  },
+  "modePage": {
+    "message": "Ventana"
+  },
+  "hintPage": {
+    "message": "Clickea o pulsa Enter para capturar esta ventana"
+  },
+  "clearShortcut": {
+    "message": "Quitar el atajo"
+  },
+  "commandVisible": {
+    "message": "Capturar lo que muestra una pantalla"
+  },
+  "commandPage": {
+    "message": "Capturar una ventana"
+  },
+  "commandToggle": {
+    "message": "Mostrar u ocultar la biblioteca"
+  },
+  "copiedEdit": {
+    "message": "Copiado. Clickea para editarlo"
+  }
+}

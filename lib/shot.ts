@@ -24,9 +24,10 @@ export type Reply<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: string; readonly kind: string }
 
-// Pages without a host, like file:// ones, are named after their scheme.
+// Pages without a host, like file:// ones, are named after their scheme. The desktop app files its screenshots under app:<name>.
 export const siteOf = (url: string) =>
   match(new URL(url))
+    .with({ protocol: 'app:' }, ({ pathname }) => decodeURIComponent(pathname))
     .with({ hostname: '' }, ({ protocol }) => protocol.replace(/:$/, ''))
     .otherwise(({ hostname }) => hostname)
 

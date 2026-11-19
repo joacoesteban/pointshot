@@ -9,11 +9,12 @@
 
   type Props = {
     live: SnagState
+    modes?: readonly SnagMode[]
     onpin: (mode: SnagMode) => void
     oncancel: () => void
   }
 
-  const { live, onpin, oncancel }: Props = $props()
+  const { live, modes, onpin, oncancel }: Props = $props()
 
   type Modifier = keyof Held
 
@@ -23,12 +24,18 @@
     readonly hold: readonly Modifier[]
   }
 
-  const ENTRIES: readonly Entry[] = [
+  const ALL: readonly Entry[] = [
     { mode: 'element', label: t('modeElement'), hold: [] },
     { mode: 'area', label: t('modeArea'), hold: ['shift'] },
     { mode: 'visible', label: t('modeVisible'), hold: ['command'] },
     { mode: 'page', label: t('modePage'), hold: ['command', 'shift'] },
   ]
+
+  const ENTRIES = $derived(
+    match(modes)
+      .with(undefined, () => ALL)
+      .otherwise((modes) => ALL.filter(({ mode }) => modes.includes(mode))),
+  )
 
   const ARROWS = ['↑', '↓', '←', '→']
 
@@ -86,7 +93,8 @@
       class="modes"
       role="radiogroup"
       aria-label={t('snagMode')}
-      style:--index={String(index)}>
+      style:--index={String(index)}
+      style:--count={String(ENTRIES.length)}>
       <span class="thumb"></span>
       {#each ENTRIES as entry (entry.mode)}
         <button
@@ -199,7 +207,7 @@
     top: 0;
     bottom: 0;
     left: 0;
-    width: 25%;
+    width: calc(100% / var(--count));
     border-radius: 11px;
     background-color: hsl(var(--hue) 90% 58% / 0.32);
     box-shadow: inset 0 0 0 1px hsl(var(--hue) 90% 70% / 0.65);

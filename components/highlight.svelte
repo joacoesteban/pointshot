@@ -12,8 +12,7 @@
   import { Dom } from '~/lib/dom'
   import { t } from '~/lib/i18n'
   import { Region } from '~/lib/region'
-  import Symbol from './symbol.svelte'
-  import { transitionIn, transitionOut } from '~/lib/transitions'
+  import Outline from './outline.svelte'
 
   type Props = {
     target$: Observable<Element | null>
@@ -80,117 +79,4 @@
   )
 </script>
 
-{#if $frame$}
-  <div
-    class="fixed pointer-events-none highlight"
-    class:scope={$frame$.scope !== null}
-    class:continues={$frame$.scope === 'page'}
-    data-testid="snag-highlight"
-    in:transitionIn|global
-    out:transitionOut|global
-    style:translate={`${String($frame$.bounds.left)}px ${String(
-      $frame$.bounds.top,
-    )}px`}
-    style:width={`${String($frame$.bounds.width)}px`}
-    style:height={`${String($frame$.bounds.height)}px`}
-    style:border-radius={$frame$.radius}>
-    <span class="tag bg-blur bg-blur:soft bg-blur:round">
-      <b>{$frame$.label}</b>
-      <span class="opacity-60">
-        {Math.round($frame$.size.width)} × {Math.round($frame$.size.height)}
-      </span>
-    </span>
-    {#if $frame$.scope === null}
-      <span class="camera" data-testid="snag-camera">
-        <Symbol name="cameraFill" size="28px" />
-      </span>
-    {/if}
-  </div>
-{/if}
-
-<style lang="scss">
-  .highlight {
-    $base-hue: 130;
-    $ping-color: hsla($base-hue + 30 100% 95%);
-    $background-color: hsla($base-hue 100% 50% / 0.2);
-    $border-color: hsla($base-hue + 15 100% 80%);
-    $glow-color: hsla($base-hue + 30 100% 60% / 0.2);
-
-    container-type: size;
-    top: 0;
-    left: 0;
-    /* `translate` moves it on the compositor and composes with the pop transitions' `transform: scale`. */
-    transition: 0.2s var(--bezier);
-    transition-property: translate, width, height;
-
-    background-color: $background-color;
-    border: 2px solid $border-color;
-    box-shadow: 0 0 30px 5px $glow-color;
-
-    @keyframes ping {
-      75%,
-      100% {
-        opacity: 0;
-      }
-    }
-
-    &::before {
-      pointer-events: none;
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background-color: $ping-color;
-      animation: ping 2s linear infinite;
-    }
-
-    &.scope {
-      background-color: hsla($base-hue 100% 50% / 0.05);
-      box-shadow: inset 0 0 40px 2px $glow-color;
-      &::before {
-        display: none;
-      }
-      .tag {
-        top: 12px;
-        left: 12px;
-        bottom: auto;
-      }
-    }
-    &.continues {
-      border-bottom-color: transparent;
-      mask-image: linear-gradient(#000 70%, #0003);
-    }
-  }
-  .camera {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    width: 56px;
-    height: 56px;
-    margin: auto;
-    border-radius: 50%;
-    color: #129a52;
-    background-color: #ffffffe0;
-    box-shadow:
-      0 0 0 2px hsla(145 100% 80%),
-      0 10px 26px #0f6a3a33;
-
-    /* The query measures inside the 2px border, so this hides it at 80px and under. */
-    @container (max-width: 76px) or (max-height: 76px) {
-      display: none;
-    }
-  }
-  .tag {
-    position: absolute;
-    left: -2px;
-    bottom: calc(100% + 8px);
-    display: flex;
-    gap: 0.5em;
-    padding: 0.25em 0.8em;
-    font-size: 12px;
-    white-space: nowrap;
-    max-width: 60vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-</style>
+<Outline frame={$frame$} />

@@ -3,6 +3,25 @@ bun = "1.4.2"
 node = "24"
 fnox = "1.39.0"
 
+[tasks.desktop]
+description = "Run the desktop app with its UI hot reloading"
+dir = "desktop"
+run = "bunx tauri dev"
+
+[tasks."desktop:build"]
+description = "Build and bundle the desktop app for this platform"
+dir = "desktop"
+run = "bunx tauri build"
+
+[tasks."desktop:check"]
+description = "Format check, lint and test the desktop app"
+dir = "desktop"
+run = [
+  "cargo fmt --check",
+  "cargo clippy --all-targets --locked -- -D warnings",
+  "cargo test --locked",
+]
+
 [tasks."firefox:lint"]
 description = "Build for Firefox and lint the build with web-ext"
 run = [

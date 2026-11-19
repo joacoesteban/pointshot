@@ -96,6 +96,49 @@ cannot decrypt the profile; never run these tasks unless asked.
 - `*.test.ts` next to the code in `lib/` and `background/`: Vitest unit tests.
 - `test/`: Playwright specs. `fixtures.ts` serves `test/fixtures/boxes.html`
   at `https://snag.test` and `http://snag.test` by routing.
+- `desktop/`: a proof of concept of Pointshot as a desktop app, on Tauri 2. It
+  picks elements of any app from the platform's accessibility tree
+  (`AXUIElement` on macOS, UI Automation on Windows, AT-SPI on Linux under
+  X11; Wayland is not supported) through the `Tree` trait in `src/tree.rs`,
+  whose arrow-key walk mirrors `lib/picker.ts`, and whose `window` is the last
+  ancestor, which the overlay's Window mode frames in the extension's page
+  slot (Command+Shift). The tree lives on one thread in `src/picker.rs`;
+  `src/stage.rs` opens a transparent overlay on each display and converts its
+  CSS pixels to the platform's units. The UI in `desktop/ui` is Svelte built
+  by `desktop/vite.config.ts`, which resolves `~/` to the repository and swaps
+  `wxt/browser` for `ui/browser.ts`, so the overlay renders the extension's
+  `Outline` and `SnagToast` and reads the extension's copy, with `ui/locales`
+  overriding the lines that speak of pages or sites. The main window is the
+  extension's options page, opening on its library, with the desktop's Capture
+  button and permissions panel in its `toolbar` and `notice` slots; the
+  browser shim answers what the page asks of the browser, and the config sets
+  the extension's build flags. The config also swaps `messages/index.ts` for
+  `ui/messages.ts`, which answers the library's messages with `ShotStore` in
+  the window's own IndexedDB, and `lib/clipboard.ts` for `ui/clipboard.ts`,
+  which copies through the app. `ui/browser.ts` keeps `storage.local` in
+  localStorage. Downloads with a folder or Save As go to `src/download.rs`,
+  and the overlay sends the resolution setting with each pick, so a Standard
+  capture is scaled to one pixel per point before the clipboard. Each capture
+  reaches the library as a `captured` event, filed under `app:<name>`, which
+  `siteOf` reads as the app's name, and titled by its window. The extension's
+  commands work from anywhere: its four captures open the overlay pinned to
+  their mode, and its popup toggle shows or hides the library. Picking has
+  Alt+Shift+S, the extension's shortcut, and the settings' Change shortcuts
+  records the others (`ui/shortcut.ts`, `src/shortcut.rs`, keyed by action),
+  which the window keeps in localStorage and registers again at launch. The
+  tray (`ui/tray.ts`, the menu bar on macOS) lists the same commands and
+  reopens the library; closing the window only hides it, since the hidden
+  window still files the captures, except on a Linux desktop without a tray,
+  where it quits. A capture made with it hidden shows the
+  extension's toast in a small window of its own (`ui/toast.svelte`), and a
+  click on it opens the capture in the extension's editor through the options
+  page's `editing` prop. On macOS a capture first checks the Accessibility and
+  Screen Recording permissions (`src/permissions.rs`); with either missing it
+  opens the library, whose `ui/permissions.svelte` asks for them. CI does not
+  check the Rust: `mise run desktop:check` runs rustfmt, clippy and its tests,
+  while `bun run check` covers `desktop/ui`. Run it with `mise run desktop`;
+  Linux needs `libwebkit2gtk-4.1-dev`, and `libayatana-appindicator3-1` for
+  the tray.
 - `store/`: the store listing and its images. `screenshots.spec.ts` is a
   Playwright spec, with its own config, that plays the scenes through
   `Studio` (`studio.ts`) over `demo.html`, a made-up site served at

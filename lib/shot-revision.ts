@@ -1,4 +1,4 @@
-import { ResultAsync } from 'neverthrow'
+import { ResultAsync, okAsync } from 'neverthrow'
 import { filter, fromEventPattern, map, type Observable } from 'rxjs'
 import { match, P } from 'ts-pattern'
 import { browser, type Browser } from 'wxt/browser'
@@ -21,6 +21,13 @@ export class ShotRevision {
       toError(StorageError),
     ).map(() => undefined)
   }
+
+  // The revision write is awaited before replying, since the worker may be suspended right after the reply.
+  // A failed write only costs other pages their refresh, so it never fails the save or removal itself.
+  static announced = <T>(value: T): ResultAsync<T, never> =>
+    ShotRevision.bump()
+      .orElse(() => okAsync(undefined))
+      .map(() => value)
 
   static changes(): Observable<void> {
     return fromEventPattern<Change>(

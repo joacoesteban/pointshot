@@ -1,0 +1,103 @@
+{
+  "emptyBody": {
+    "message": "Press Capture and click anything on screen. It lands in your clipboard."
+  },
+  "hintVisible": {
+    "message": "Click or press Enter to capture this display"
+  },
+  "libraryEmptyBody": {
+    "message": "Press Capture and click anything on screen."
+  },
+  "site": {
+    "message": "App"
+  },
+  "allSites": {
+    "message": "All apps"
+  },
+  "moreSites": {
+    "message": "$COUNT$ more apps",
+    "placeholders": {
+      "count": {
+        "content": "$1"
+      }
+    }
+  },
+  "noMatchBody": {
+    "message": "Try another search or app."
+  },
+  "clipboardBlocked": {
+    "message": "The clipboard did not take the screenshot"
+  },
+  "savedClipboardBlocked": {
+    "message": "Saved, but the clipboard did not take it"
+  },
+  "quit": {
+    "message": "Quit Pointshot"
+  },
+  "screen": {
+    "message": "Screen"
+  },
+  "permissionsTitle": {
+    "message": "Pointshot needs two permissions"
+  },
+  "permissionsBody": {
+    "message": "macOS asks you to allow them once, in System Settings, Privacy & Security."
+  },
+  "accessibility": {
+    "message": "Accessibility"
+  },
+  "accessibilityHelp": {
+    "message": "To find what is under the pointer in other apps."
+  },
+  "screenRecording": {
+    "message": "Screen Recording"
+  },
+  "screenRecordingHelp": {
+    "message": "To capture what other apps show. macOS asks you to reopen Pointshot after you allow it."
+  },
+  "allow": {
+    "message": "Allow"
+  },
+  "allowed": {
+    "message": "Allowed"
+  },
+  "commandPick": {
+    "message": "Pick something on screen to capture"
+  },
+  "diagnosticsHelp": {
+    "message": "Version, system, settings and recent errors, to paste in a bug report."
+  },
+  "shortcutTitle": {
+    "message": "Change the capture shortcuts"
+  },
+  "shortcutBody": {
+    "message": "Click a shortcut, then hold one or more modifiers and press a key."
+  },
+  "shortcutWaiting": {
+    "message": "Waiting for keys"
+  },
+  "shortcutNotSet": {
+    "message": "Pointshot could not use that shortcut. Another app may hold it."
+  },
+  "modePage": {
+    "message": "Window"
+  },
+  "hintPage": {
+    "message": "Click or press Enter to capture this window"
+  },
+  "clearShortcut": {
+    "message": "Clear the shortcut"
+  },
+  "commandVisible": {
+    "message": "Capture what a display shows"
+  },
+  "commandPage": {
+    "message": "Capture a window"
+  },
+  "commandToggle": {
+    "message": "Show or hide the library"
+  },
+  "copiedEdit": {
+    "message": "Copied. Click to edit"
+  }
+}

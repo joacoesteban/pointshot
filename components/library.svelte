@@ -27,9 +27,19 @@
     settings: Settings
     // The shortcut that picks an element, shown in the empty state when set.
     shortcut: string
+    // A shot the desktop app asks to open in the editor, cleared through oneditopened once it is.
+    editing?: Shot | null | undefined
+    oneditopened?: (() => void) | undefined
   }
 
-  const { library, actions, settings, shortcut }: Props = $props()
+  const {
+    library,
+    actions,
+    settings,
+    shortcut,
+    editing = null,
+    oneditopened,
+  }: Props = $props()
 
   // Sites beyond this many chips move into a select, so a long tail of domains does not wrap into rows of pills.
   const MAX_CHIPS = 8
@@ -103,6 +113,15 @@
     () => shown,
     remove,
   )
+
+  $effect(() => {
+    match(editing)
+      .with(P.nonNullable, (shot) => {
+        viewer.openEditor(shot)
+        oneditopened?.()
+      })
+      .otherwise(() => undefined)
+  })
 
   // svelte-ignore state_referenced_locally
   void library.refresh().mapErr(Failure.report)

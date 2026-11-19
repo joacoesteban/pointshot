@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte'
   import { fromEvent, map, startWith } from 'rxjs'
   import { match, P } from 'ts-pattern'
   import { browser } from 'wxt/browser'
@@ -13,6 +14,7 @@
   import { REPOSITORY_URL } from '~/lib/links'
   import { ShotActions } from '~/lib/shot-actions'
   import { ShotLibrary } from '~/lib/shot-library'
+  import type { Shot } from '~/lib/shot'
   import type { SymbolName } from '~/lib/symbols'
   import { themeController } from '~/lib/theme-controller'
   import type { OptionsView } from '~/messages'
@@ -24,6 +26,18 @@
   import SettingsView from './options/settings.svelte'
   import SymbolButton from './symbol-button.svelte'
   import Toaster from './toaster.svelte'
+
+  type Props = {
+    // The desktop app's own header actions, notices and shortcut editor; the extension has none.
+    toolbar?: Snippet
+    notice?: Snippet
+    onchangeshortcuts?: () => Promise<unknown>
+    editing?: Shot | null
+    oneditopened?: () => void
+  }
+
+  const { toolbar, notice, onchangeshortcuts, editing, oneditopened }: Props =
+    $props()
 
   let settings = $state<Settings>(DEFAULT_SETTINGS)
   let commands = $state<readonly Command[]>([])
@@ -63,18 +77,21 @@
     settings = next
   })
 
-  void browser.commands.getAll().then((all) => {
-    commands = all.flatMap(({ name, description, shortcut }) =>
-      match({ name, description })
-        .with(
-          { name: P.string, description: P.string.minLength(1) },
-          ({ name: command, description: name }) => [
-            { command, name, shortcut: shortcut ?? '' },
-          ],
-        )
-        .otherwise(() => []),
-    )
-  })
+  const loadCommands = () =>
+    browser.commands.getAll().then((all) => {
+      commands = all.flatMap(({ name, description, shortcut }) =>
+        match({ name, description })
+          .with(
+            { name: P.string, description: P.string.minLength(1) },
+            ({ name: command, description: name }) => [
+              { command, name, shortcut: shortcut ?? '' },
+            ],
+          )
+          .otherwise(() => []),
+      )
+    })
+
+  void loadCommands()
 
   const pickShortcut = $derived(
     commands.find(({ command }) => command === 'pick-element')?.shortcut ?? '',
@@ -94,14 +111,17 @@
           <img src={logo} alt="" class="w-14 h-14" />
           <h1 class="blend font-black text-4xl m-0">Pointshot</h1>
         </div>
-        <SymbolButton
-          name="github"
-          title={t('sourceCode')}
-          size="lg"
-          opaque
-          onclick={() => {
-            open(REPOSITORY_URL)
-          }} />
+        <div class="flex items-center gap-3">
+          {@render toolbar?.()}
+          <SymbolButton
+            name="github"
+            title={t('sourceCode')}
+            size="lg"
+            opaque
+            onclick={() => {
+              open(REPOSITORY_URL)
+            }} />
+        </div>
       </header>
 
       <nav class="flex gap-2 mb-8" aria-label={t('optionsTitle')}>
@@ -118,10 +138,25 @@
         {/each}
       </nav>
 
+      {@render notice?.()}
+
       {#if view === 'library'}
-        <Library {library} {actions} {settings} shortcut={pickShortcut} />
+        <Library
+          {library}
+          {actions}
+          {settings}
+          shortcut={pickShortcut}
+          {editing}
+          {oneditopened} />
       {:else}
-        <SettingsView {settings} {commands} />
+        <SettingsView
+          {settings}
+          {commands}
+          onchangeshortcuts={match(onchangeshortcuts)
+            .with(P.nonNullable, (change) => () => {
+              void change().then(loadCommands)
+            })
+            .otherwise(() => undefined)} />
       {/if}
 
       <Footer {version} />

@@ -4,11 +4,15 @@ import themes from 'daisyui/src/theming/themes'
 
 export default {
   darkMode: 'media',
-  content: [
-    './components/**/*.svelte',
-    './contents/**/*.svelte',
-    './entrypoints/**/*.svelte',
-  ],
+  // Relative to this file, so the desktop app's build finds the components from its own folder.
+  content: {
+    relative: true,
+    files: [
+      './components/**/*.svelte',
+      './contents/**/*.svelte',
+      './entrypoints/**/*.svelte',
+    ],
+  },
   plugins: [daisyui],
   daisyui: {
     themes: [
