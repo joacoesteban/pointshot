@@ -128,7 +128,8 @@ cannot decrypt the profile; never run these tasks unless asked.
   which the window keeps in localStorage and registers again at launch. The
   tray (`ui/tray.ts`, the menu bar on macOS) lists the same commands and
   reopens the library; closing the window only hides it, since the hidden
-  window still files the captures. A capture made with it hidden shows the
+  window still files the captures, except on a Linux desktop without a tray,
+  where it quits. A capture made with it hidden shows the
   extension's toast in a small window of its own (`ui/toast.svelte`), and a
   click on it opens the capture in the extension's editor through the options
   page's `editing` prop. On macOS a capture first checks the Accessibility and

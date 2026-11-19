@@ -87,7 +87,8 @@ fn main() {
             Ok(())
         })
         .on_window_event(|window, event| match (window.label(), event) {
-            (MAIN, WindowEvent::CloseRequested { api, .. }) => {
+            // Without a tray nothing could bring the library back, so closing it quits.
+            (MAIN, WindowEvent::CloseRequested { api, .. }) if platform::tray_supported() => {
                 api.prevent_close();
                 window.hide().ok();
             }
