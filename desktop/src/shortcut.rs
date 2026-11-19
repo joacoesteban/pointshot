@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, MutexGuard, PoisonError};
 use tauri::{AppHandle, State};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
@@ -7,11 +8,16 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 pub const DEFAULT: (&str, &str) = ("element", "Alt+Shift+KeyS");
 
 #[derive(Default)]
-pub struct Hotkey(Mutex<HashMap<String, Shortcut>>);
+pub struct Hotkey {
+    shortcuts: Mutex<HashMap<String, Shortcut>>,
+    paused: AtomicBool,
+}
 
 impl Hotkey {
     fn shortcuts(&self) -> MutexGuard<'_, HashMap<String, Shortcut>> {
-        self.0.lock().unwrap_or_else(PoisonError::into_inner)
+        self.shortcuts
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
     }
 
     // An overlay mode to start the capture in, or "library".
@@ -44,6 +50,10 @@ impl Hotkey {
             app.global_shortcut()
                 .register(next)
                 .map_err(|error| error.to_string())?;
+            // While recording, registering only checks that no other app holds it; resuming registers it for good.
+            if self.paused.load(Ordering::SeqCst) {
+                app.global_shortcut().unregister(next).ok();
+            }
         }
         if let Some(previous) = current {
             app.global_shortcut().unregister(previous).ok();
@@ -57,6 +67,7 @@ impl Hotkey {
 
     // A registered shortcut reaches the app before the window, so recording new ones releases them all.
     fn pause(&self, app: &AppHandle, paused: bool) -> Result<(), String> {
+        self.paused.store(paused, Ordering::SeqCst);
         let shortcuts = app.global_shortcut();
         self.shortcuts()
             .values()
