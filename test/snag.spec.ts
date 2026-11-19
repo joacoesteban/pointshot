@@ -152,6 +152,50 @@ test('walks siblings and children and snags with Enter', async ({
   expect(await clipboardImage(page)).toMatchObject({ width: 400, height: 300 })
 })
 
+test('walks past wrappers on the same box and through elements with no area', async ({
+  page,
+  togglePopup,
+}) => {
+  await page.evaluate(() => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `<section id="shelf" style="position: absolute; top: 560px; left: 80px; display: flex; align-items: flex-start; gap: 10px">
+        <div id="first" style="width: 100px; height: 100px; background: #112233"></div>
+        <div id="flat" style="position: relative; width: 60px; height: 0">
+          <div id="floating" style="width: 60px; height: 60px; background: #445566"></div>
+        </div>
+        <div id="outer"><div id="middle"><div id="card" style="width: 100px; height: 100px; background: #778899">
+          <div id="title" style="width: 50px; height: 20px; background: #aabbcc"></div>
+        </div></div></div>
+      </section>`,
+    )
+  })
+  await togglePopup()
+  await page.getByTestId('snag-pick').click()
+  await hover(page, '#title')
+  const highlight = page.getByTestId('snag-highlight')
+  await expect(highlight).toContainText('div#title')
+
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('div#outer')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#title')
+
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('ArrowLeft')
+  await expect(highlight).toContainText('div#floating')
+  await page.keyboard.press('ArrowLeft')
+  await expect(highlight).toContainText('div#first')
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowRight')
+  await expect(highlight).toContainText('div#outer')
+  await page.keyboard.press('ArrowDown')
+  await expect(highlight).toContainText('div#title')
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('ArrowUp')
+  await expect(highlight).toContainText('section#shelf')
+})
+
 test('swallows the picking click so the page does not react', async ({
   page,
   togglePopup,
@@ -295,8 +339,9 @@ test('picks SVG elements', async ({ page, togglePopup }) => {
   await hover(page, '#logo')
   const highlight = page.getByTestId('snag-highlight')
   await expect(highlight).toContainText('rect')
+  // The rect fills the svg, so climbing has nowhere else to go.
   await page.keyboard.press('ArrowUp')
-  await expect(highlight).toContainText('svg#logo')
+  await expect(highlight).toContainText('rect')
   await page.mouse.down()
   await page.mouse.up()
   await expect(page.getByText('Copied to clipboard')).toBeVisible()
