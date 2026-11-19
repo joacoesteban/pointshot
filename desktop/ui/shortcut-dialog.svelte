@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fromEvent } from 'rxjs'
+  import { distinctUntilChanged, fromEvent, map, merge, startWith } from 'rxjs'
   import toast from 'svelte-french-toast'
   import { match, P } from 'ts-pattern'
   import Dialog from '~/components/dialog.svelte'
@@ -16,10 +16,6 @@
   let shortcuts = $state(Shortcut.all())
   let recording = $state<Action | null>(null)
 
-  const close = () => {
-    void Shortcut.pause(false).match(onclose, onclose)
-  }
-
   const save = (action: Action, accelerator: string) => {
     void Shortcut.save(action, accelerator)
       .andThen(tray)
@@ -33,8 +29,16 @@
   }
 
   $effect(() => {
-    void Shortcut.pause(true)
-    const subscription = fromEvent<KeyboardEvent>(window, 'keydown').subscribe(
+    // The keys reach the dialog only while its window has focus, so a hidden or unfocused library gives the shortcuts back.
+    const focus = merge(
+      fromEvent(window, 'focus').pipe(map(() => true)),
+      fromEvent(window, 'blur').pipe(map(() => false)),
+    )
+      .pipe(startWith(document.hasFocus()), distinctUntilChanged())
+      .subscribe((focused) => {
+        void Shortcut.pause(focused)
+      })
+    const keys = fromEvent<KeyboardEvent>(window, 'keydown').subscribe(
       // Plain keys, like Tab and Enter, still reach the dialog's buttons.
       (event) => {
         match({ recording, accelerator: Shortcut.read(event) })
@@ -49,12 +53,14 @@
       },
     )
     return () => {
-      subscription.unsubscribe()
+      focus.unsubscribe()
+      keys.unsubscribe()
+      void Shortcut.pause(false)
     }
   })
 </script>
 
-<Dialog title={say('shortcutTitle')} testId="pointshot-shortcut" onclose={close}>
+<Dialog title={say('shortcutTitle')} testId="pointshot-shortcut" {onclose}>
   <p class="body">{say('shortcutBody')}</p>
   <ul class="shortcuts">
     {#each COMMANDS as { action, description } (action)}

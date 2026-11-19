@@ -83,7 +83,7 @@ export class Shortcut {
     )
   }
 
-  // A shortcut needs a modifier and a key that is not one, so a keydown of a modifier alone reads as nothing yet.
+  // A shortcut needs Control, Alt or Super and a key that is not a modifier, so a modifier's own keydown reads as nothing yet, and Shift alone, which types capitals and moves back with Tab, never takes a key from every app.
   static read({
     code,
     ctrlKey,
@@ -95,7 +95,7 @@ export class Shortcut {
       (_, index) => [ctrlKey, altKey, shiftKey, metaKey][index],
     )
     return match({ held, code })
-      .with({ held: [] }, () => null)
+      .with({ held: [] }, { held: ['Shift'] }, () => null)
       .with(
         { code: P.string.regex(/^(Control|Alt|Shift|Meta|OS)(Left|Right)?$/) },
         () => null,
