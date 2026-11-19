@@ -156,6 +156,19 @@ describe('step through elements with no area', () => {
     )
   })
 
+  it('does not look inside an element with no height that clips', () => {
+    const { section, a, flat, b } = build()
+    // happy-dom leaves the overflow shorthand unexpanded, so this sets the axis itself.
+    flat.style.overflowY = 'hidden'
+    expect(step({ element: a, trail: [] }, { kind: 'next' }).element).toBe(b)
+    expect(step({ element: b, trail: [] }, { kind: 'previous' }).element).toBe(
+      a,
+    )
+    section.replaceChildren(flat)
+    const aim: Aim = { element: section, trail: [] }
+    expect(step(aim, { kind: 'down' })).toBe(aim)
+  })
+
   it('does not look inside display: none', () => {
     const { section, a, b } = build()
     const ghost = make('div', 'ghost')

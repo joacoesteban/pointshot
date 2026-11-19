@@ -164,6 +164,9 @@ test('walks past wrappers on the same box and through elements with no area', as
         <div id="flat" style="position: relative; width: 60px; height: 0">
           <div id="floating" style="width: 60px; height: 60px; background: #445566"></div>
         </div>
+        <div id="collapsed" style="width: 60px; height: 0; overflow: hidden">
+          <div id="secret" style="width: 60px; height: 60px; background: #ddeeff"></div>
+        </div>
         <div id="outer"><div id="middle"><div id="card" style="width: 100px; height: 100px; background: #778899">
           <div id="title" style="width: 50px; height: 20px; background: #aabbcc"></div>
         </div></div></div>

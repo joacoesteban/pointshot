@@ -80,8 +80,18 @@ const visible = (element: Element) => {
   return width > 0 && height > 0
 }
 
-// Nothing under display: none renders, so the walk doesn't look inside it.
-const undisplayed = (element: Element) => Dom.style(element).display === 'none'
+// Nothing under display: none renders, nor past an edge with no length that clips, as in a collapsed accordion.
+const CLIPPING = ['hidden', 'clip', 'scroll', 'auto']
+
+const hides = (element: Element) => {
+  const { width, height } = element.getBoundingClientRect()
+  const { display, overflowX, overflowY } = Dom.style(element)
+  return (
+    display === 'none' ||
+    (width === 0 && CLIPPING.includes(overflowX)) ||
+    (height === 0 && CLIPPING.includes(overflowY))
+  )
+}
 
 // The elements as the walk sees them, those with no area replaced by their children.
 function* flatten(
@@ -90,7 +100,7 @@ function* flatten(
   for (const element of elements) {
     if (visible(element)) {
       yield element
-    } else if (!undisplayed(element)) {
+    } else if (!hides(element)) {
       yield* flatten(Dom.children(element))
     }
   }
