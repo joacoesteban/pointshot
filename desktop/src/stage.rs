@@ -182,6 +182,13 @@ impl Stage {
         }
     }
 
+    // An overlay closed from outside, with Command+W or Alt+F4, cancels the session, which would otherwise wait for it forever.
+    pub fn closed(&self, label: &str) {
+        if locked(&self.screens).contains_key(label) {
+            self.end(None);
+        }
+    }
+
     fn show(&self, app: &AppHandle, aimed: Option<Aimed>) -> tauri::Result<()> {
         locked(&self.screens)
             .iter()

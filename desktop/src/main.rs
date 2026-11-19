@@ -86,11 +86,13 @@ fn main() {
                 .ok();
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let (MAIN, WindowEvent::CloseRequested { api, .. }) = (window.label(), event) {
+        .on_window_event(|window, event| match (window.label(), event) {
+            (MAIN, WindowEvent::CloseRequested { api, .. }) => {
                 api.prevent_close();
                 window.hide().ok();
             }
+            (label, WindowEvent::Destroyed) => window.state::<Stage>().closed(label),
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             stage::capture,
