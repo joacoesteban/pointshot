@@ -205,7 +205,9 @@ const siblingOf = (element: Element, offset: -1 | 1) => {
   const siblings = match(flat.includes(from))
     .with(true, () => flat)
     .otherwise(() => [...flatten(Dom.siblings(from))])
-  return siblings[siblings.indexOf(from) + offset]
+  return match(siblings.indexOf(from))
+    .with(-1, () => undefined)
+    .otherwise((index) => siblings[index + offset])
 }
 
 const land = (aim: Aim, element: Element | undefined): Aim =>

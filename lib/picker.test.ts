@@ -169,6 +169,13 @@ describe('step through elements with no area', () => {
     expect(step(aim, { kind: 'down' })).toBe(aim)
   })
 
+  it('next and previous stay put on an element with no area', () => {
+    const { flat } = build()
+    const aim: Aim = { element: flat, trail: [] }
+    expect(step(aim, { kind: 'next' })).toBe(aim)
+    expect(step(aim, { kind: 'previous' })).toBe(aim)
+  })
+
   it('does not look inside display: none', () => {
     const { section, a, b } = build()
     const ghost = make('div', 'ghost')
