@@ -64,11 +64,17 @@ impl Session {
 
     // An area or a display has no picked node, so the source is whatever shows at the frame's center.
     fn finish(&mut self, frame: Option<Frame>) -> Source {
-        let source = self.tree.as_ref().zip(frame).and_then(|(tree, frame)| {
-            let node = tree.at(frame.center())?;
-            tree.raise(&node);
-            Some(tree.source(&node))
-        });
+        let node = self
+            .tree
+            .as_ref()
+            .zip(frame)
+            .and_then(|(tree, frame)| tree.at(frame.center()));
+        self.tree.iter().for_each(|tree| tree.raise(node.as_ref()));
+        let source = self
+            .tree
+            .as_ref()
+            .zip(node.as_ref())
+            .map(|(tree, node)| tree.source(node));
         self.tree.iter().for_each(Accessibility::release);
         self.aim = Aim::default();
         source.unwrap_or_default()

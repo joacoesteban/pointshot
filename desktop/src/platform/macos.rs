@@ -211,8 +211,12 @@ impl Accessibility {
 
     // The overlay activates Pointshot, so the app in front before it is activated again before the capture shows it inactive. Raising the app under the frame instead would reorder windows the user never picked.
     #[allow(deprecated)]
-    pub fn raise(&self, node: &Element) {
-        if let Some(application) = self.front.take().or_else(|| self.application(node)) {
+    pub fn raise(&self, node: Option<&Element>) {
+        if let Some(application) = self
+            .front
+            .take()
+            .or_else(|| node.and_then(|node| self.application(node)))
+        {
             application.activateWithOptions(NSApplicationActivationOptions::empty());
         }
     }
