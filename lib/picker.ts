@@ -74,20 +74,141 @@ const pickOf = (mode: SnagMode, element: Element | null): Pick | null =>
 
 const isPick = (pick: Pick | null): pick is Pick => pick !== null
 
-const rendered = (element: Element) => element.getClientRects().length > 0
-
-const siblingOf = (element: Element, offset: -1 | 1) => {
-  const siblings = Dom.siblings(element).filter(rendered)
-  return siblings[siblings.indexOf(element) + offset]
+// An element with no area shows nothing, so the walk passes through it to its children.
+const visible = (element: Element) => {
+  const { width, height } = element.getBoundingClientRect()
+  return width > 0 && height > 0
 }
 
-const firstChildOf = (element: Element) => Dom.children(element).find(rendered)
+// Nothing under display: none renders, nor past an edge with no length that clips, as in a collapsed accordion.
+const CLIPPING = ['hidden', 'clip', 'scroll', 'auto']
+
+const hides = (element: Element) => {
+  const { width, height } = element.getBoundingClientRect()
+  const { display, overflowX, overflowY } = Dom.style(element)
+  return (
+    display === 'none' ||
+    (width === 0 && CLIPPING.includes(overflowX)) ||
+    (height === 0 && CLIPPING.includes(overflowY))
+  )
+}
+
+// The elements as the walk sees them, those with no area replaced by their children.
+function* flatten(
+  elements: Iterable<Element>,
+): Generator<Element, void, undefined> {
+  for (const element of elements) {
+    if (visible(element)) {
+      yield element
+    } else if (!hides(element)) {
+      yield* flatten(Dom.children(element))
+    }
+  }
+}
+
+const childrenOf = (element: Element) => flatten(Dom.children(element))
+
+const boxOf = (element: Element) => {
+  const { left, top, width, height } = Dom.rect(element)
+  return [left, top, width, height].map(Math.round).join()
+}
+
+// Elements on the same box look alike, as nested containers do, so the walk takes them as one step.
+const twin =
+  (element: Element) =>
+  (other: Element | undefined): other is Element =>
+    other !== undefined && boxOf(other) === boxOf(element)
 
 // The page roots are skipped: the top document's lead nowhere, and a frame's lead out to the frame.
 const climbable = (element: Element): Element | null =>
   match(Dom.parent(element))
     .with({ tagName: P.union('BODY', 'HTML') }, climbable)
     .otherwise((parent) => parent)
+
+const ancestorsOf = (element: Element): Element[] =>
+  match(climbable(element))
+    .with(null, () => [])
+    .otherwise((parent) => [parent, ...ancestorsOf(parent)])
+
+// The leading items on the element's box.
+const runOn = (element: Element, items: readonly Element[]): Element[] =>
+  match(items)
+    .with([P.when(twin(element)), ...P.array()], ([first, ...rest]) => [
+      first,
+      ...runOn(element, rest),
+    ])
+    .otherwise(() => [])
+
+// Above the element, past the ancestors on its box, then up through those on the box it lands on.
+const above = (element: Element): Element | undefined => {
+  const ancestors = ancestorsOf(element).filter(visible)
+  const rest = ancestors.slice(runOn(element, ancestors).length)
+  return match(rest)
+    .with([P.select(), ...P.array()], (parent) => runOn(parent, rest).at(-1))
+    .otherwise(() => undefined)
+}
+
+// The element's only child, when it sits on the same box, as in nested containers.
+const nestedIn = (element: Element): Element | undefined => {
+  const children = childrenOf(element)
+  const first = children.next().value ?? undefined
+  return match([first, children.next().done] as const)
+    .with([P.when(twin(element)), true], ([child]) => child)
+    .otherwise(() => undefined)
+}
+
+const innermost = (element: Element): Element =>
+  match(nestedIn(element))
+    .with(P.nonNullable, innermost)
+    .otherwise(() => element)
+
+// The first descendant off the element's box, past the wrappers and overlays on it, then in as far as its box goes.
+const below = (element: Element): Element | undefined => {
+  for (const child of childrenOf(element)) {
+    const stop = match(child)
+      .with(P.when(twin(element)), below)
+      .otherwise(innermost)
+    if (stop !== undefined) {
+      return stop
+    }
+  }
+  return undefined
+}
+
+// The outermost of the wrappers around the element.
+const wrapperOf = (element: Element): Element =>
+  match(ancestorsOf(element).find(visible))
+    .with(
+      P.when(
+        (parent): parent is Element =>
+          parent !== undefined && nestedIn(parent) === element,
+      ),
+      wrapperOf,
+    )
+    .otherwise(() => element)
+
+// The top of the parents with no area above the element, whose siblings flatten to the element's.
+const exposed = (element: Element): Element =>
+  match(Dom.parent(element))
+    .with(
+      P.when(
+        (parent): parent is Element => parent !== null && !visible(parent),
+      ),
+      exposed,
+    )
+    .otherwise(() => element)
+
+// Slotted children are missing from the children of the host's shadow root, so they fall back to their own siblings.
+const siblingOf = (element: Element, offset: -1 | 1) => {
+  const from = wrapperOf(element)
+  const flat = [...flatten(Dom.siblings(exposed(from)))]
+  const siblings = match(flat.includes(from))
+    .with(true, () => flat)
+    .otherwise(() => [...flatten(Dom.siblings(from))])
+  return match(siblings.indexOf(from))
+    .with(-1, () => undefined)
+    .otherwise((index) => siblings[index + offset])
+}
 
 const land = (aim: Aim, element: Element | undefined): Aim =>
   match(element)
@@ -101,8 +222,8 @@ export const step = (aim: Aim, next: Step): Aim =>
       trail: [],
     }))
     .with([{ element: P.when(Dom.isElement) }, { kind: 'up' }], ([aim]) =>
-      match(climbable(aim.element))
-        .with(null, () => aim)
+      match(above(aim.element))
+        .with(undefined, () => aim)
         .otherwise((parent) => ({
           element: parent,
           trail: [aim.element, ...aim.trail],
@@ -117,7 +238,7 @@ export const step = (aim: Aim, next: Step): Aim =>
       ]) => ({ element: child, trail: rest }),
     )
     .with([{ element: P.when(Dom.isElement) }, { kind: 'down' }], ([aim]) =>
-      land(aim, firstChildOf(aim.element)),
+      land(aim, below(aim.element)),
     )
     .with([{ element: P.when(Dom.isElement) }, { kind: 'previous' }], ([aim]) =>
       land(aim, siblingOf(aim.element, -1)),
