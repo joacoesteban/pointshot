@@ -1,61 +1,22 @@
 name: Merge
 
+# pull_request_target runs this file from the base branch, so a pull request
+# cannot rewrite it to read MERGE_APP_KEY.
 on:
   pull_request_target:
     types: [labeled]
 
-permissions:
-  actions: read
-  checks: read
-  contents: read
-  pull-requests: write
-  statuses: read
-
 jobs:
   merge:
-    if: github.event.label.name == 'merge'
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
-      PR: ${{ github.event.pull_request.number }}
-      BASE: ${{ github.base_ref }}
-      HEAD: ${{ github.event.pull_request.head.sha }}
-      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-    steps:
-      - name: Targets the default branch
-        run: |
-          if [ "$BASE" != "$DEFAULT_BRANCH" ]; then
-            echo "Merge into $DEFAULT_BRANCH only: this pull request targets $BASE" >&2
-            exit 1
-          fi
-      - name: Rebased onto the base branch
-        run: >
-          gh api "repos/$GH_REPO/compare/$BASE...$HEAD" --jq '
-            if .behind_by > 0 then error("Rebase onto \(env.BASE): \(.behind_by) commits behind")
-            elif any(.commits[]; .parents | length > 1) then error("Rebase onto \(env.BASE) without merge commits")
-            else empty end'
-      - name: Checks passed
-        run: >
-          gh pr view "$PR" --json statusCheckRollup --jq '
-            [.statusCheckRollup[]
-              | select(.workflowName != env.GITHUB_WORKFLOW)
-              | select(.conclusion // .state | IN("SUCCESS", "NEUTRAL", "SKIPPED") | not)
-              | .name // .context]
-            | if length > 0 then error("Checks not passed: \(join(", "))") else empty end'
-      # Merges made with GITHUB_TOKEN start no push workflows and close no
-      # linked issues, even when it can write issues.
-      - id: app
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ vars.MERGE_APP_CLIENT_ID }}
-          private-key: ${{ secrets.MERGE_APP_KEY }}
-      - if: github.event.pull_request.draft
-        run: gh pr ready "$PR"
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
-      - run: gh pr merge "$PR" --${{ vars.MERGE_METHOD }} --match-head-commit "$HEAD"
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
-      - if: failure()
-        run: gh pr edit "$PR" --remove-label merge
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: write
+      statuses: read
+    uses: joacoesteban/workflows/.github/workflows/merge.yml@main
+    with:
+      method: ${{ vars.MERGE_METHOD }}
+      client-id: ${{ vars.MERGE_APP_CLIENT_ID }}
+    secrets:
+      MERGE_APP_KEY: ${{ secrets.MERGE_APP_KEY }}
