@@ -5,9 +5,9 @@ on:
     types: [labeled]
 
 permissions:
-  actions: write
+  actions: read
   checks: read
-  contents: write
+  contents: read
   pull-requests: write
   statuses: read
 
@@ -43,20 +43,19 @@ jobs:
               | select(.conclusion // .state | IN("SUCCESS", "NEUTRAL", "SKIPPED") | not)
               | .name // .context]
             | if length > 0 then error("Checks not passed: \(join(", "))") else empty end'
-      - run: gh pr merge "$PR" --${{ vars.MERGE_METHOD }} --match-head-commit "$HEAD"
-      - uses: actions/checkout@v4
+      # Merges made with GITHUB_TOKEN start no push workflows and close no
+      # linked issues, even when it can write issues.
+      - id: app
+        uses: actions/create-github-app-token@v3
         with:
-          ref: ${{ github.event.repository.default_branch }}
-          sparse-checkout: .github/workflows
-      # Pushes made with GITHUB_TOKEN start no workflows, but workflow_dispatch
-      # events do, so run the push workflows of the default branch by hand.
-      - name: Run push workflows
-        run: |
-          for workflow in .github/workflows/*.yml .github/workflows/*.yaml; do
-            [ -f "$workflow" ] || continue
-            if yq -e '(.on | has("push")) and (.on | has("workflow_dispatch")) and ((.on.push.branches // [strenv(DEFAULT_BRANCH)]) | contains([strenv(DEFAULT_BRANCH)]))' "$workflow" >/dev/null 2>&1; then
-              gh workflow run "$(basename "$workflow")" --ref "$DEFAULT_BRANCH"
-            fi
-          done
+          client-id: ${{ vars.MERGE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.MERGE_APP_KEY }}
+      - if: github.event.pull_request.draft
+        run: gh pr ready "$PR"
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+      - run: gh pr merge "$PR" --${{ vars.MERGE_METHOD }} --match-head-commit "$HEAD"
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
       - if: failure()
         run: gh pr edit "$PR" --remove-label merge
